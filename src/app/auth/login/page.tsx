@@ -1,53 +1,34 @@
-import Link from "next/link";
-import { Card, Field, Shell } from "@/components/brandpilot";
+import { Card, PrimaryButton, SecondaryButton, Shell } from "@/components/brandpilot";
 
 export default function LoginPage() {
   return (
     <Shell
-      eyebrow="Authentication"
-      title="Login user untuk masuk ke workspace BrandPilot AI."
-      description="Halaman ini merepresentasikan modul auth PRD: login, session, dan arah ke dashboard."
+      eyebrow="Login"
+      title="Welcome back."
+      description="Masuk ke AI Marketing OS. Layout ini disusun seperti auth card pada referensi."
     >
-      <div className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
-        <Card className="bg-slate-50">
-          <h2 className="text-2xl font-semibold text-slate-900">Access control</h2>
-          <div className="mt-5 space-y-3">
-            <Field label="Auth strategy" value="JWT access token + refresh token" />
-            <Field label="Role default" value="owner / admin / member" />
-            <Field label="Redirect after login" value="/dashboard" />
+      <div className="mx-auto grid w-full max-w-md gap-6">
+        <Card>
+          <div className="grid gap-3">
+            <button className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50">
+              Continue with Google
+            </button>
+            <button className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 transition-all duration-150 hover:bg-slate-50">
+              Continue with Apple
+            </button>
+          </div>
+          <div className="my-5 h-px bg-slate-200" />
+          <form className="grid gap-4">
+            <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100" placeholder="Email" />
+            <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100" placeholder="Password" type="password" />
+            <PrimaryButton href="/onboarding/workspace">Login</PrimaryButton>
+          </form>
+          <div className="mt-4 flex justify-between text-sm text-slate-500">
+            <a href="/auth/forgot-password">Forgot password</a>
+            <a href="/auth/register">Register</a>
           </div>
         </Card>
-
-        <Card>
-          <form className="grid gap-4">
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Email
-              <input
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                placeholder="owner@brandpilot.ai"
-                type="email"
-              />
-            </label>
-            <label className="grid gap-2 text-sm font-medium text-slate-700">
-              Password
-              <input
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
-                placeholder="••••••••"
-                type="password"
-              />
-            </label>
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 text-sm text-slate-500">
-              <Link href="/auth/forgot-password">Forgot password</Link>
-              <Link href="/auth/register">Belum punya akun?</Link>
-            </div>
-            <Link
-              href="/dashboard"
-              className="mt-2 inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-            >
-              Masuk ke dashboard
-            </Link>
-          </form>
-        </Card>
+        <SecondaryButton href="/">Back to landing</SecondaryButton>
       </div>
     </Shell>
   );

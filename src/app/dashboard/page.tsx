@@ -1,49 +1,50 @@
-import { Card, MiniProgress, SectionTitle, Shell, StatGrid, Table } from "@/components/brandpilot";
-import { aiJobs, campaigns, dashboardStats } from "@/lib/mock-data";
+import { AppFrame, Card, MiniProgress, PrimaryButton, SectionTitle, Shell, StatGrid, Table } from "@/components/brandpilot";
+import { campaigns, dashboardStats, renderQueue } from "@/lib/mock-data";
 
 export default function DashboardPage() {
   return (
     <Shell
-      eyebrow="Dashboard"
-      title="Control room untuk campaign, queue, dan quick monitoring."
-      description="Mewakili module dashboard pada PRD: total campaign, draft, approved, generated assets, recent campaign, dan quick action."
+      eyebrow="Dashboard Overview"
+      title="Good morning, Sarah."
+      description="Dashboard utama mengikuti struktur referensi: sidebar workspace, stats cards, recent campaign, dan quick actions."
+      actions={<PrimaryButton href="/campaigns">New Campaign</PrimaryButton>}
     >
-      <StatGrid stats={dashboardStats} />
-
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <SectionTitle
-            title="Recent campaign"
-            description="Snapshot strategi campaign yang baru dibuat."
-          />
-          <Table
-            headers={["Campaign", "Goal", "Platforms", "Duration", "Status"]}
-            rows={campaigns.map((campaign) => [
-              <span key={`${campaign.id}-name`} className="font-medium text-slate-900">
-                {campaign.name}
-              </span>,
-              campaign.goal,
-              campaign.platforms.join(", "),
-              `${campaign.durationDays} hari`,
-              <span key={`${campaign.id}-status`} className="capitalize">
-                {campaign.status}
-              </span>,
-            ])}
-          />
-        </Card>
-
-        <Card>
-          <SectionTitle
-            title="Live queue"
-            description="Representasi progress AI job via Redis + BullMQ."
-          />
-          <div className="space-y-4">
-            {aiJobs.map((job) => (
-              <MiniProgress key={job.id} label={job.type} value={job.progress} />
-            ))}
-          </div>
-        </Card>
-      </section>
+      <AppFrame title="Dashboard Overview">
+        <StatGrid stats={dashboardStats} />
+        <div className="mt-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+          <Card>
+            <SectionTitle title="Recent Campaigns" description="Progress campaign aktif." />
+            <Table
+              headers={["Campaign", "Goal", "Platform", "Progress"]}
+              rows={campaigns.map((campaign, index) => [
+                <span key={campaign.id} className="font-medium text-slate-900">
+                  {campaign.name}
+                </span>,
+                campaign.goal,
+                campaign.platforms.join(", "),
+                <div key={index} className="min-w-[140px]">
+                  <MiniProgress label="Completion" value={index === 0 ? 89 : 52} />
+                </div>,
+              ])}
+            />
+          </Card>
+          <Card>
+            <SectionTitle title="Quick Actions" description="Arahkan user ke workflow inti." />
+            <div className="grid gap-3">
+              {["New Campaign", "Brand Audit", "Generate Assets", "Schedule Post"].map((item) => (
+                <div key={item} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm font-medium text-slate-700">
+                  {item}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 space-y-4">
+              {renderQueue.map((job) => (
+                <MiniProgress key={job.name} label={job.name} value={job.progress} />
+              ))}
+            </div>
+          </Card>
+        </div>
+      </AppFrame>
     </Shell>
   );
 }

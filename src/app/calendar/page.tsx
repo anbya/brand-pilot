@@ -1,31 +1,40 @@
-import { Card, SectionTitle, Shell, StatusBadge, Table } from "@/components/brandpilot";
-import { calendarItems } from "@/lib/mock-data";
+import { AppFrame, Card, PrimaryButton, SectionTitle, Shell } from "@/components/brandpilot";
+
+const days = Array.from({ length: 31 }, (_, index) => index + 1);
 
 export default function CalendarPage() {
   return (
     <Shell
-      eyebrow="Content Calendar"
-      title="30-day calendar generator dengan topic, hook, objective, CTA, dan asset need."
-      description="Mewakili output otomatis calendar planner agent dan status per item konten."
+      eyebrow="Content Calendar View"
+      title="Monthly publishing calendar."
+      description="Visualnya mengikuti calendar grid pada referensi."
+      actions={<PrimaryButton href="/content">Open Content Detail</PrimaryButton>}
     >
-      <Card>
-        <SectionTitle
-          title="Calendar items"
-          description="Setiap row berisi struktur yang disebutkan di PRD."
-        />
-        <Table
-          headers={["Day", "Topic", "Hook", "CTA", "Asset", "Platform", "Status"]}
-          rows={calendarItems.map((item) => [
-            `Day ${item.dayNumber}`,
-            item.topic,
-            item.hook,
-            item.cta,
-            item.assetNeeded,
-            item.platform,
-            <StatusBadge key={`${item.id}-status`} status={item.status} />,
-          ])}
-        />
-      </Card>
+      <AppFrame title="July 2026">
+        <Card>
+          <SectionTitle title="Content Calendar" description="Campaign items placed on a monthly calendar." />
+          <div className="grid grid-cols-7 gap-3">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => (
+              <div key={day} className="text-center text-xs font-semibold uppercase tracking-[0.12em] text-slate-500">
+                {day}
+              </div>
+            ))}
+            {days.map((day) => (
+              <div
+                key={day}
+                className={`min-h-24 rounded-xl border p-3 text-sm ${day % 5 === 0 ? "border-violet-200 bg-violet-50" : "border-slate-200 bg-white"}`}
+              >
+                <p className="font-medium text-slate-900">{day}</p>
+                {day % 5 === 0 ? (
+                  <div className="mt-2 rounded-lg bg-white px-2 py-1 text-xs text-violet-700 shadow-sm">
+                    Carousel
+                  </div>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </Card>
+      </AppFrame>
     </Shell>
   );
 }

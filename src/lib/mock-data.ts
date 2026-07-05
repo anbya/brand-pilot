@@ -7,29 +7,6 @@ export type AppStatus =
   | "need_revision"
   | "failed";
 
-export type BrandProfile = {
-  id: string;
-  companyName: string;
-  industry: string;
-  targetAudience: string;
-  businessDescription: string;
-  usp: string;
-  brandVoice: string;
-  language: string;
-  location: string;
-  website: string;
-  instagram: string;
-  facebook: string;
-  tiktok: string;
-  primaryColor: string;
-  secondaryColor: string;
-  aiSummary: string;
-  aiPersonality: string;
-  aiTone: string;
-  aiKeywords: string[];
-  aiNegativePrompt: string;
-};
-
 export type Campaign = {
   id: string;
   name: string;
@@ -66,117 +43,96 @@ export type AssetItem = {
   prompt: string;
 };
 
-export type JobItem = {
-  id: string;
-  type: string;
-  progress: number;
-  status: "queued" | "running" | "completed" | "failed";
-};
-
-export const workflowSteps = [
-  "Register",
-  "Create Brand",
-  "Upload Logo",
-  "Describe Business",
-  "AI Learn Brand",
-  "Generate 30 Days Campaign",
-  "Review",
-  "Generate Assets",
-  "Approve",
-  "Download ZIP",
-];
-
-export const featureModules = [
-  {
-    title: "Authentication",
-    bullets: ["Login", "Register", "Forgot Password", "JWT", "Refresh Token"],
-  },
-  {
-    title: "Brand Profile",
-    bullets: [
-      "Company profile",
-      "Brand voice",
-      "Business photos",
-      "AI summary",
-      "Negative prompt",
-    ],
-  },
-  {
-    title: "Campaign Generator",
-    bullets: ["Goal", "Platform", "Duration", "Strategy", "CTA recommendation"],
-  },
-  {
-    title: "Content Calendar",
-    bullets: ["Topic", "Hook", "Objective", "Caption preview", "Status"],
-  },
-  {
-    title: "Caption AI",
-    bullets: ["Hook", "Body", "CTA", "Hashtags", "Tone selection"],
-  },
-  {
-    title: "Asset Studio",
-    bullets: ["PNG/JPG", "HD images", "5-10s vertical video", "Subtitle", "Voice over"],
-  },
-  {
-    title: "Approval Desk",
-    bullets: ["Draft", "Review", "Approved", "Rejected", "Bulk approval"],
-  },
-  {
-    title: "Download Center",
-    bullets: ["ZIP", "Images", "Videos", "Calendar.csv", "README.txt"],
-  },
-];
-
-export const brandProfile: BrandProfile = {
+export const brandProfile = {
   id: "brand-1",
-  companyName: "Anbya Coffee",
+  companyName: "Coffee XYZ",
   industry: "Cafe & Beverage",
-  targetAudience: "Mahasiswa, pekerja remote, dan pencinta kopi di Jakarta Selatan.",
+  targetAudience: "Young professionals, coffee hobbyists, and remote workers.",
   businessDescription:
-    "Cafe artisan dengan seasonal menu, suasana hangat, dan area kerja nyaman.",
-  usp: "Specialty coffee approachable dengan ambience cozy untuk nongkrong dan kerja.",
-  brandVoice: "Ramah, modern, dan membumi.",
+    "Modern neighborhood coffee brand with premium beans and educational content.",
+  usp: "Premium but approachable coffee experience with daily ritual storytelling.",
+  brandVoice: "Warm, premium, confident",
   language: "id",
-  location: "Jakarta Selatan",
-  website: "https://anbya.coffee",
-  instagram: "@anbyacoffee",
-  facebook: "Anbya Coffee",
-  tiktok: "@anbyacoffee",
-  primaryColor: "#C96A2B",
-  secondaryColor: "#214336",
-  aiSummary:
-    "Brand lokal dengan karakter hangat, visual earthy, dan fokus pada ritual ngopi harian.",
-  aiPersonality: "Warm guide, artisan host, and everyday motivator.",
-  aiTone: "Friendly educational with subtle sales push.",
-  aiKeywords: ["kopi susu", "cozy cafe", "work-friendly", "seasonal beans", "hangout"],
-  aiNegativePrompt: "Visual terlalu mewah, industrial dingin, neon, crowded nightclub mood.",
+  location: "Jakarta",
+  website: "https://coffeexyz.example",
+  instagram: "@coffeexyz",
+  facebook: "Coffee XYZ",
+  tiktok: "@coffeexyz",
+  primaryColor: "#6D4CFF",
+  secondaryColor: "#D6BCFA",
+  aiSummary: "Coffee-focused brand with modern visual identity and educational positioning.",
+  aiPersonality: "Helpful, curated, and polished",
+  aiTone: "Premium, simple, and friendly",
+  aiKeywords: ["coffee", "beans", "morning ritual", "premium cafe"],
+  aiNegativePrompt: "No cluttered layout, no neon, no aggressive sales style.",
 };
+
+export const onboardingSteps = [
+  "Login",
+  "Create Workspace",
+  "Choose Industry",
+  "Brand Info",
+  "Finish",
+];
+
+export const workspaceBrands = [
+  { name: "Coffee XYZ", owner: "2 Campaigns", status: "active" },
+  { name: "SkinCare ABC", owner: "4 Campaigns", status: "active" },
+  { name: "Klinik Sehat", owner: "1 Campaign", status: "active" },
+];
+
+export const dashboardStats = [
+  { label: "Campaign Active", value: "23", hint: "Across 3 workspaces" },
+  { label: "Generated Posts", value: "220", hint: "This month" },
+  { label: "Ready to Publish", value: "18", hint: "Approved by team" },
+  { label: "Asset Created", value: "158", hint: "Images and videos" },
+];
+
+export const trendMetrics = [
+  { label: "July awareness", value: "30" },
+  { label: "Draft content", value: "12" },
+  { label: "Pending review", value: "4" },
+];
+
+export const brandBrainFields = [
+  ["Brand Name", "Coffee XYZ"],
+  ["Industry", "Cafe"],
+  ["Tone of Voice", "Warm, premium, easy-going"],
+  ["Primary Color", "#6D4CFF"],
+  ["Target Audience", "Young professional and coffee lovers"],
+];
+
+export const knowledgeBase = [
+  { name: "Brand Summary", type: "md", updated: "Jul 5, 2026" },
+  { name: "Brand Visual Prompt", type: "txt", updated: "Jul 4, 2026" },
+  { name: "FAQ Menu", type: "csv", updated: "Jul 2, 2026" },
+  { name: "Product Catalogue", type: "pdf", updated: "Jun 29, 2026" },
+];
 
 export const campaigns: Campaign[] = [
   {
     id: "cmp-1",
-    name: "30 Hari Kopi Pagi",
+    name: "July Awareness",
     goal: "awareness",
-    platforms: ["instagram", "tiktok"],
+    platforms: ["instagram", "tiktok", "facebook"],
     durationDays: 30,
-    status: "review",
-    strategy:
-      "Bangun top-of-mind lewat ritual pagi, storytelling menu, dan UGC-friendly content.",
-    contentPillars: ["Product spotlight", "Lifestyle", "Education", "Promotion"],
-    postingFrequency: "1 feed + 4 short videos per week",
-    ctaRecommendation: "Ajak audience save post dan mampir sebelum jam 11 pagi.",
+    status: "approved",
+    strategy: "Push brand recall using coffee ritual, store ambiance, and educational reels.",
+    contentPillars: ["Education", "Product", "Environment", "Offer"],
+    postingFrequency: "5x per week",
+    ctaRecommendation: "Drive profile visit and saved post.",
   },
   {
     id: "cmp-2",
-    name: "Weekend Signature Push",
+    name: "Weekend Promo",
     goal: "sales",
     platforms: ["instagram", "facebook"],
     durationDays: 14,
-    status: "generating",
-    strategy: "Fokus pada limited menu dan urgency untuk traffic akhir pekan.",
-    contentPillars: ["Offer", "Testimonial", "Product close-up"],
-    postingFrequency: "1 post per day",
-    ctaRecommendation: "Dorong preorder dan share ke teman nongkrong.",
+    status: "review",
+    strategy: "Promote bundle menu and drive weekend in-store traffic.",
+    contentPillars: ["Offer", "Testimonial", "Menu"],
+    postingFrequency: "Daily",
+    ctaRecommendation: "Use limited-time urgency.",
   },
 ];
 
@@ -184,141 +140,147 @@ export const calendarItems: CalendarItem[] = [
   {
     id: "cal-1",
     dayNumber: 1,
-    topic: "Kenapa kopi pagi terasa lebih nikmat di ruang hangat",
-    hook: "Kopi pagi itu bukan cuma soal kafein.",
-    objective: "Awareness",
-    cta: "Save untuk referensi cafe hopping.",
-    assetNeeded: "Lifestyle image + subtitle video",
-    captionPreview: "Mulai pagi dengan ruang, aroma, dan mood yang tepat.",
+    topic: "5 Kesalahan Memilih Kopi",
+    hook: "Banyak orang salah pilih beans untuk kebutuhan harian.",
+    objective: "Education",
+    cta: "Save post ini untuk referensi.",
+    assetNeeded: "Carousel + reel teaser",
+    captionPreview: "Biar ngopi harian lebih cocok, mulai dari pilihan beans.",
     platform: "instagram",
     status: "approved",
   },
   {
     id: "cal-2",
     dayNumber: 2,
-    topic: "Behind the beans",
-    hook: "Ada cerita panjang di balik satu cangkir ini.",
-    objective: "Education",
-    cta: "Tanya barista soal beans minggu ini.",
-    assetNeeded: "Short video vertical",
-    captionPreview: "Bean of the week kami datang dengan notes citrus dan caramel.",
-    platform: "tiktok",
+    topic: "Morning coffee setup",
+    hook: "Rutinitas pagi dimulai dari satu cangkir yang tepat.",
+    objective: "Awareness",
+    cta: "Visit profile untuk menu terbaru.",
+    assetNeeded: "Lifestyle image",
+    captionPreview: "Start your day with the right brew.",
+    platform: "instagram",
     status: "review",
   },
   {
     id: "cal-3",
     dayNumber: 3,
-    topic: "Promo work-from-cafe bundle",
-    hook: "Kerja lebih fokus kalau kopi dan camilan sudah aman.",
+    topic: "Promo duo set",
+    hook: "Buy 1 get pastry untuk jam sibuk sore ini.",
     objective: "Sales",
-    cta: "Datang sebelum jam 3 sore.",
-    assetNeeded: "Promo image set",
-    captionPreview: "Paket kopi + pastry untuk teman kerja produktif.",
-    platform: "instagram",
-    status: "generating",
-  },
-  {
-    id: "cal-4",
-    dayNumber: 4,
-    topic: "Customer mini testimonial",
-    hook: "Tempat yang bikin laptop betah terbuka sampai sore.",
-    objective: "Trust",
-    cta: "Tag teman yang butuh tempat meeting santai.",
-    assetNeeded: "Quote graphic",
-    captionPreview: "Review jujur dari tamu tetap kami minggu ini.",
+    cta: "Datang sebelum jam 5 sore.",
+    assetNeeded: "Promo graphic",
+    captionPreview: "Cocok untuk meeting sore dan quick break.",
     platform: "facebook",
     status: "draft",
   },
+];
+
+export const contentOutput = {
+  title: "Day 1 - Carousel",
+  headline: "5 Kesalahan Memilih Kopi",
+  sections: [
+    "Slide 1: Hook dan intro singkat.",
+    "Slide 2: Kesalahan memilih roast level.",
+    "Slide 3: Kesalahan memilih grind size.",
+    "Slide 4: Kesalahan memahami notes.",
+    "Slide 5: CTA untuk save dan follow.",
+  ],
+};
+
+export const canvasSlides = [
+  "Cover",
+  "Kesalahan 1",
+  "Kesalahan 2",
+  "Kesalahan 3",
+];
+
+export const previewSlides = [
+  "5 Kesalahan",
+  "Tangkai bitterness",
+  "Jangan asal seduh",
 ];
 
 export const assets: AssetItem[] = [
   {
     id: "asset-1",
     type: "image",
-    title: "Morning coffee hero",
-    format: "PNG HD",
+    title: "Carousel cover",
+    format: "PNG 1080x1350",
     status: "approved",
-    variant: "1:1 social post",
-    prompt: "Cozy artisan coffee shop, earthy morning light, branded cup, warm tones.",
+    variant: "Instagram carousel",
+    prompt: "Coffee beans macro, premium dark brown palette, headline safe area.",
   },
   {
     id: "asset-2",
-    type: "video",
-    title: "Beans story reel",
-    format: "MP4 1080x1920",
+    type: "image",
+    title: "Promo buy 1 get 1",
+    format: "PNG 1080x1350",
     status: "review",
-    variant: "9:16 with subtitles",
-    prompt: "Close-up beans to brewing sequence, intimate pacing, subtitle safe area.",
+    variant: "Feed promo",
+    prompt: "Coffee cup with pastry, promotional layout, elegant warm scene.",
   },
   {
     id: "asset-3",
-    type: "subtitle",
-    title: "Beans story subtitle",
-    format: "SRT",
-    status: "approved",
-    variant: "ID subtitle",
-    prompt: "Subtitle track generated from script.",
+    type: "video",
+    title: "Morning reel",
+    format: "MP4 1080x1920",
+    status: "generating",
+    variant: "Short vertical",
+    prompt: "Morning brew sequence with subtitle-safe composition.",
+  },
+];
+
+export const renderQueue = [
+  { name: "Episode 1 - Carousel Master", progress: 82, status: "running" },
+  { name: "Reel - Coffee beans", progress: 44, status: "queued" },
+  { name: "Image - Promo buy 1 get 1", progress: 100, status: "completed" },
+];
+
+export const assetLibrary = [
+  "Carousel",
+  "Promo Buy 1 Get 1",
+  "New Matcha",
+  "Coffee Story",
+];
+
+export const schedulePosts = [
+  { channel: "Instagram", date: "Jun 7, 2026", time: "10:00 AM" },
+  { channel: "TikTok", date: "Jun 8, 2026", time: "09:30 AM" },
+];
+
+export const analyticsStats = [
+  { label: "Impressions", value: "125.4K", hint: "+12%" },
+  { label: "Engagement", value: "8.7K", hint: "+8%" },
+  { label: "Clicks", value: "2.3K", hint: "+5%" },
+  { label: "Followers", value: "1.1K", hint: "+9%" },
+];
+
+export const teamMembers = [
+  { name: "Sarah", role: "Owner", status: "online" },
+  { name: "Mika", role: "Strategist", status: "online" },
+  { name: "Ari", role: "Designer", status: "away" },
+  { name: "Nina", role: "Publisher", status: "online" },
+];
+
+export const pricingPlans = [
+  {
+    name: "Free",
+    price: "Rp0",
+    features: ["1 brand", "Basic workspace", "Starter images", "30 credits/month"],
   },
   {
-    id: "asset-4",
-    type: "zip",
-    title: "Campaign export package",
-    format: "ZIP",
-    status: "draft",
-    variant: "Awaiting packaging",
-    prompt: "Aggregate approved assets and captions.",
+    name: "Premium",
+    price: "Rp199K",
+    features: ["3 brands", "Unlimited 30-day plan", "Carousel and reels", "500 credits/month"],
   },
-];
-
-export const aiJobs: JobItem[] = [
-  { id: "job-1", type: "campaign_generate", progress: 100, status: "completed" },
-  { id: "job-2", type: "calendar_generate", progress: 78, status: "running" },
-  { id: "job-3", type: "caption_generate", progress: 64, status: "running" },
-  { id: "job-4", type: "video_generate", progress: 15, status: "queued" },
-];
-
-export const dashboardStats = [
-  { label: "Total Campaign", value: "24", hint: "12 active, 8 approved" },
-  { label: "Draft", value: "09", hint: "Menunggu final review" },
-  { label: "Approved", value: "15", hint: "Siap diunduh" },
-  { label: "Assets Generated", value: "186", hint: "Image, video, subtitle" },
-];
-
-export const queueStages = [
-  "Generate Campaign",
-  "Generate Calendar",
-  "Generate Captions",
-  "Generate Images",
-  "Generate Videos",
-  "Package ZIP",
-];
-
-export const databaseEntities = [
-  "users",
-  "refresh_tokens",
-  "brands",
-  "campaigns",
-  "calendar_items",
-  "captions",
-  "assets",
-  "image_assets",
-  "video_assets",
-  "ai_jobs",
-  "prompt_histories",
-  "download_packages",
-  "settings",
-];
-
-export const apiExamples = [
-  "POST /api/brands",
-  "GET /api/brands",
-  "POST /api/campaigns",
-  "GET /api/campaigns",
-  "POST /api/campaigns/:id/generate",
-  "POST /api/calendar/:id/regenerate",
-  "POST /api/caption/:id/regenerate",
-  "POST /api/image/:id/generate",
-  "POST /api/video/:id/generate",
-  "POST /api/campaign/:id/approve",
-  "POST /api/downloads/:campaignId",
+  {
+    name: "Pro",
+    price: "Rp599K",
+    features: ["10 brands", "Team access", "All asset types", "SOC media workflow"],
+  },
+  {
+    name: "Enterprise",
+    price: "Custom",
+    features: ["Unlimited brands", "Approval flow", "Dedicated support", "Custom integration"],
+  },
 ];

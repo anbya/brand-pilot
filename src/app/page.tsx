@@ -1,151 +1,115 @@
-import Link from "next/link";
 import {
-  ActionRow,
+  AppFrame,
   Card,
-  MiniProgress,
+  MockArtCard,
+  PrimaryButton,
+  SecondaryButton,
   SectionTitle,
   Shell,
-  StatGrid,
 } from "@/components/brandpilot";
-import {
-  aiJobs,
-  apiExamples,
-  dashboardStats,
-  databaseEntities,
-  featureModules,
-  queueStages,
-  workflowSteps,
-} from "@/lib/mock-data";
+
+const flowCards = [
+  ["Landing", "Marketing page dengan CTA ke workspace."],
+  ["Login", "Masuk ke akun dan buka AI workspace."],
+  ["Onboarding", "Buat workspace, pilih industri, isi brand info."],
+  ["Dashboard", "Pantau campaign, progress, dan quick actions."],
+  ["Brand Brain", "Lihat memory brand, tone, prompt, dan knowledge base."],
+  ["Campaign", "Generate blueprint campaign dan content calendar."],
+  ["Editor", "Ubah content output dan mock canvas design."],
+  ["Render + Library", "Queue asset, review hasil, dan simpan library."],
+  ["Schedule", "Atur publish date dan preview post."],
+  ["Analytics", "Pantau performa konten."],
+  ["Team + Settings", "Kelola anggota dan workspace profile."],
+  ["Pricing", "Arahkan upgrade plan."],
+] as const;
 
 export default function Home() {
   return (
     <Shell
-      eyebrow="PRD implementation"
-      title="BrandPilot AI sekarang sudah jadi MVP product shell yang bisa dijelajahi."
-      description="Phase 1 ini mencakup halaman marketing, auth flow, dashboard, brand profile, campaign generator, content calendar, caption and asset review, approval desk, download center, dan mock API route yang mengikuti endpoint inti PRD."
+      eyebrow="AI Marketing OS"
+      title="Complete user flow untuk AI marketing workspace."
+      description="Tampilan dan struktur halaman diubah mengikuti referensi: landing minimal, onboarding bertahap, dashboard dengan sidebar, content workflow, asset pipeline, scheduling, analytics, team, settings, dan pricing."
+      actions={
+        <>
+          <PrimaryButton href="/auth/login">Start Free Trial</PrimaryButton>
+          <SecondaryButton href="/dashboard">Watch Demo</SecondaryButton>
+        </>
+      }
     >
-      <StatGrid stats={dashboardStats} />
+      <MockArtCard title="Your AI Marketing Team, All in One Platform" subtitle="Landing Page" />
 
-      <section className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+      <section className="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
         <Card>
           <SectionTitle
-            title="Core workflow"
-            description="Seluruh alur utama PRD dipetakan menjadi experience yang bisa dinavigasi."
+            title="Reference flow implemented"
+            description="Urutan halaman mengikuti struktur utama pada gambar."
           />
-          <div className="grid gap-3 sm:grid-cols-2">
-            {workflowSteps.map((step, index) => (
-              <div
-                key={step}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <p className="text-sm font-semibold text-blue-600">
-                  {String(index + 1).padStart(2, "0")}
+          <div className="grid gap-3 md:grid-cols-2">
+            {flowCards.map(([title, description], index) => (
+              <div key={title} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-violet-600">
+                  Step {index + 1}
                 </p>
-                <p className="mt-3 text-lg font-medium text-slate-900">{step}</p>
+                <p className="mt-2 text-lg font-semibold text-slate-900">{title}</p>
+                <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p>
               </div>
             ))}
           </div>
         </Card>
 
-        <Card>
-          <SectionTitle
-            title="Quick actions"
-            description="Masuk langsung ke modul utama yang paling penting untuk MVP."
-          />
-          <ActionRow />
-          <div className="mt-6 space-y-4">
-            {aiJobs.map((job) => (
-              <MiniProgress key={job.id} label={job.type} value={job.progress} />
-            ))}
-          </div>
-        </Card>
-      </section>
-
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr_0.9fr]">
-        <Card>
-          <SectionTitle
-            title="Module coverage"
-            description="Setiap modul Phase 1 diterjemahkan menjadi halaman dan data shape yang siap dikembangkan."
-          />
-          <div className="grid gap-4">
-            {featureModules.map((module) => (
-              <div
-                key={module.title}
-                className="rounded-xl border border-slate-200 bg-slate-50 p-4"
-              >
-                <p className="text-lg font-semibold text-slate-900">{module.title}</p>
-                <p className="mt-3 text-sm leading-7 text-slate-600">
-                  {module.bullets.join(" • ")}
-                </p>
-              </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <SectionTitle
-            title="Queue pipeline"
-            description="Representasi proses async AI dari generator hingga packaging."
-          />
-          <div className="space-y-3">
-            {queueStages.map((stage, index) => (
-              <div
-                key={stage}
-                className="flex items-center gap-4 rounded-xl border border-slate-200 px-4 py-3"
-              >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-semibold text-blue-700">
-                  {index + 1}
+        <AppFrame title="Dashboard Preview">
+          <div className="grid gap-4 xl:grid-cols-[1.2fr_0.8fr]">
+            <div className="grid gap-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm text-slate-500">Generated Content</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900">220</p>
                 </div>
-                <p className="font-medium text-slate-900">{stage}</p>
+                <div className="rounded-xl border border-slate-200 bg-white p-4">
+                  <p className="text-sm text-slate-500">Ready to Publish</p>
+                  <p className="mt-2 text-3xl font-semibold text-slate-900">18</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </Card>
-
-        <Card>
-          <SectionTitle
-            title="Schema scope"
-            description="Entitas utama database PRD juga sudah diterjemahkan ke model mock."
-          />
-          <div className="flex flex-wrap gap-2">
-            {databaseEntities.map((entity) => (
-              <span
-                key={entity}
-                className="rounded-full border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-semibold text-slate-700"
-              >
-                {entity}
-              </span>
-            ))}
-          </div>
-
-          <div className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-            <p className="font-semibold text-slate-900">API ready</p>
-            <div className="mt-3 space-y-2">
-              {apiExamples.slice(0, 6).map((endpoint) => (
-                <p key={endpoint}>{endpoint}</p>
-              ))}
+              <div className="rounded-xl border border-slate-200 bg-white p-4">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium text-slate-900">Recent Campaigns</p>
+                  <p className="text-xs text-violet-600">View all</p>
+                </div>
+                <div className="mt-4 space-y-3">
+                  {[72, 48, 91].map((value, index) => (
+                    <div key={index}>
+                      <div className="mb-2 flex items-center justify-between text-sm text-slate-500">
+                        <span>Campaign {index + 1}</span>
+                        <span>{value}%</span>
+                      </div>
+                      <div className="h-2 rounded-full bg-slate-100">
+                        <div
+                          className="h-2 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500"
+                          style={{ width: `${value}%` }}
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div className="rounded-xl border border-slate-200 bg-white p-4">
+              <p className="text-sm font-medium text-slate-900">Quick Actions</p>
+              <div className="mt-4 grid gap-3">
+                {["New Campaign", "Brand Audit", "Generate Assets", "Schedule Posts"].map(
+                  (item) => (
+                    <div
+                      key={item}
+                      className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-3 text-sm text-slate-700"
+                    >
+                      {item}
+                    </div>
+                  ),
+                )}
+              </div>
             </div>
           </div>
-        </Card>
-      </section>
-
-      <section className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-600">
-              Navigate the MVP
-            </p>
-            <h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em] text-slate-900">
-              Semua halaman inti sekarang sudah tersedia
-            </h2>
-          </div>
-          <Link
-            href="/dashboard"
-            className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-700"
-          >
-            Buka dashboard
-          </Link>
-        </div>
+        </AppFrame>
       </section>
     </Shell>
   );
