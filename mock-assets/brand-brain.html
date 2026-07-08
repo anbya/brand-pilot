@@ -1,0 +1,416 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Brand Brain | AI Marketing OS</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#0058bc",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#414755",
+                    "tertiary-container": "#00855b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-container-low": "#eff4ff",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "surface": "#f8f9ff",
+                    "on-tertiary-container": "#f5fff6",
+                    "on-secondary-container": "#fffbff",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#dce9ff",
+                    "outline": "#717786",
+                    "primary-fixed": "#d8e2ff",
+                    "on-primary-container": "#fefcff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-tertiary-fixed": "#002113",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#0b1c30",
+                    "on-primary-fixed-variant": "#004493",
+                    "background": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-secondary-fixed": "#07006c",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-container": "#e5eeff",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#001a41",
+                    "inverse-primary": "#adc6ff",
+                    "tertiary": "#006947",
+                    "secondary-container": "#6063ee",
+                    "surface-bright": "#f8f9ff",
+                    "surface-tint": "#005bc1",
+                    "surface-variant": "#d3e4fe",
+                    "outline-variant": "#c1c6d7",
+                    "on-background": "#0b1c30",
+                    "inverse-surface": "#213145",
+                    "primary-container": "#0070eb",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "secondary": "#4648d4",
+                    "secondary-fixed": "#e1e0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max-width": "1440px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "40px",
+                    "stack-sm": "8px",
+                    "base": "8px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-lg": "32px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .brand-brain-canvas {
+            min-height: 100vh;
+            background-color: #f8f9ff;
+        }
+        .surface-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .surface-card:hover {
+            box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-4 z-40 bg-surface-container-lowest border-r border-outline-variant w-64">
+<!-- Brand Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+<div>
+<h2 class="text-headline-sm font-headline-sm font-bold text-primary">AI Marketing OS</h2>
+<p class="text-[10px] font-label-md text-outline uppercase tracking-wider">Enterprise Suite</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-semibold scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">workspaces</span>
+<span class="text-label-md font-label-md">Brands</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="text-label-md font-label-md">Campaigns</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-label-md font-label-md">Content Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-label-md font-label-md">Assets</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-label-md font-label-md">Analytics</span>
+</a>
+</nav>
+<!-- CTA & Bottom Actions -->
+<div class="mt-auto space-y-4 pt-4 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 bg-secondary text-on-secondary rounded-lg px-4 py-3 font-semibold hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="text-label-md font-label-md">New Campaign</span>
+</button>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<div class="flex items-center gap-3 p-2 bg-surface-container-low rounded-xl">
+<img class="w-10 h-10 rounded-full border-2 border-white" data-alt="A professional headshot of a smiling female marketing director with warm, natural lighting in a modern office environment. She has a friendly and confident expression, wearing a neutral-toned blazer. The photo uses a soft depth-of-field effect, with a clean and organized workspace blurred in the background, matching a high-end corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5LtcSEZ7F5QffQjEpFdB4p3jqD2GVDvGjOPezI4zUOYKPK6IqzRZwAMUi9xvpAiVsZ81RRy_bbmzqkzqLaGPEZoGs-LQTRXzJlojqaC6BLHrNa-iu_stwKurd_kr30Pu52GcQJ48h7mj5pEF91bwZFXHnaEZS4JFXdalOTDUX9H_X-AzbxIMa9VQG87tdkaA4g32dcXsT3FBGWsgzbIC_mqPyFjj410cbXW19irJXn_0-Q9h_HKro"/>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-label-md truncate">Sarah Jenkins</p>
+<p class="text-label-sm font-label-sm text-outline truncate">Admin</p>
+</div>
+<span class="material-symbols-outlined text-outline">unfold_more</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen relative">
+<!-- TopNavBar Style Header (Integrated) -->
+<header class="sticky top-0 z-30 glass-effect px-10 py-6 flex justify-between items-center max-w-container-max-width mx-auto">
+<div>
+<h1 class="text-headline-md font-headline-md text-on-surface">Brand Brain</h1>
+<p class="text-body-sm text-outline">Manage your AI's understanding of Coffee XYZ</p>
+</div>
+<div class="flex items-center gap-4">
+<button class="flex items-center gap-2 px-4 py-2 text-primary border border-primary rounded-lg hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+<span class="text-label-md">Analyze Brand Data</span>
+</button>
+<div class="w-10 h-10 rounded-full bg-surface-container-high border border-outline-variant flex items-center justify-center overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A high-quality professional portrait of a marketing executive in a brightly lit, modern minimalist office. The executive has a friendly, confident expression, symbolizing the visionary and reliable brand identity. The lighting is soft and natural, emphasizing the professional and lucid atmosphere of the AI Marketing OS workspace." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD0caw30WtyUGSUyxpyOs2SGUK9WGKRo2RlKSgaAsv2NUD9hD0Kvc5oZd0WssRZ0-N2mKrGtArN10nMVusbyGXHwFRZjjI2NrKVqzxsz1fAlBTDq3Cqjib4E06nbJqfvVpl_IpDLuue1rASaOhvTCRTEnhgkT0XQA4db5J7aoQvgcMUiUbCSkyiI4WcowUgnxmBONblLjzkAsElucfKlhSIq9cHmwO-3ySjrkZ3JxOdIICjKnOV8ohr">
+</div>
+</div>
+</header>
+<div class="px-10 py-8 max-w-container-max-width mx-auto">
+<!-- Bento Layout for Brand Identity -->
+<div class="bento-grid">
+<!-- Brand Voice Card (Large) -->
+<section class="col-span-8 surface-card p-6 flex flex-col gap-6 relative overflow-hidden">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">record_voice_over</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm">Brand Voice</h3>
+</div>
+<button class="text-primary font-label-md flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">edit</span> Edit
+                        </button>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+<p class="text-label-md text-primary mb-1 uppercase tracking-wider">Primary Personality</p>
+<p class="text-headline-sm font-bold">Friendly &amp; Visionary</p>
+<p class="text-body-sm text-on-surface-variant mt-2 leading-relaxed">
+                                We speak to our customers like a knowledgeable friend who sees the future of coffee. We are encouraging, optimistic, and deeply passionate about quality.
+                            </p>
+</div>
+<div class="p-4 bg-surface-container-low rounded-xl border border-outline-variant/30">
+<p class="text-label-md text-primary mb-1 uppercase tracking-wider">Communication Style</p>
+<p class="text-headline-sm font-bold">Lucid &amp; Reliable</p>
+<p class="text-body-sm text-on-surface-variant mt-2 leading-relaxed">
+                                Clarity is our priority. No jargon, just honest descriptions of our sustainable sourcing and roasting techniques that users can trust.
+                            </p>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-2">
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary font-label-md rounded-full">#Approachable</span>
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary font-label-md rounded-full">#Eco-Conscious</span>
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary font-label-md rounded-full">#Expert</span>
+<span class="px-3 py-1 bg-secondary-container/20 text-secondary font-label-md rounded-full">#Optimistic</span>
+</div>
+</section>
+<!-- Brand Logo Section (Medium) -->
+<section class="col-span-4 surface-card p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">branding_watermark</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm">Brand Logo</h3>
+</div>
+<button class="text-primary font-label-md flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">upload</span> Change
+                        </button>
+</div>
+<div class="flex-1 border-2 border-dashed border-outline-variant rounded-2xl flex flex-col items-center justify-center p-8 bg-surface-container-lowest group cursor-pointer hover:bg-surface-container transition-all">
+<div class="w-24 h-24 mb-4 rounded-xl shadow-sm overflow-hidden bg-white flex items-center justify-center">
+<img class="w-16 h-16 object-contain" data-alt="A minimalist, modern logo design for a premium coffee brand named Coffee XYZ. The logo features a sophisticated combination of a coffee bean and a geometric abstract shape, utilizing a professional palette of deep navy blue and crisp white. The style is clean and corporate, emphasizing reliability and modern intelligence in a high-fidelity finish." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBuvwxHG-3aEQmbB3JVSbYYqCSmYs7mE3kB2z6pD7ZaBXEQWjPcSZ6MJemSSul7V5oSl9OiQTMHsjxqPBu3bdYF2xK6x7vmHAWAARG3T0aW665qff9bd7YUOZLBKML8CltnKMDwcr1uukBdhB5LiF79v340gUTFtuxk_DI1h7YmnqG3PssQD1RH2_mxk68KIl5fCekqUZs0SMAj-9PpO9SK67dlkFEchi3cHPdEY0acXCF08HHpREN-">
+</div>
+<p class="text-label-md text-on-surface text-center">Primary Logo (SVG)</p>
+<p class="text-label-sm text-outline text-center">coffee_xyz_v2_final.svg</p>
+</div>
+</section>
+<!-- Tone of Voice Section (Medium) -->
+<section class="col-span-4 surface-card p-6 flex flex-col gap-4">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">tune</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm">Tone Dial</h3>
+</div>
+<button class="text-primary font-label-md flex items-center gap-1 hover:underline">
+<span class="material-symbols-outlined text-[16px]">edit</span> Adjust
+                        </button>
+</div>
+<div class="space-y-6 py-4">
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm uppercase text-outline">
+<span class="">Casual</span>
+<span class="">Formal</span>
+</div>
+<div class="h-2 bg-surface-container rounded-full relative">
+<div class="absolute left-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary border-2 border-white rounded-full shadow-md"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm uppercase text-outline">
+<span class="">Playful</span>
+<span class="">Serious</span>
+</div>
+<div class="h-2 bg-surface-container rounded-full relative">
+<div class="absolute left-2/3 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary border-2 border-white rounded-full shadow-md"></div>
+</div>
+</div>
+<div class="space-y-2">
+<div class="flex justify-between text-label-sm uppercase text-outline">
+<span class="">Concise</span>
+<span class="">Detailed</span>
+</div>
+<div class="h-2 bg-surface-container rounded-full relative">
+<div class="absolute left-1/2 top-1/2 -translate-y-1/2 w-4 h-4 bg-primary border-2 border-white rounded-full shadow-md"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Brand Assets Section (Large) -->
+<section class="col-span-8 surface-card p-6 flex flex-col gap-6">
+<div class="flex justify-between items-start">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary-container/10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">collections</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm">Core Brand Assets</h3>
+</div>
+<div class="flex gap-2">
+<button class="flex items-center gap-2 px-3 py-1.5 text-on-surface-variant bg-surface-container rounded-lg text-label-md hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined text-[18px]">folder_shared</span> Manage All
+                            </button>
+<button class="flex items-center gap-2 px-3 py-1.5 bg-primary text-on-primary rounded-lg text-label-md hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-[18px]">add</span> Upload
+                            </button>
+</div>
+</div>
+<div class="grid grid-cols-4 gap-4">
+<!-- Asset Card 1 -->
+<div class="group relative aspect-square rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A professional, high-end photograph of organic coffee beans spread across a rustic wooden surface. The lighting is warm and cinematic, highlighting the rich textures of the beans. The image represents the core sustainable sourcing asset for Coffee XYZ, fitting a modern corporate minimalist aesthetic with clean lines and natural colors." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBXaPfHNhCGII6FOB-bAUyFQYQ7afrWP6VeREebGZXI6rvHG7tN4OyWBdtSYVy3ogAC4V5NeL9N0AMYECnmsfUQXRpvZgb2KFP-q35G78cUVDfeGAk1QVgt4d_UgB6WgNw9I9V3TtQmtmCCmesL4vJg8V_QI4ovtFjLCZJlwLJj89xCz6feBRG9GnRcwnWy5bg6cbMB4SS249dZrI1vfQlGTHLmCd25-9ljkID1P73ZyQFU-g_7Ds61">
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">visibility</span>
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">download</span>
+</div>
+</div>
+<!-- Asset Card 2 -->
+<div class="group relative aspect-square rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="A clean, minimalist product shot of a Coffee XYZ branded reusable ceramic mug. The mug is placed on a bright, off-white surface with soft, diffused shadows. The background is a calm, neutral gray, perfectly aligning with the modern corporate minimalism style. The focus is on the subtle brand logo and the high-fidelity finish of the product." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLaCQ1KCRiF8l--45Fz4VFlVCExRYqKlReiII2QsVWTA_MTdcLi3fwNp3x6a4dkNXEWTsYngKb4NAuUaFlmrMxFz0dyRLEVRP_ym0sPPOiYWXqY4Yah4Se5CxnAxkGKv25O2p3ymtV35CKES8V_FuDV2jhAyrq0H3ySu_AeuB6scV6HZ_dC5khyrjpW37tj9J-UMcIvLwjsxpluWve6ANrKaURW-2NkYhRYhoCtZsQziLWSIz7DQwE">
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">visibility</span>
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">download</span>
+</div>
+</div>
+<!-- Asset Card 3 -->
+<div class="group relative aspect-square rounded-xl overflow-hidden border border-outline-variant/30">
+<img class="w-full h-full object-cover" data-alt="An atmospheric interior photograph of a modern, eco-conscious coffee shop with minimalist wooden furniture and plenty of natural light. The space is calm and organized, reflecting the professional and lucid brand personality of Coffee XYZ. The color palette features soft whites, natural wood tones, and subtle green accents from indoor plants." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBGVc2YXf_R5hCspI-jCLdk8ax3pgdLSaFTLqJwf5TXfUmmpQBLtgMb4qQ1xIpFpmoDAXX2lNf8clQ1tUjR2vKYcqKVWlpOXIPWtTC4fRLlGDwkDILD7ceBiwNgT1SyQrPPZ_8tcRAr4undRinzKsBoPfxtXISKaFrS2Wy9SLHecmh-TUz7Z0uTXdvF0XYr0ObZVOiahBlY1HCvN2NWeQQ8g04afwjAF4ymOxGxdrX5_s86kNtgjH0B">
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3">
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">visibility</span>
+<span class="material-symbols-outlined text-white cursor-pointer hover:scale-110 transition-transform">download</span>
+</div>
+</div>
+<!-- Empty Placeholder for Upload -->
+<div class="aspect-square rounded-xl border-2 border-dashed border-outline-variant/50 flex flex-col items-center justify-center text-outline hover:border-primary hover:text-primary transition-all cursor-pointer">
+<span class="material-symbols-outlined text-[32px] mb-2">add_photo_alternate</span>
+<span class="text-label-sm">Add New</span>
+</div>
+</div>
+</section>
+<!-- Bottom Full Row Section: AI Insights -->
+<section class="col-span-12 surface-card p-6 border-l-4 border-primary">
+<div class="flex items-center gap-4">
+<div class="p-3 bg-primary-container text-on-primary-container rounded-full">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+<div class="flex-1">
+<h4 class="text-label-md font-bold text-primary mb-1">AI Recommendation</h4>
+<p class="text-body-md text-on-surface">Based on your latest campaign performance, users respond best to a <span class="font-semibold">Friendly</span> voice with a <span class="font-semibold">Concise</span> tone. Your current assets are performing 24% higher than industry average.</p>
+</div>
+<button class="px-6 py-2 bg-primary text-on-primary rounded-lg font-label-md shadow-sm">View Insights</button>
+</div>
+</section>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('.surface-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                // Subtle lift or feedback handled by CSS hover
+            });
+        });
+
+        // Simple Active State Logic for Navigation
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                navLinks.forEach(l => {
+                    l.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-semibold', 'scale-95');
+                    l.classList.add('text-on-surface-variant');
+                });
+                link.classList.remove('text-on-surface-variant');
+                link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-semibold', 'scale-95');
+            });
+        });
+    </script>
+
+
+
+
+</body></html>
