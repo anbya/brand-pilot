@@ -1,23 +1,30 @@
-import { Card, PrimaryButton, SecondaryButton, Shell, Stepper } from "@/components/brandpilot";
-import { onboardingSteps } from "@/lib/mock-data";
+import { ChoiceOption, OnboardingWizard, TextField } from "@/components/onboarding-wizard";
 
 export default function WorkspaceOnboardingPage() {
   return (
-    <Shell
-      eyebrow="Onboarding"
-      title="Let's create your workspace."
-      description="Langkah awal sesuai flow referensi: buat workspace sebelum memilih industri dan mengisi brand."
+    <OnboardingWizard
+      activeStep={2}
+      title="Setup your Workspace"
+      description="Let's get started by naming your collaborative environment."
+      backHref="/onboarding/account"
+      nextHref="/onboarding/industry"
     >
-      <Card className="mx-auto w-full max-w-2xl">
-        <Stepper steps={onboardingSteps} active={1} />
-        <div className="mt-8 grid gap-4">
-          <input className="w-full rounded-lg border border-slate-200 bg-white px-3 py-3 text-sm outline-none transition focus:border-violet-600 focus:ring-4 focus:ring-violet-100" placeholder="Workspace Name" />
-          <div className="flex justify-between gap-3">
-            <SecondaryButton href="/auth/login">Back</SecondaryButton>
-            <PrimaryButton href="/onboarding/industry">Continue</PrimaryButton>
+      <div className="grid gap-6">
+        <TextField
+          id="ws_name"
+          label="Workspace Name"
+          placeholder="e.g. Acme Marketing Team"
+        />
+
+        <div className="grid gap-3">
+          <p className="text-sm font-semibold text-slate-700">Organization Type</p>
+          <div className="grid grid-cols-3 gap-3">
+            <ChoiceOption icon="CO" label="Company" selected />
+            <ChoiceOption icon="AG" label="Agency" />
+            <ChoiceOption icon="SO" label="Solo" />
           </div>
         </div>
-      </Card>
-    </Shell>
+      </div>
+    </OnboardingWizard>
   );
 }

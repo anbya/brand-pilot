@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
-import { TopNav } from "@/components/brandpilot";
+import { ConditionalTopNav } from "@/components/conditional-top-nav";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "BrandPilot AI",
+  title: "AI Marketing OS | BrandPilot AI",
   description:
-    "MVP shell untuk AI Social Media Manager yang mengubah brand profile menjadi campaign 30 hari lengkap dengan caption, image, video, approval, dan download.",
+    "AI Marketing OS untuk merencanakan, membuat, dan menerbitkan campaign marketing modern dari satu workspace.",
 };
 
 export default function RootLayout({
@@ -16,7 +16,7 @@ export default function RootLayout({
   return (
     <html lang="id" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <TopNav />
+        <ConditionalTopNav />
         {children}
       </body>
     </html>

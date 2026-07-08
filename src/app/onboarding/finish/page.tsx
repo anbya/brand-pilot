@@ -1,25 +1,22 @@
-import { Card, PrimaryButton, Shell, Stepper } from "@/components/brandpilot";
-import { onboardingSteps } from "@/lib/mock-data";
+import { OnboardingWizard } from "@/components/onboarding-wizard";
 
 export default function FinishOnboardingPage() {
   return (
-    <Shell
-      eyebrow="Onboarding"
-      title="All set."
-      description="Screen konfirmasi akhir sebelum user masuk ke dashboard."
+    <OnboardingWizard
+      activeStep={5}
+      title="You're all set!"
+      description="We've processed your Brand DNA and set up your workspace. Your AI Marketing OS is ready to start generating campaigns."
+      finishHref="/dashboard"
     >
-      <Card className="mx-auto w-full max-w-xl text-center">
-        <Stepper steps={onboardingSteps} active={4} />
-        <div className="mx-auto mt-8 flex h-24 w-24 items-center justify-center rounded-full bg-emerald-50 text-3xl text-emerald-600">
-          ✓
+      <div className="flex flex-col items-center justify-center py-10 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-lg font-bold text-emerald-700">
+          OK
         </div>
-        <p className="mt-6 text-lg text-slate-500">
-          Workspace dan brand profile sudah siap digunakan.
+        <p className="mt-6 max-w-md text-base leading-7 text-slate-600">
+          Workspace, niche, and brand profile are ready. Next, open the dashboard to
+          generate your first campaign.
         </p>
-        <div className="mt-6">
-          <PrimaryButton href="/dashboard">Go to dashboard</PrimaryButton>
-        </div>
-      </Card>
-    </Shell>
+      </div>
+    </OnboardingWizard>
   );
 }
