@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="scroll-smooth" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Marketing OS | Your AI Marketing Team</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "outline": "#717786",
+                    "on-tertiary-container": "#f5fff6",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#adc6ff",
+                    "primary-container": "#0070eb",
+                    "secondary": "#4648d4",
+                    "on-secondary-container": "#fffbff",
+                    "tertiary-container": "#00855b",
+                    "surface-container": "#e5eeff",
+                    "on-background": "#0b1c30",
+                    "secondary-fixed": "#e1e0ff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#414755",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c1c6d7",
+                    "primary": "#0058bc",
+                    "secondary-container": "#6063ee",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-primary-fixed": "#001a41",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-dim": "#cbdbf5",
+                    "tertiary": "#006947",
+                    "surface-container-low": "#eff4ff",
+                    "on-primary-fixed-variant": "#004493",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d8e2ff",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-bright": "#f8f9ff",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-surface": "#213145",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "surface-variant": "#d3e4fe",
+                    "surface": "#f8f9ff",
+                    "surface-container-high": "#dce9ff",
+                    "surface-tint": "#005bc1",
+                    "on-surface": "#0b1c30",
+                    "on-primary-container": "#fefcff",
+                    "background": "#f8f9ff",
+                    "on-secondary-fixed": "#07006c",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max-width": "1440px",
+                    "stack-lg": "32px",
+                    "margin-desktop": "40px",
+                    "base": "8px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-sm": "8px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #f8f9ff; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .glass-card { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.3); }
+        .bento-grid { display: grid; grid-template-columns: repeat(12, 1fr); gap: 24px; }
+        .hero-gradient { background: radial-gradient(circle at 50% 50%, rgba(0, 88, 188, 0.05) 0%, rgba(248, 249, 255, 1) 70%); }
+    </style>
+</head>
+<body class="text-on-background">
+<!-- Top Navigation Bar -->
+<nav class="fixed top-0 left-0 w-full z-50 bg-surface/80 backdrop-blur-md">
+<div class="flex justify-between items-center w-full px-margin-desktop py-4 max-w-container-max-width mx-auto">
+<div class="text-headline-md font-headline-md font-bold text-on-surface">
+                AI Marketing OS
+            </div>
+<div class="hidden md:flex items-center gap-8">
+<a class="text-label-md font-label-md text-primary font-semibold border-b-2 border-primary" href="#">Product</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Pricing</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Resources</a>
+<a class="text-label-md font-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Login</a>
+<button class="bg-primary text-on-primary px-6 py-2.5 rounded-lg font-label-md text-label-md hover:opacity-90 transition-all shadow-sm">
+                    Get Started Free
+                </button>
+</div>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</nav>
+<main class="pt-24 overflow-x-hidden">
+<!-- Hero Section -->
+<section class="relative min-h-[90vh] flex items-center hero-gradient px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max-width mx-auto w-full grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+<!-- Hero Content -->
+<div class="space-y-8 text-center lg:text-left">
+<div class="inline-flex items-center gap-2 px-4 py-2 bg-primary-container/10 text-primary rounded-full border border-primary/20">
+<span class="material-symbols-outlined text-[18px]" style="font-variation-settings: 'FILL' 1;">spark</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">New: AI Video Campaigns</span>
+</div>
+<h1 class="text-display-lg font-display-lg text-on-background leading-tight">
+                        Your AI <br class="hidden md:block"/> Marketing Team <br/> <span class="text-primary">All In One Platform</span>
+</h1>
+<p class="text-body-lg font-body-lg text-on-surface-variant max-w-xl mx-auto lg:mx-0">
+                        Plan, create and publish content faster with AI. The complete operating system for modern marketing teams to scale growth without complexity.
+                    </p>
+<div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+<button class="w-full sm:w-auto bg-primary text-on-primary px-8 py-4 rounded-xl font-headline-sm text-headline-sm hover:scale-[0.98] transition-transform shadow-lg shadow-primary/20">
+                            Get Started Free
+                        </button>
+<button class="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 bg-surface-container-lowest border border-outline-variant rounded-xl font-headline-sm text-headline-sm hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined">play_circle</span>
+                            Watch Demo
+                        </button>
+</div>
+<div class="pt-4 flex items-center justify-center lg:justify-start gap-3">
+<div class="flex -space-x-2">
+<img class="w-10 h-10 rounded-full border-2 border-surface" data-alt="A professional headshot of a female marketing executive with a friendly smile, clean white studio lighting, 8k resolution, minimalist style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD9nrmV_qwxsse5vihKs0-qB6m1fYK9HY2tfZzPf8olGA0R0J3lhLGrae1kp_HpxomgzEdST_ZNqH5ErFSJDUdzf0L8To9tZOwEks9EbbuzajPorI0RRwgHEUyHqDaxt3T4XWBakkvRUiWbG0sIqolRBznlwpSRHleeIKNzY8RACl0S-3MF8SXs-Z-HkDvQVflzAUM9YiY_YGJ94Q9_aoGcfuTsVIkvsyELnZJYPK9D847PQxt1tlrj"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface" data-alt="A professional headshot of a creative director in his late 30s, natural daylight, soft bokeh background, high-fidelity business portrait." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDRdMvDWY65IYv_Ri4eACYsKMgjoPOUR_tQ0fORhIl0AY9k9BwtzdfePdYokPARR8oadP6fZzAhmWqENe_WlXD6d8lMlHoe5CJxqR7h0Ab9YfjeRoZsmOxv-1HZcaPJOz82dvrIIHxogBN82ZMuMP6-S7Qj7bVeA9zWSjClzIDr4A0y2p3TU_B-CE10Mwvi98GpFtl_qRdMCQIGB6Q7eoWikbmx_4tSOF6i_GekgOu1ET3o9VmL4ALc"/>
+<img class="w-10 h-10 rounded-full border-2 border-surface" data-alt="Close up of a diverse marketing professional looking at a laptop, vibrant workspace lighting, shallow depth of field." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBBIf-9T9CaNc4R5T0A_d1-rlv5UYVVagzIK12ftJXxkA7-IdmkZ68iDMs_y7axAQGW6rzT1PHZyXzkmAkGVF4396yD51A_XXyIWme9PwrcXzgSas_f7huUxCHD7MKlE52ul7fg-GcJFPYYOdFb5XPGHFz_vFnAKWNe5a2f8Wo3TO6oxGuSVYFs8FIzQaBm86iOHeehyiUYHK7oW93Pf-HTEBR-YddTjeGNcRJv9u1mSdJkCF5e-MBZ"/>
+</div>
+<p class="text-label-md font-label-md text-on-surface-variant">
+                            Trusted by <span class="text-on-background font-bold">10,000+</span> marketing teams
+                        </p>
+</div>
+</div>
+<!-- Hero Visual -->
+<div class="relative">
+<div class="relative z-10 glass-card p-4 rounded-[2rem] shadow-2xl">
+<img class="w-full h-auto rounded-[1.5rem] shadow-sm" data-alt="A high-tech UI dashboard visualization for an AI marketing platform. The image shows floating widgets for campaign performance, AI content generation previews, and a 3D visualization of data flows. Soft blue and purple accents on a clean white background, high-end professional software interface design." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBJVdpDsfj5vd2FcxTPMC2q2ua4toLMgTVRtn7hlXWaiDroPyWWUqJR88s2VxAJS5HS2N2LIs7iiEbrX2NcNfsCfJqI5-ixhXb8u-EvQkK9Bx1P_pHGOMqXIrt4pXcv0B33q4vAI5zOBnoHpZPDmuHVSk6fJcHJwjzRNkryAN9481paxdbXM2k64Twa7POSmfmYXDQ_405XvY3zspvZ6e2xs4PVf6AKcxmtIPSB7KahZ2b_DhV4BiM0"/>
+<!-- Floating Micro-UI elements -->
+<div class="absolute -top-6 -right-6 glass-card px-4 py-3 rounded-xl shadow-lg animate-bounce duration-[3000ms] hidden md:flex items-center gap-3">
+<div class="bg-tertiary-container/20 p-2 rounded-lg">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">trending_up</span>
+</div>
+<div>
+<p class="text-[10px] uppercase font-bold text-outline">ROI Increased</p>
+<p class="text-label-md font-bold text-on-surface">+124%</p>
+</div>
+</div>
+<div class="absolute -bottom-10 -left-10 glass-card p-4 rounded-2xl shadow-xl hidden md:block max-w-[200px]">
+<div class="flex items-center gap-2 mb-2">
+<span class="material-symbols-outlined text-primary text-sm">auto_awesome</span>
+<span class="text-label-sm font-bold">AI Draft Ready</span>
+</div>
+<div class="h-2 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary w-3/4"></div>
+</div>
+</div>
+</div>
+<!-- Decorative backdrops -->
+<div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 rounded-full blur-3xl -z-10"></div>
+</div>
+</div>
+</section>
+<!-- Social Proof / Logos -->
+<section class="py-16 bg-surface-container-lowest overflow-hidden">
+<div class="max-w-container-max-width mx-auto px-margin-desktop text-center">
+<p class="text-label-md font-label-md text-outline uppercase tracking-[0.2em] mb-12">Empowering brands globally</p>
+<div class="flex flex-wrap justify-center items-center gap-12 md:gap-24 opacity-60 grayscale hover:grayscale-0 transition-all duration-500">
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 1</div>
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 2</div>
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 3</div>
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 4</div>
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 5</div>
+<div class="h-8 w-24 bg-outline/20 rounded flex items-center justify-center font-bold text-on-surface">LOGO 6</div>
+</div>
+</div>
+</section>
+<!-- Features Bento Grid -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface">
+<div class="max-w-container-max-width mx-auto">
+<div class="mb-16 text-center lg:text-left">
+<h2 class="text-headline-lg font-headline-lg mb-4">Unified AI Workflow</h2>
+<p class="text-body-md font-body-md text-on-surface-variant max-w-2xl">Everything you need to run a high-performance marketing department, powered by state-of-the-art AI agents.</p>
+</div>
+<div class="bento-grid">
+<!-- Feature 1: Main -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-low p-10 rounded-[2rem] relative overflow-hidden group">
+<div class="relative z-10 lg:w-1/2">
+<span class="material-symbols-outlined text-primary text-4xl mb-6">insights</span>
+<h3 class="text-headline-md font-headline-md mb-4 text-on-surface">Strategic Brand Brain</h3>
+<p class="text-body-md font-body-md text-on-surface-variant mb-6">Train our AI on your specific brand voice, guidelines, and assets to ensure every piece of content stays perfectly on-message.</p>
+<a class="text-primary font-bold inline-flex items-center gap-2 group-hover:gap-3 transition-all" href="#">
+                                Learn more <span class="material-symbols-outlined">arrow_forward</span>
+</a>
+</div>
+<div class="absolute top-1/2 -right-20 -translate-y-1/2 w-full lg:w-1/2 hidden lg:block group-hover:scale-105 transition-transform duration-700">
+<img class="w-full" data-alt="A stylized 3D representation of a digital brain being formed by neural network connections, in shades of deep blue and crisp white. High-key lighting, minimalist tech aesthetic, clean corporate style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDDULEMB2JwloIj-syiVLPOJa546H6Dc5xGM2m2tehr1QN_yYwD7sWQfhr17xUMfNnocbCYaBnx1ViGqCd2VT3NrEpvNuofzdYAuPi8oTOm6fz67tO44JnW19wEqkzaP7YGG4v9_wNn9Y4QjP8h8Z-EdQXtEShNkgLptwn63WPNWS-GV-MfXNGRRrUd6dEG99nrvp_BX8Ix8MSKauXBMn9pSD-_6K0QUUt4tBeqBfb4DpTjlQNhT8Ie"/>
+</div>
+</div>
+<!-- Feature 2: Small -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white p-8 rounded-[2rem] border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="bg-secondary-container/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-secondary">campaign</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm mb-3">Multi-Channel Campaigns</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Generate blueprints for email, social, and search campaigns in minutes, not weeks.</p>
+</div>
+<!-- Feature 3: Small -->
+<div class="col-span-12 md:col-span-6 lg:col-span-4 bg-white p-8 rounded-[2rem] border border-outline-variant shadow-sm hover:shadow-md transition-shadow">
+<div class="bg-tertiary-container/10 w-12 h-12 rounded-xl flex items-center justify-center mb-6">
+<span class="material-symbols-outlined text-tertiary">calendar_month</span>
+</div>
+<h3 class="text-headline-sm font-headline-sm mb-3">Smart Calendar</h3>
+<p class="text-body-sm font-body-sm text-on-surface-variant">Drag-and-drop scheduling with AI-driven optimal posting time suggestions for maximum engagement.</p>
+</div>
+<!-- Feature 4: Medium -->
+<div class="col-span-12 lg:col-span-8 bg-inverse-surface p-10 rounded-[2rem] text-white relative overflow-hidden group">
+<div class="relative z-10 lg:w-3/5">
+<span class="material-symbols-outlined text-primary-fixed-dim text-4xl mb-6">auto_awesome</span>
+<h3 class="text-headline-md font-headline-md mb-4">Content Creation Engine</h3>
+<p class="text-body-md font-body-md text-outline-variant mb-8">From carousel posts to high-conversion copy, our studio generates high-fidelity assets ready for publishing.</p>
+<button class="bg-primary-container text-on-primary-container px-6 py-3 rounded-xl font-label-md text-label-md">Try the Studio</button>
+</div>
+<div class="absolute -right-10 -bottom-10 opacity-30 lg:opacity-100 group-hover:rotate-6 transition-transform duration-1000">
+<img class="w-[400px]" data-alt="Dynamic 3D composition of social media UI cards, images of coffee and lifestyle, and glowing particles. Modern, sleek, dark mode style with vibrant blue light trails." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAmGbgj_H8jYNB9Z67X4uO5piTcIlDcV5zDWD39ryg0bPT0kpUhct1pAM7crw6viWLamrwUaIyfeSdCyFlmKUHs6Wc8vXCRxqkeSbreWdO3xZTq0s5Ed1R4FBGevX6q6NoxsjdcObHq2uFZWgWojGWjXL4BLWutVr-If8Beh1jmXAgceWPqO8G5nraIy4gPaCuG0aJ9ayOjH0fUMqB-_MD8w9fOrMYSaET_9lWPQ316jNg5S97XZQgc"/>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Simple Dashboard Preview Mock -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop bg-surface-container-low overflow-hidden">
+<div class="max-w-container-max-width mx-auto flex flex-col items-center">
+<div class="text-center max-w-3xl mb-16">
+<h2 class="text-headline-lg font-headline-lg mb-6">From Idea to Campaign in 3 Clicks</h2>
+<p class="text-body-lg font-body-lg text-on-surface-variant">Our intuitive workspace replaces 10+ disconnected tools with one unified intelligence.</p>
+</div>
+<div class="w-full relative">
+<!-- Dashboard Mock Frame -->
+<div class="rounded-[2rem] border-[12px] border-on-background shadow-2xl bg-surface-container-lowest h-[600px] overflow-hidden relative">
+<div class="flex h-full">
+<!-- Sidebar Mock -->
+<div class="w-64 border-r border-outline-variant p-6 hidden md:block">
+<div class="text-primary font-bold mb-10">AI Marketing OS</div>
+<div class="space-y-4">
+<div class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-semibold">
+<span class="material-symbols-outlined">dashboard</span>Dashboard
+                                    </div>
+<div class="flex items-center gap-3 text-on-surface-variant px-4 py-3">
+<span class="material-symbols-outlined">workspaces</span>Brands
+                                    </div>
+<div class="flex items-center gap-3 text-on-surface-variant px-4 py-3">
+<span class="material-symbols-outlined">campaign</span>Campaigns
+                                    </div>
+<div class="flex items-center gap-3 text-on-surface-variant px-4 py-3">
+<span class="material-symbols-outlined">analytics</span>Analytics
+                                    </div>
+</div>
+</div>
+<!-- Main Content Mock -->
+<div class="flex-1 p-8">
+<div class="flex justify-between items-center mb-8">
+<h4 class="text-headline-md font-headline-md">Welcome back, Sarah!</h4>
+<button class="bg-primary text-white px-4 py-2 rounded-lg text-sm">+ New Campaign</button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="bg-white p-6 rounded-2xl border border-outline-variant h-40 flex flex-col justify-between">
+<p class="text-label-sm text-outline">TOTAL REACH</p>
+<p class="text-headline-lg font-headline-lg">124.5K</p>
+<div class="text-tertiary text-xs font-bold">↑ 12% vs last month</div>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant h-40 flex flex-col justify-between">
+<p class="text-label-sm text-outline">ENGAGEMENT</p>
+<p class="text-headline-lg font-headline-lg">8.7K</p>
+<div class="text-tertiary text-xs font-bold">↑ 5% vs last month</div>
+</div>
+<div class="bg-white p-6 rounded-2xl border border-outline-variant h-40 flex flex-col justify-between">
+<p class="text-label-sm text-outline">CONVERSIONS</p>
+<p class="text-headline-lg font-headline-lg">2.3K</p>
+<div class="text-tertiary text-xs font-bold">↑ 15% vs last month</div>
+</div>
+</div>
+<div class="mt-8 bg-white p-6 rounded-2xl border border-outline-variant">
+<p class="text-label-md font-bold mb-4">Recent AI Generations</p>
+<div class="space-y-4">
+<div class="flex items-center gap-4 p-3 hover:bg-surface-container-low rounded-xl transition-colors">
+<div class="w-12 h-12 bg-secondary/10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-secondary">image</span>
+</div>
+<div class="flex-1">
+<p class="text-body-sm font-bold">Summer Promotion Ad Set</p>
+<p class="text-[10px] text-outline">Generated 2h ago • 4 assets</p>
+</div>
+<div class="bg-tertiary-container/10 text-tertiary px-3 py-1 rounded-full text-[10px] font-bold">READY</div>
+</div>
+<div class="flex items-center gap-4 p-3 hover:bg-surface-container-low rounded-xl transition-colors">
+<div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">edit_note</span>
+</div>
+<div class="flex-1">
+<p class="text-body-sm font-bold">Coffee XYZ Brand Script</p>
+<p class="text-[10px] text-outline">Generated 5h ago • 1 file</p>
+</div>
+<div class="bg-tertiary-container/10 text-tertiary px-3 py-1 rounded-full text-[10px] font-bold">READY</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- CTA Section -->
+<section class="py-24 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max-width mx-auto bg-primary rounded-[3rem] p-12 md:p-24 text-center relative overflow-hidden">
+<div class="relative z-10">
+<h2 class="text-display-lg font-display-lg text-white mb-8">Ready to automate your <br class="hidden md:block"/> marketing success?</h2>
+<p class="text-body-lg font-body-lg text-primary-fixed-dim max-w-xl mx-auto mb-12">Join thousands of high-growth brands using AI Marketing OS to stay ahead of the competition.</p>
+<div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+<button class="w-full sm:w-auto bg-white text-primary px-10 py-5 rounded-2xl font-headline-sm text-headline-sm hover:bg-surface-container-lowest transition-colors shadow-xl">
+                            Start Free Trial
+                        </button>
+<button class="w-full sm:w-auto border border-primary-fixed-dim text-white px-10 py-5 rounded-2xl font-headline-sm text-headline-sm hover:bg-white/10 transition-colors">
+                            Book a Demo
+                        </button>
+</div>
+</div>
+<!-- Abstract blobs -->
+<div class="absolute top-0 right-0 w-[500px] h-[500px] bg-secondary-container rounded-full blur-[120px] opacity-20 -translate-y-1/2 translate-x-1/4"></div>
+<div class="absolute bottom-0 left-0 w-[400px] h-[400px] bg-tertiary-container rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/4"></div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant py-16 px-margin-mobile md:px-margin-desktop">
+<div class="max-w-container-max-width mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+<div>
+<div class="text-headline-sm font-headline-sm font-bold text-on-surface mb-6">AI Marketing OS</div>
+<p class="text-body-sm font-body-sm text-on-surface-variant mb-6">The operating system for modern marketing teams.</p>
+<div class="flex gap-4">
+<a class="text-outline hover:text-primary" href="#"><span class="material-symbols-outlined">public</span></a>
+<a class="text-outline hover:text-primary" href="#"><span class="material-symbols-outlined">share</span></a>
+<a class="text-outline hover:text-primary" href="#"><span class="material-symbols-outlined">groups</span></a>
+</div>
+</div>
+<div>
+<h5 class="text-label-md font-label-md text-on-surface font-bold mb-6">Product</h5>
+<ul class="space-y-4 text-body-sm text-on-surface-variant">
+<li><a class="hover:text-primary" href="#">Features</a></li>
+<li><a class="hover:text-primary" href="#">Integrations</a></li>
+<li><a class="hover:text-primary" href="#">Pricing</a></li>
+<li><a class="hover:text-primary" href="#">Roadmap</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-label-md font-label-md text-on-surface font-bold mb-6">Company</h5>
+<ul class="space-y-4 text-body-sm text-on-surface-variant">
+<li><a class="hover:text-primary" href="#">About Us</a></li>
+<li><a class="hover:text-primary" href="#">Careers</a></li>
+<li><a class="hover:text-primary" href="#">Press</a></li>
+<li><a class="hover:text-primary" href="#">Contact</a></li>
+</ul>
+</div>
+<div>
+<h5 class="text-label-md font-label-md text-on-surface font-bold mb-6">Newsletter</h5>
+<p class="text-body-sm text-on-surface-variant mb-4">Get the latest AI marketing tips delivered to your inbox.</p>
+<form class="flex gap-2">
+<input class="flex-1 bg-surface-container px-4 py-2 rounded-lg border-none focus:ring-2 focus:ring-primary text-sm" placeholder="Email" type="email"/>
+<button class="bg-primary text-white p-2 rounded-lg"><span class="material-symbols-outlined">send</span></button>
+</form>
+</div>
+</div>
+<div class="max-w-container-max-width mx-auto pt-16 mt-16 border-t border-outline-variant flex flex-col md:flex-row justify-between items-center gap-4 text-label-sm text-outline">
+<p>© 2024 AI Marketing OS. All rights reserved.</p>
+<div class="flex gap-8">
+<a class="hover:text-primary" href="#">Privacy Policy</a>
+<a class="hover:text-primary" href="#">Terms of Service</a>
+<a class="hover:text-primary" href="#">Cookie Settings</a>
+</div>
+</div>
+</footer>
+<script>
+        // Micro-interaction for hover effects or scrolling could go here
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mouseenter', () => {
+                // Subtle interaction
+            });
+        });
+    </script>
+</body></html>
