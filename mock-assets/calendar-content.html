@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Marketing OS - Content Calendar</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8f9ff;
+        }
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            min-height: 800px;
+        }
+        .calendar-cell {
+            border-right: 1px solid #e2e8f0;
+            border-bottom: 1px solid #e2e8f0;
+            transition: background-color 0.2s ease;
+        }
+        .calendar-cell:hover {
+            background-color: #f1f5f9;
+        }
+        .calendar-cell:nth-child(7n) {
+            border-right: none;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(226, 232, 240, 0.5);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-error-container": "#93000a",
+                    "outline": "#717786",
+                    "on-tertiary-container": "#f5fff6",
+                    "error-container": "#ffdad6",
+                    "inverse-primary": "#adc6ff",
+                    "primary-container": "#0070eb",
+                    "secondary": "#4648d4",
+                    "on-secondary-container": "#fffbff",
+                    "tertiary-container": "#00855b",
+                    "surface-container": "#e5eeff",
+                    "on-background": "#0b1c30",
+                    "secondary-fixed": "#e1e0ff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#414755",
+                    "inverse-on-surface": "#eaf1ff",
+                    "outline-variant": "#c1c6d7",
+                    "primary": "#0058bc",
+                    "secondary-container": "#6063ee",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-primary-fixed": "#001a41",
+                    "surface-container-highest": "#d3e4fe",
+                    "surface-dim": "#cbdbf5",
+                    "tertiary": "#006947",
+                    "surface-container-low": "#eff4ff",
+                    "on-primary-fixed-variant": "#004493",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d8e2ff",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-bright": "#f8f9ff",
+                    "on-tertiary": "#ffffff",
+                    "on-error": "#ffffff",
+                    "on-tertiary-fixed": "#002113",
+                    "inverse-surface": "#213145",
+                    "on-primary": "#ffffff",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "surface-variant": "#d3e4fe",
+                    "surface": "#f8f9ff",
+                    "surface-container-high": "#dce9ff",
+                    "surface-tint": "#005bc1",
+                    "on-surface": "#0b1c30",
+                    "on-primary-container": "#fefcff",
+                    "background": "#f8f9ff",
+                    "on-secondary-fixed": "#07006c",
+                    "tertiary-fixed": "#6ffbbe",
+                    "surface-container-lowest": "#ffffff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max-width": "1440px",
+                    "stack-lg": "32px",
+                    "margin-desktop": "40px",
+                    "base": "8px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-sm": "8px",
+                    "margin-mobile": "16px"
+            },
+            "fontFamily": {
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}]
+            }
+          },
+        },
+      }
+    </script>
+</head>
+<body class="bg-surface text-on-surface">
+<!-- Sidebar Navigation Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-4 z-40 bg-surface-container-lowest dark:bg-surface-dim border-r border-outline-variant w-64 shadow-sm">
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 bg-primary rounded-lg flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">coffee</span>
+</div>
+<div>
+<h1 class="text-headline-sm font-headline-sm font-bold text-primary">Coffee XYZ</h1>
+<p class="text-[10px] text-on-surface-variant font-semibold uppercase tracking-widest">Marketing Workspace</p>
+</div>
+</div>
+<nav class="space-y-1 flex-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">workspaces</span>
+<span class="text-label-md font-label-md">Brands</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">campaign</span>
+<span class="text-label-md font-label-md">Campaigns</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-semibold transition-transform duration-150 scale-95" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">calendar_month</span>
+<span class="text-label-md font-label-md">Content Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-label-md font-label-md">Assets</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-label-md font-label-md">Analytics</span>
+</a>
+</nav>
+<div class="mt-auto pt-4 border-t border-outline-variant">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 mb-2" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<div class="flex items-center gap-3 px-4 py-3">
+<div class="w-8 h-8 rounded-full overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional headshot of a female marketing executive with a friendly expression, wearing business casual attire, against a soft blurred office background with neutral blue and gray tones." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDMpktKIJuYgh6IRZvf-Zz8H7HE0wku8BWoN8jG2o_8Tyo1Kusyu9Hn1m4PASY-pL0v5-QhXJn13S0rKfq7bbak96jMt9EijIZAQ6IY7UsHN8scl_7B7JGDR6-J97eJEa11FNN5XCxnR7Lnm3CEyYeHhruCPuVBj_zp8tA0ujUAKa627YAVCtRj40Kj2IgHMjEiZaDGhyWMGvJWJCkHvJzmNPwDAf0D0g2x2ZSCg6rhq2crOVjCcwpy"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-bold truncate">Sarah Miller</p>
+<p class="text-[10px] text-on-surface-variant truncate">Admin</p>
+</div>
+<span class="material-symbols-outlined text-outline text-sm">unfold_more</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="ml-64 min-h-screen">
+<!-- Top App Bar -->
+<header class="h-16 px-margin-desktop flex items-center justify-between bg-surface/80 backdrop-blur-md sticky top-0 z-30">
+<div class="flex items-center gap-4">
+<h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">Content Calendar</h2>
+<div class="flex items-center bg-surface-container p-1 rounded-lg">
+<button class="px-4 py-1.5 text-label-md font-semibold bg-surface-container-lowest text-primary rounded-md shadow-sm">Month</button>
+<button class="px-4 py-1.5 text-label-md font-semibold text-on-surface-variant hover:text-primary transition-colors">Week</button>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex -space-x-2 mr-2">
+<div class="w-8 h-8 rounded-full border-2 border-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A professional male team member with glasses and a warm smile, wearing a dark navy polo shirt, set against a clean white and minimalist studio background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDAmIHHW9OsNVtDymmwxZgfn9wZZBGLyOLQwdiEey0TzxOpw86mgovDdfKHlsv9qC6m8FLVk_6bdpvrjh-aDq4ANOoTOv0lNSu6fRTxCQzmlYJLKCnM7Uy4xX6eQxVWzpDmHIyNjqABIvM9gM0trfHLUcv_OTumL1LIhL3ZcVbkmh5e8QO58GXX0HjlzRMGs4-_RFJl2Vcv31o107FDTkI3RwxIEOFfBEcyJVNvmBHD7MLfAqSNx188"/>
+</div>
+<div class="w-8 h-8 rounded-full border-2 border-surface overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="A creative female team member with colorful hair and a modern aesthetic, in a bright creative studio environment with soft natural lighting and light wood textures." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAseD8mkp2tp-psAxPjBx6XB7r1qEZXuqPZCIWPwqBKYXRmiSM1bN2fxn5cr9nleDuk3VmLIknDB94hGgL-vHn1FgLKT9UAcnaY6SUd643CodVHD5_rXqrAxjtCpDN5zdNWfHTd8YGWYxXkxzFIfETf1GDEarMANgOxU4e9gJg4mFBqRDeeRHxHxcVdIyzHUUZcvowgm_O2H9TbSnmbb3xK6Lb6Geqlh-VwLnOANr3DLp3qI4D3t299"/>
+</div>
+<div class="flex items-center justify-center w-8 h-8 rounded-full border-2 border-surface bg-primary-container text-on-primary-container text-[10px] font-bold">
+                        +3
+                    </div>
+</div>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-on-primary rounded-lg font-semibold hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined text-sm">add</span>
+<span class="text-label-md">Schedule Post</span>
+</button>
+</div>
+</header>
+<!-- Calendar Dashboard Content -->
+<div class="p-8 max-w-container-max-width mx-auto">
+<!-- Calendar Navigation Header -->
+<div class="flex items-center justify-between mb-8">
+<div class="flex items-center gap-4">
+<h3 class="text-headline-md font-headline-md font-bold">July 2024</h3>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded-full hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined text-on-surface-variant">chevron_right</span>
+</button>
+</div>
+<button class="text-label-md font-semibold text-primary hover:underline">Today</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest">
+<span class="w-2 h-2 rounded-full bg-secondary"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Education</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Reel</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Story</span>
+</div>
+<div class="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-outline-variant bg-surface-container-lowest">
+<span class="w-2 h-2 rounded-full bg-on-error-container"></span>
+<span class="text-label-sm font-label-sm text-on-surface-variant">Promo</span>
+</div>
+</div>
+</div>
+<!-- Calendar Grid Card -->
+<div class="bg-surface-container-lowest rounded-xl shadow-sm border border-outline-variant overflow-hidden">
+<!-- Day Names -->
+<div class="grid grid-cols-7 border-b border-outline-variant bg-surface-container-low/50">
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Sun</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Mon</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Tue</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Wed</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Thu</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Fri</div>
+<div class="py-3 text-center text-label-md font-bold text-on-surface-variant">Sat</div>
+</div>
+<!-- Calendar Days -->
+<div class="calendar-grid">
+<!-- Week 1 (Empty start) -->
+<div class="calendar-cell p-4 text-on-surface-variant opacity-30 bg-surface-container-low/20">30</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">1</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">2</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">3</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">
+<span>4</span>
+<div class="mt-2 space-y-2">
+<div class="bg-secondary-fixed text-on-secondary-fixed-variant p-2 rounded-lg text-[11px] font-bold border-l-4 border-secondary flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">school</span>
+<span>Kopi 101 Education</span>
+</div>
+</div>
+</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">5</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">6</div>
+<!-- Week 2 -->
+<div class="calendar-cell p-4 text-on-surface font-bold">7</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">
+<span>8</span>
+<div class="mt-2 space-y-2">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant p-2 rounded-lg text-[11px] font-bold border-l-4 border-tertiary flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">movie</span>
+<span>Monday Brew Reel</span>
+</div>
+</div>
+</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">9</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">
+<span class="w-7 h-7 flex items-center justify-center bg-primary text-on-primary rounded-full">10</span>
+<div class="mt-2 space-y-2">
+<div class="bg-primary-fixed text-on-primary-fixed-variant p-2 rounded-lg text-[11px] font-bold border-l-4 border-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">history_toggle_off</span>
+<span>Quick Tips Story</span>
+</div>
+<div class="bg-secondary-fixed text-on-secondary-fixed-variant p-2 rounded-lg text-[11px] font-bold border-l-4 border-secondary flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">school</span>
+<span>Latte Art Guide</span>
+</div>
+</div>
+</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">11</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">12</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">13</div>
+<!-- Week 3 -->
+<div class="calendar-cell p-4 text-on-surface font-bold">14</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">15</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">
+<span>16</span>
+<div class="mt-2 space-y-2">
+<div class="bg-error-container text-on-error-container p-2 rounded-lg text-[11px] font-bold border-l-4 border-error flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">sell</span>
+<span>Mid-Month Promo</span>
+</div>
+</div>
+</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">17</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">18</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">19</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">20</div>
+<!-- Week 4 -->
+<div class="calendar-cell p-4 text-on-surface font-bold">21</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">22</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">23</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">24</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">
+<span>25</span>
+<div class="mt-2 space-y-2">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant p-2 rounded-lg text-[11px] font-bold border-l-4 border-tertiary flex items-center gap-2">
+<span class="material-symbols-outlined text-[14px]">movie</span>
+<span>Weekend Vibe Reel</span>
+</div>
+</div>
+</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">26</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">27</div>
+<!-- Week 5 -->
+<div class="calendar-cell p-4 text-on-surface font-bold">28</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">29</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">30</div>
+<div class="calendar-cell p-4 text-on-surface font-bold">31</div>
+<div class="calendar-cell p-4 text-on-surface-variant opacity-30 bg-surface-container-low/20">1</div>
+<div class="calendar-cell p-4 text-on-surface-variant opacity-30 bg-surface-container-low/20">2</div>
+<div class="calendar-cell p-4 text-on-surface-variant opacity-30 bg-surface-container-low/20">3</div>
+</div>
+</div>
+</div>
+<!-- Floating Quick Action (Magic AI) -->
+<div class="fixed bottom-8 right-8 flex flex-col items-end gap-4 z-50">
+<button class="flex items-center gap-3 px-6 py-4 bg-secondary text-on-secondary rounded-full shadow-lg hover:scale-105 transition-transform group">
+<span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+<span class="text-label-md font-bold">AI Auto-Plan Week</span>
+</button>
+</div>
+</main>
+<!-- Contextual Details Pane (Slide-in Mockup Hidden initially) -->
+<div class="fixed top-0 right-0 h-full w-[400px] bg-surface-container-lowest shadow-2xl border-l border-outline-variant translate-x-full transition-transform duration-300 z-50 p-6 overflow-y-auto hidden" id="details-pane">
+<div class="flex items-center justify-between mb-8">
+<h4 class="text-headline-sm font-bold">Event Details</h4>
+<button class="p-2 hover:bg-surface-container rounded-full" onclick="togglePane()">
+<span class="material-symbols-outlined">close</span>
+</button>
+</div>
+<div class="space-y-6">
+<div class="p-4 bg-secondary-fixed/50 rounded-xl">
+<p class="text-label-sm font-bold text-secondary uppercase mb-1">Education Content</p>
+<h5 class="text-headline-sm font-bold text-on-surface">Kopi 101: The Roast Levels</h5>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<p class="text-label-sm font-bold text-on-surface-variant">Date</p>
+<p class="text-body-md font-semibold">July 4, 2024</p>
+</div>
+<div class="space-y-1">
+<p class="text-label-sm font-bold text-on-surface-variant">Time</p>
+<p class="text-body-md font-semibold">10:00 AM</p>
+</div>
+</div>
+<div class="space-y-2">
+<p class="text-label-sm font-bold text-on-surface-variant">Description</p>
+<p class="text-body-sm text-on-surface-variant leading-relaxed">
+                    A carousel post explaining the differences between light, medium, and dark roasts. Aimed at coffee enthusiasts looking to deepen their knowledge.
+                </p>
+</div>
+<div class="space-y-2">
+<p class="text-label-sm font-bold text-on-surface-variant">Attachments</p>
+<div class="grid grid-cols-3 gap-2">
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container relative group">
+<img class="w-full h-full object-cover" data-alt="A macro photograph of roasted coffee beans with varied levels of char, highlighting oily textures and deep brown colors in a high-fidelity minimalist marketing style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD6cJH6zaKt04xqIfRdCZ3sgA5hqk9kQJfVkgW_I4iMV1AnQvZfZvGAqWSUA0a-S5eNjn6nMLnmmkswiqAwurExQXBr24kpjPgOYwHgdTac7Lh3hmO6lPYSZmpVT_U67y833F2BLe-CO4XOh1Wui0fZcFvb6W96uCskOKQ-CxBniI7weM-RnpxoHqB9bx0h9Vix2WnIOfbGJwcrnUSi-93-UH_PvimvPzNv7gFOqN3aqSh6a9AOPdoy"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div class="aspect-square rounded-lg overflow-hidden bg-surface-container relative group">
+<img class="w-full h-full object-cover" data-alt="A clean infographic showing a color gradient of coffee roasts from light amber to oily black, using professional graphic design elements and soft shadows." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCBGS6vO4_la6nrYeO1xAErfiT4r834kfNmaaQ7AafRo9WhTA9UzAsvy6EJj5IoclLqgS3pliD0TlvYkCYJQ1oWpTGd1G78xc6dI7XjUxFZg8oXxa_INHw8KblAGp-42JJwr2wf-O6T6Qg2O3w7l1VX7tYveGHtLSJfl29TBAU2k5LdHTFF7puA0zRJTA_S7T4seg4k44eK60E-74AX2jTuplPHb35ZdGeo-tGAqex435vqGKX1Cva7"/>
+<div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity cursor-pointer">
+<span class="material-symbols-outlined text-white">visibility</span>
+</div>
+</div>
+<div class="flex items-center justify-center border-2 border-dashed border-outline-variant rounded-lg hover:bg-surface-container cursor-pointer transition-colors">
+<span class="material-symbols-outlined text-outline">add</span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-outline-variant space-y-3">
+<button class="w-full py-3 bg-primary text-on-primary rounded-lg font-bold hover:opacity-90 transition-opacity">Edit Post</button>
+<button class="w-full py-3 border border-outline text-on-surface-variant rounded-lg font-bold hover:bg-surface-container transition-colors">Reschedule</button>
+<button class="w-full py-3 text-error font-bold hover:bg-error-container/10 transition-colors rounded-lg">Delete Post</button>
+</div>
+</div>
+</div>
+<script>
+        function togglePane() {
+            const pane = document.getElementById('details-pane');
+            pane.classList.toggle('hidden');
+            setTimeout(() => {
+                pane.classList.toggle('translate-x-full');
+            }, 10);
+        }
+
+        // Add click listener to specific calendar items for demo
+        document.querySelectorAll('.calendar-cell > div > div').forEach(item => {
+            item.classList.add('cursor-pointer', 'hover:brightness-95', 'transition-all');
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePane();
+            });
+        });
+    </script>
+</body></html>
