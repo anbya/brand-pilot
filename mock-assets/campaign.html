@@ -1,0 +1,490 @@
+<!DOCTYPE html><html class="light" lang="en" style=""><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Brand Brain | AI Marketing OS</title>
+<!-- Google Fonts: Plus Jakarta Sans -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "primary": "#0058bc",
+                    "error": "#ba1a1a",
+                    "on-surface-variant": "#414755",
+                    "tertiary-container": "#00855b",
+                    "surface-container-lowest": "#ffffff",
+                    "on-error": "#ffffff",
+                    "primary-fixed-dim": "#adc6ff",
+                    "surface-container-low": "#eff4ff",
+                    "secondary-fixed-dim": "#c0c1ff",
+                    "surface": "#f8f9ff",
+                    "on-tertiary-container": "#f5fff6",
+                    "on-secondary-container": "#fffbff",
+                    "on-error-container": "#93000a",
+                    "surface-container-high": "#dce9ff",
+                    "outline": "#717786",
+                    "primary-fixed": "#d8e2ff",
+                    "on-primary-container": "#fefcff",
+                    "tertiary-fixed": "#6ffbbe",
+                    "on-tertiary-fixed": "#002113",
+                    "on-tertiary": "#ffffff",
+                    "on-surface": "#0b1c30",
+                    "on-primary-fixed-variant": "#004493",
+                    "background": "#f8f9ff",
+                    "surface-dim": "#cbdbf5",
+                    "surface-container-highest": "#d3e4fe",
+                    "on-secondary": "#ffffff",
+                    "on-tertiary-fixed-variant": "#005236",
+                    "on-secondary-fixed": "#07006c",
+                    "tertiary-fixed-dim": "#4edea3",
+                    "surface-container": "#e5eeff",
+                    "on-primary": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-primary-fixed": "#001a41",
+                    "inverse-primary": "#adc6ff",
+                    "tertiary": "#006947",
+                    "secondary-container": "#6063ee",
+                    "surface-bright": "#f8f9ff",
+                    "surface-tint": "#005bc1",
+                    "surface-variant": "#d3e4fe",
+                    "outline-variant": "#c1c6d7",
+                    "on-background": "#0b1c30",
+                    "inverse-surface": "#213145",
+                    "primary-container": "#0070eb",
+                    "inverse-on-surface": "#eaf1ff",
+                    "on-secondary-fixed-variant": "#2f2ebe",
+                    "secondary": "#4648d4",
+                    "secondary-fixed": "#e1e0ff"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "container-max-width": "1440px",
+                    "margin-mobile": "16px",
+                    "margin-desktop": "40px",
+                    "stack-sm": "8px",
+                    "base": "8px",
+                    "stack-md": "16px",
+                    "gutter": "24px",
+                    "stack-lg": "32px"
+            },
+            "fontFamily": {
+                    "headline-sm": ["Plus Jakarta Sans"],
+                    "headline-md": ["Plus Jakarta Sans"],
+                    "label-sm": ["Plus Jakarta Sans"],
+                    "body-sm": ["Plus Jakarta Sans"],
+                    "label-md": ["Plus Jakarta Sans"],
+                    "headline-lg-mobile": ["Plus Jakarta Sans"],
+                    "headline-lg": ["Plus Jakarta Sans"],
+                    "body-lg": ["Plus Jakarta Sans"],
+                    "display-lg": ["Plus Jakarta Sans"],
+                    "body-md": ["Plus Jakarta Sans"]
+            },
+            "fontSize": {
+                    "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "600"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}],
+                    "body-sm": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                    "label-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "600"}],
+                    "headline-lg-mobile": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                    "headline-lg": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "700"}],
+                    "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                    "display-lg": ["48px", {"lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                    "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .brand-brain-canvas {
+            min-height: 100vh;
+            background-color: #f8f9ff;
+        }
+        .surface-card {
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.05);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .surface-card:hover {
+            box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.08);
+        }
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full flex flex-col p-4 z-40 bg-surface-container-lowest border-r border-outline-variant w-64">
+<!-- Brand Header -->
+<div class="flex items-center gap-3 mb-8 px-2">
+<div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary" style="font-variation-settings: 'FILL' 1;">cloud_done</span>
+</div>
+<div>
+<h2 class="text-headline-sm font-headline-sm font-bold text-primary">AI Marketing OS</h2>
+<p class="text-[10px] font-label-md text-outline uppercase tracking-wider">Enterprise Suite</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-1">
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-label-md font-label-md">Dashboard</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">workspaces</span>
+<span class="text-label-md font-label-md">Brands</span>
+</a>
+<a class="flex items-center gap-3 bg-primary-container text-on-primary-container rounded-lg px-4 py-3 font-semibold scale-95 transition-transform duration-150" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">campaign</span>
+<span class="text-label-md font-label-md">Campaigns</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="text-label-md font-label-md">Content Calendar</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">folder_open</span>
+<span class="text-label-md font-label-md">Assets</span>
+</a>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">insights</span>
+<span class="text-label-md font-label-md">Analytics</span>
+</a>
+</nav>
+<!-- CTA & Bottom Actions -->
+<div class="mt-auto space-y-4 pt-4 border-t border-outline-variant">
+<button class="w-full flex items-center justify-center gap-2 bg-secondary text-on-secondary rounded-lg px-4 py-3 font-semibold hover:opacity-90 transition-opacity">
+<span class="material-symbols-outlined">add_circle</span>
+<span class="text-label-md font-label-md">New Campaign</span>
+</button>
+<a class="flex items-center gap-3 text-on-surface-variant hover:bg-surface-container rounded-lg px-4 py-3 transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-label-md font-label-md">Settings</span>
+</a>
+<div class="flex items-center gap-3 p-2 bg-surface-container-low rounded-xl">
+<img class="w-10 h-10 rounded-full border-2 border-white" data-alt="A professional headshot of a smiling female marketing director with warm, natural lighting in a modern office environment. She has a friendly and confident expression, wearing a neutral-toned blazer. The photo uses a soft depth-of-field effect, with a clean and organized workspace blurred in the background, matching a high-end corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuD5LtcSEZ7F5QffQjEpFdB4p3jqD2GVDvGjOPezI4zUOYKPK6IqzRZwAMUi9xvpAiVsZ81RRy_bbmzqkzqLaGPEZoGs-LQTRXzJlojqaC6BLHrNa-iu_stwKurd_kr30Pu52GcQJ48h7mj5pEF91bwZFXHnaEZS4JFXdalOTDUX9H_X-AzbxIMa9VQG87tdkaA4g32dcXsT3FBGWsgzbIC_mqPyFjj410cbXW19irJXn_0-Q9h_HKro"/>
+<div class="flex-1 min-w-0">
+<p class="text-label-md font-label-md truncate">Sarah Jenkins</p>
+<p class="text-label-sm font-label-sm text-outline truncate">Admin</p>
+</div>
+<span class="material-symbols-outlined text-outline">unfold_more</span>
+</div>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="ml-64 min-h-screen relative">
+<div class="max-w-container-max-width mx-auto p-margin-desktop">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-gutter mb-stack-lg">
+<div class="animate-in fade-in slide-in-from-left-4 duration-700">
+<nav class="flex items-center gap-2 text-outline mb-2">
+<span class="font-label-sm text-label-sm">Campaigns</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm text-on-surface font-semibold">July Awareness</span>
+</nav>
+<h1 class="font-display-lg text-display-lg text-on-surface">Campaign Blueprint</h1>
+<p class="font-body-md text-body-md text-on-surface-variant mt-2 max-w-2xl">
+                        AI has generated your 30-day awareness strategy. Review the asset sequence and hit "Generate All" to begin the rendering process.
+                    </p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-6 py-3 border border-outline-variant text-on-surface font-label-md text-label-md rounded-xl hover:bg-surface-container transition-all flex items-center gap-2">
+<span class="material-symbols-outlined">edit</span>
+                        Edit Strategy
+                    </button>
+<button class="px-8 py-3 bg-primary text-white font-label-md text-label-md rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-2">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+                        Generate All Assets
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Dashboard -->
+<div class="grid grid-cols-12 gap-gutter">
+<!-- Strategy Overview Card -->
+<div class="col-span-12 lg:col-span-4 bento-card p-6 border border-outline-variant/30 flex flex-col">
+<div class="flex items-center justify-between mb-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Strategy Specs</h3>
+<span class="px-3 py-1 bg-tertiary-container/10 text-tertiary-container rounded-full text-[10px] font-bold uppercase tracking-widest">Optimized</span>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-2">Primary Objective</p>
+<p class="font-body-md text-body-md font-semibold text-on-surface">Brand Awareness &amp; Engagement</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-2">Target Platforms</p>
+<div class="flex gap-2">
+<span class="p-2 bg-surface-container-low rounded-lg text-primary"><span class="material-symbols-outlined">photo_library</span></span>
+<span class="p-2 bg-surface-container-low rounded-lg text-primary"><span class="material-symbols-outlined">video_library</span></span>
+<span class="p-2 bg-surface-container-low rounded-lg text-primary"><span class="material-symbols-outlined">layers</span></span>
+</div>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-outline uppercase mb-2">Tone of Voice</p>
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-md text-label-sm font-medium">Visionary</span>
+<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-md text-label-sm font-medium">Reliable</span>
+<span class="px-3 py-1 bg-surface-container text-on-surface-variant rounded-md text-label-sm font-medium">Professional</span>
+</div>
+</div>
+<div class="p-4 bg-secondary-container/5 rounded-xl border border-secondary-container/10">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary pt-1">lightbulb</span>
+<div>
+<p class="font-label-md text-label-md font-bold text-secondary">AI Insight</p>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">Based on current trends, Carousel formats are performing 42% better for B2B engagement this month.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Blueprint Timeline/Table -->
+<div class="col-span-12 lg:col-span-8 bento-card border border-outline-variant/30 flex flex-col overflow-hidden">
+<div class="p-6 border-b border-outline-variant/20 flex items-center justify-between bg-surface-container-lowest">
+<div class="flex items-center gap-6">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Content Asset Map</h3>
+<div class="flex gap-1">
+<button class="px-4 py-1.5 bg-primary-container text-on-primary-container font-label-sm text-label-sm rounded-lg">List View</button>
+<button class="px-4 py-1.5 text-on-surface-variant font-label-sm text-label-sm hover:bg-surface-container rounded-lg">Calendar View</button>
+</div>
+</div>
+<div class="flex items-center gap-2 text-outline">
+<span class="font-label-sm text-label-sm">Filter:</span>
+<select class="bg-transparent border-none focus:ring-0 text-on-surface font-label-md text-label-md cursor-pointer">
+<option>All Stages</option>
+<option>Blueprints</option>
+<option>Generating</option>
+<option>Ready</option>
+</select>
+</div>
+</div>
+<div class="overflow-x-auto custom-scrollbar">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low/50 animate-in fade-in slide-in-from-bottom-2 duration-500">
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline uppercase">Schedule</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline uppercase">Asset Type</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline uppercase">Core Topic</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline uppercase">Status</th>
+<th class="px-6 py-4 font-label-sm text-label-sm text-outline uppercase text-right">Action</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-outline-variant/10">
+<!-- Row 1 -->
+<tr class="hover:bg-surface-container-low transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-500">
+<td class="px-6 py-5">
+<p class="font-label-md text-label-md font-bold text-on-surface">Day 1</p>
+<p class="text-[10px] text-outline">Mon, July 1</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">view_carousel</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Education Carousel</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="font-body-sm text-body-sm text-on-surface">5 Mistakes in Digital Marketing</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-[11px] font-bold">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                            BLUEPRINT
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary font-label-sm text-label-sm hover:underline opacity-0 group-hover:opacity-100 transition-opacity">View Details</button>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-surface-container-low transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-500">
+<td class="px-6 py-5">
+<p class="font-label-md text-label-md font-bold text-on-surface">Day 3</p>
+<p class="text-[10px] text-outline">Wed, July 3</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">movie</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Awareness Reel</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="font-body-sm text-body-sm text-on-surface">A Day in the Life with AI OS</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-primary-container/10 text-primary rounded-full text-[11px] font-bold animate-pulse">
+<span class="w-2 h-2 rounded-full bg-primary"></span>
+                                            GENERATING
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary font-label-sm text-label-sm hover:underline">Track</button>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="hover:bg-surface-container-low transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-500">
+<td class="px-6 py-5">
+<p class="font-label-md text-label-md font-bold text-on-surface">Day 5</p>
+<p class="text-[10px] text-outline">Fri, July 5</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">article</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Insight Post</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="font-body-sm text-body-sm text-on-surface">Why Speed Matters in 2024</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-tertiary-container/10 text-tertiary-container rounded-full text-[11px] font-bold">
+<span class="w-2 h-2 rounded-full bg-tertiary"></span>
+                                            READY
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary font-label-sm text-label-sm hover:underline">Preview</button>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="hover:bg-surface-container-low transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-500">
+<td class="px-6 py-5">
+<p class="font-label-md text-label-md font-bold text-on-surface">Day 7</p>
+<p class="text-[10px] text-outline">Sun, July 7</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">equalizer</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Poll Story</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="font-body-sm text-body-sm text-on-surface">Human vs AI: Who writes better?</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-[11px] font-bold">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                            BLUEPRINT
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary font-label-sm text-label-sm hover:underline opacity-0 group-hover:opacity-100 transition-opacity">View Details</button>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="hover:bg-surface-container-low transition-colors group animate-in fade-in slide-in-from-bottom-2 duration-500">
+<td class="px-6 py-5">
+<p class="font-label-md text-label-md font-bold text-on-surface">Day 10</p>
+<p class="text-[10px] text-outline">Wed, July 10</p>
+</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-lg">view_carousel</span>
+<span class="font-body-sm text-body-sm text-on-surface-variant">Case Study</span>
+</div>
+</td>
+<td class="px-6 py-5">
+<span class="font-body-sm text-body-sm text-on-surface">How TechCorp grew 300%</span>
+</td>
+<td class="px-6 py-5">
+<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-surface-container text-on-surface-variant rounded-full text-[11px] font-bold">
+<span class="w-2 h-2 rounded-full bg-outline"></span>
+                                            BLUEPRINT
+                                        </span>
+</td>
+<td class="px-6 py-5 text-right">
+<button class="text-primary font-label-sm text-label-sm hover:underline opacity-0 group-hover:opacity-100 transition-opacity">View Details</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="p-6 bg-surface-container-low/30 border-t border-outline-variant/10 flex justify-center">
+<button class="text-primary font-label-md text-label-md hover:underline flex items-center gap-2">
+                            Load Full 30-Day Strategy
+                            <span class="material-symbols-outlined text-[16px]">expand_more</span>
+</button>
+</div>
+</div>
+<!-- AI Generation Settings Card -->
+<div class="col-span-12 bento-card p-8 border border-outline-variant/30 flex items-center justify-between bg-surface">
+<div class="flex items-center gap-6">
+<div class="w-16 h-16 rounded-full bg-secondary-fixed-dim/30 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined text-3xl" style="font-variation-settings: 'FILL' 1;">auto_fix_high</span>
+</div>
+<div>
+<h4 class="font-headline-sm text-headline-sm text-on-surface">Ready to bring your blueprint to life?</h4>
+<p class="font-body-sm text-body-sm text-on-surface-variant mt-1">
+                                Our AI will use your brand guidelines and the selected knowledge base to generate all 12 assets for the first 10 days.
+                            </p>
+</div>
+</div>
+<div class="flex items-center gap-8">
+<div class="text-right hidden sm:block">
+<p class="font-label-sm text-label-sm text-outline uppercase mb-1">Estimated Time</p>
+<p class="font-body-md text-body-md font-bold text-on-surface">~14 Minutes</p>
+</div>
+<div class="w-[1px] h-12 bg-outline-variant hidden sm:block"></div>
+<button class="px-10 py-4 bg-primary text-white font-label-md text-label-md rounded-xl shadow-xl shadow-primary/30 hover:scale-105 active:scale-95 transition-all">
+                            Start Batch Generation
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</main>
+<script>
+        // Micro-interactions
+        document.querySelectorAll('.surface-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                // Subtle lift or feedback handled by CSS hover
+            });
+        });
+
+        // Simple Active State Logic for Navigation
+        const navLinks = document.querySelectorAll('nav a');
+        navLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                navLinks.forEach(l => {
+                    l.classList.remove('bg-primary-container', 'text-on-primary-container', 'font-semibold', 'scale-95');
+                    l.classList.add('text-on-surface-variant');
+                });
+                link.classList.remove('text-on-surface-variant');
+                link.classList.add('bg-primary-container', 'text-on-primary-container', 'font-semibold', 'scale-95');
+            });
+        });
+    </script>
+
+
+
+
+</body></html>
