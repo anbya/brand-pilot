@@ -73,12 +73,12 @@ function LandingNav() {
           <Link className="text-sm font-medium text-slate-600 transition hover:text-blue-600" href="#resources">
             Resources
           </Link>
-          <Link className="text-sm font-medium text-slate-600 transition hover:text-blue-600" href="/auth/login">
+          <Link className="text-sm font-medium text-slate-600 transition hover:text-blue-600" href="/dashboard">
             Login
           </Link>
         </nav>
         <Link
-          href="/auth/register"
+          href="/onboarding/account"
           className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
           Get Started Free
@@ -108,7 +108,7 @@ function HeroSection() {
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
             <Link
-              href="/auth/register"
+              href="/onboarding/account"
               className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
             >
               Get Started Free
@@ -375,7 +375,7 @@ function CtaSection() {
               Start Free Trial
             </Link>
             <Link
-              href="/auth/login"
+              href="/onboarding/account"
               className="inline-flex items-center justify-center rounded-lg border border-blue-200 px-6 py-3 text-sm font-bold text-white transition hover:bg-white/10"
             >
               Book a Demo
