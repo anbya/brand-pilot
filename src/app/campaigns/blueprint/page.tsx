@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CampaignAssetMap, type CampaignAssetRow } from "@/components/campaign-asset-map";
+import { CampaignAssetMap, StartBatchGenerationButton, type CampaignAssetRow } from "@/components/campaign-asset-map";
 
 type IconName =
   | "add"
@@ -92,13 +92,6 @@ export default async function CampaignBlueprintPage({
               <Icon name="edit" className="h-4 w-4" />
               Edit Strategy
             </Link>
-            <button
-              className="inline-flex items-center gap-2 rounded-lg bg-[#0058bc] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition hover:bg-[#004493]"
-              type="button"
-            >
-              <Icon name="spark" className="h-4 w-4" />
-              Generate All Assets
-            </button>
           </div>
         </header>
 
@@ -165,35 +158,6 @@ export default async function CampaignBlueprintPage({
           </section>
 
           <section className="col-span-12 overflow-hidden rounded-lg border border-[#d3e4fe]/70 bg-white shadow-sm lg:col-span-8">
-            <div className="flex flex-col gap-4 border-b border-[#d3e4fe]/70 bg-white px-5 py-5 xl:flex-row xl:items-center xl:justify-between">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
-                <h2 className="text-xl font-bold text-[#0b1c30]">Content Asset Map</h2>
-                <div className="flex rounded-lg bg-[#eff4ff] p-1">
-                  <button
-                    className="rounded-md bg-[#0070eb] px-4 py-1.5 text-xs font-bold text-white"
-                    type="button"
-                  >
-                    List View
-                  </button>
-                  <button
-                    className="rounded-md px-4 py-1.5 text-xs font-bold text-[#414755] transition hover:bg-white"
-                    type="button"
-                  >
-                    Calendar View
-                  </button>
-                </div>
-              </div>
-              <label className="flex w-fit items-center gap-2 text-sm font-semibold text-[#717786]">
-                Filter:
-                <select className="rounded-lg border border-[#d3e4fe] bg-white px-3 py-2 text-sm font-bold text-[#0b1c30] outline-none focus:border-[#0058bc]">
-                  <option>All Stages</option>
-                  <option>Blueprints</option>
-                  <option>Generating</option>
-                  <option>Ready</option>
-                </select>
-              </label>
-            </div>
-
             <CampaignAssetMap initialRows={assetRows} />
           </section>
 
@@ -222,12 +186,7 @@ export default async function CampaignBlueprintPage({
                   <p className="text-base font-extrabold text-[#0b1c30]">~14 Minutes</p>
                 </div>
                 <span className="hidden h-12 w-px bg-[#c1c6d7] sm:block" />
-                <button
-                  className="rounded-lg bg-[#0058bc] px-8 py-4 text-sm font-bold text-white shadow-lg shadow-blue-900/10 transition hover:bg-[#004493]"
-                  type="button"
-                >
-                  Start Batch Generation
-                </button>
+                <StartBatchGenerationButton />
               </div>
             </div>
           </section>
@@ -270,83 +229,28 @@ function buildAssetRows(campaign: CampaignBlueprint): AssetRow[] {
   const startDate = new Date(`${campaign.startDate}T00:00:00`);
   const topics = topicsForObjective(campaign.primaryObjective);
   const firstPlatform = campaign.targetPlatforms[0] ?? "Instagram";
-
-  const initialRows: AssetRow[] = [
-    {
-      day: "Day 1",
-      date: formatScheduleDate(startDate),
-      type: `${firstPlatform} Education Carousel`,
-      topic: topics[0],
-      status: "BLUEPRINT",
-      action: "View Details",
-      icon: "carousel",
-    },
-    {
-      day: "Day 3",
-      date: formatScheduleDate(addDays(startDate, 2)),
-      type: "Awareness Reel",
-      topic: topics[1],
-      status: "GENERATING",
-      action: "Track",
-      icon: "movie",
-    },
-    {
-      day: "Day 5",
-      date: formatScheduleDate(addDays(startDate, 4)),
-      type: "Insight Post",
-      topic: topics[2],
-      status: "READY",
-      action: "Preview",
-      icon: "post",
-    },
-    {
-      day: "Day 7",
-      date: formatScheduleDate(addDays(startDate, 6)),
-      type: "Poll Story",
-      topic: topics[3],
-      status: "BLUEPRINT",
-      action: "View Details",
-      icon: "poll",
-    },
-    {
-      day: "Day 10",
-      date: formatScheduleDate(addDays(startDate, 9)),
-      type: "Case Study",
-      topic: topics[4],
-      status: "BLUEPRINT",
-      action: "View Details",
-      icon: "carousel",
-    },
-  ];
-
-  const additionalTopics = [
-    "Behind the scenes: how the team works",
-    "Three practical tips your audience can use today",
-    "Customer story: from challenge to result",
-    "Quick myth versus fact breakdown",
-    "A simple checklist for better outcomes",
-    "Meet the people behind the brand",
-    "Frequently asked questions answered",
-    "This or that: let the audience decide",
-    "Monthly highlights and key learnings",
-    "Campaign recap and next-step invitation",
-  ];
-  const additionalDays = [12, 14, 16, 18, 20, 22, 24, 26, 28, 30];
-  const assetTypes = ["Behind-the-Scenes Reel", "Tips Carousel", "Customer Story", "Myth vs Fact Post", "Checklist Carousel", "Team Spotlight", "FAQ Reel", "Interactive Poll", "Monthly Recap", "Campaign Finale"];
+  const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
+  const assetTypes = ["Education Carousel", "Awareness Reel", "Insight Post", "Poll Story", "Case Study", "Behind-the-Scenes Reel", "Tips Carousel", "Customer Story", "Myth vs Fact Post", "Checklist Carousel", "Team Spotlight", "FAQ Reel", "Interactive Poll", "Monthly Recap", "Campaign Finale"];
+  const topicPool = [...topics, "Behind the scenes: how the team works", "Three practical tips your audience can use today", "Customer story: from challenge to result", "Quick myth versus fact breakdown", "A simple checklist for better outcomes", "Meet the people behind the brand", "Frequently asked questions answered", "This or that: let the audience decide", "Monthly highlights and key learnings", "Campaign recap and next-step invitation"];
   const icons: IconName[] = ["movie", "carousel", "post", "post", "carousel", "post", "movie", "poll", "carousel", "movie"];
   const statuses: AssetRow["status"][] = ["BLUEPRINT", "READY", "BLUEPRINT", "GENERATING", "BLUEPRINT", "READY", "BLUEPRINT", "BLUEPRINT", "GENERATING", "BLUEPRINT"];
 
-  const additionalRows = additionalDays.map((day, index): AssetRow => ({
-    day: `Day ${day}`,
-    date: formatScheduleDate(addDays(startDate, day - 1)),
-    type: `${campaign.targetPlatforms[index % campaign.targetPlatforms.length] ?? firstPlatform} ${assetTypes[index]}`,
-    topic: additionalTopics[index],
-    status: statuses[index],
-    action: statuses[index] === "READY" ? "Preview" : statuses[index] === "GENERATING" ? "Track" : "View Details",
-    icon: icons[index],
-  }));
-
-  return [...initialRows, ...additionalRows];
+  return Array.from({ length: daysInMonth }, (_, index): AssetRow => {
+    const day = index + 1;
+    const scheduledDate = new Date(startDate.getFullYear(), startDate.getMonth(), day);
+    const status = statuses[index % statuses.length];
+    const platform = campaign.targetPlatforms[index % campaign.targetPlatforms.length] ?? firstPlatform;
+    return {
+      day: `Day ${day}`,
+      date: formatScheduleDate(scheduledDate),
+      scheduledDate: formatISODate(scheduledDate),
+      type: `${platform} ${assetTypes[index % assetTypes.length]}`,
+      topic: topicPool[index % topicPool.length],
+      status,
+      action: status === "READY" ? "Preview" : status === "GENERATING" ? "Track" : "View Details",
+      icon: icons[index % icons.length],
+    };
+  });
 }
 
 function topicsForObjective(objective: string) {
@@ -417,12 +321,6 @@ function getDurationDays(startDate: string, endDate: string) {
   return Math.floor(diff / 86_400_000) + 1;
 }
 
-function addDays(date: Date, days: number) {
-  const nextDate = new Date(date);
-  nextDate.setDate(nextDate.getDate() + days);
-  return nextDate;
-}
-
 function formatDate(value: string) {
   return new Intl.DateTimeFormat("en", {
     month: "short",
@@ -437,6 +335,13 @@ function formatScheduleDate(value: Date) {
     month: "long",
     day: "numeric",
   }).format(value);
+}
+
+function formatISODate(value: Date) {
+  const year = value.getFullYear();
+  const month = String(value.getMonth() + 1).padStart(2, "0");
+  const day = String(value.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function CampaignSidebar() {
