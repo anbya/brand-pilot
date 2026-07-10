@@ -2,7 +2,7 @@
 
 # AI Social Media Manager --- Phase 1 MVP
 
-## 1. Overview
+## 1. Overview..
 
 ### Project Name
 
