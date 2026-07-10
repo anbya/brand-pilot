@@ -12,7 +12,7 @@ export function ConditionalTopNav() {
     pathname === "/brain" ||
     pathname === "/brands" ||
     pathname === "/calendar" ||
-    pathname === "/campaigns" ||
+    pathname.startsWith("/campaigns") ||
     pathname === "/dashboard" ||
     pathname === "/auth/login" ||
     pathname.startsWith("/onboarding")
