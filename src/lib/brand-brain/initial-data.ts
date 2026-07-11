@@ -1,0 +1,97 @@
+import type { BrandBrainState } from "@/lib/brand-brain/types";
+
+export const initialBrandBrainData: BrandBrainState = {
+  brand: {
+    id: "brand-coffee-xyz",
+    name: "Coffee XYZ",
+  },
+  voice: {
+    primaryPersonality: "Friendly & Visionary",
+    primaryPersonalityDescription:
+      "We speak to our customers like a knowledgeable friend who sees the future of coffee. We are encouraging, optimistic, and deeply passionate about quality.",
+    communicationStyle: "Lucid & Reliable",
+    communicationStyleDescription:
+      "Clarity is our priority. No jargon, just honest descriptions of our sustainable sourcing and roasting techniques that users can trust.",
+    traits: ["Approachable", "Eco-Conscious", "Expert", "Optimistic"],
+  },
+  toneDial: {
+    casualFormal: 27,
+    playfulSerious: 68,
+    conciseDetailed: 52,
+  },
+  logo: {
+    id: "logo-primary",
+    displayName: "Primary Logo",
+    logoType: "primary",
+    previewBackground: "light",
+    fileName: "coffee_xyz_v2_final.svg",
+    fileType: "SVG",
+    previewUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBuvwxHG-3aEQmbB3JVSbYYqCSmYs7mE3kB2z6pD7ZaBXEQWjPcSZ6MJemSSul7V5oSl9OiQTMHsjxqPBu3bdYF2xK6x7vmHAWAARG3T0aW665qff9bd7YUOZLBKML8CltnKMDwcr1uukBdhB5LiF79v340gUTFtuxk_DI1h7YmnqG3PssQD1RH2_mxk68KIl5fCekqUZs0SMAj-9PpO9SK67dlkFEchi3cHPdEY0acXCF08HHpREN-",
+    alt: "Coffee XYZ logo",
+  },
+  assets: [
+    {
+      id: "asset-coffee-beans",
+      name: "Organic Coffee Beans",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBXaPfHNhCGII6FOB-bAUyFQYQ7afrWP6VeREebGZXI6rvHG7tN4OyWBdtSYVy3ogAC4V5NeL9N0AMYECnmsfUQXRpvZgb2KFP-q35G78cUVDfeGAk1QVgt4d_UgB6WgNw9I9V3TtQmtmCCmesL4vJg8V_QI4ovtFjLCZJlwLJj89xCz6feBRG9GnRcwnWy5bg6cbMB4SS249dZrI1vfQlGTHLmCd25-9ljkID1P73ZyQFU-g_7Ds61",
+      alt: "Organic coffee beans on a wooden surface",
+      assetType: "product-photo",
+      description: "Organic coffee beans used for product and educational content.",
+      tags: ["coffee", "beans", "premium"],
+      usage: ["social-media", "website", "product-marketing"],
+      fileName: "organic-coffee-beans.jpg",
+      fileType: "JPG",
+      isCoreAsset: true,
+    },
+    {
+      id: "asset-ceramic-mug",
+      name: "Reusable Ceramic Mug",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCLaCQ1KCRiF8l--45Fz4VFlVCExRYqKlReiII2QsVWTA_MTdcLi3fwNp3x6a4dkNXEWTsYngKb4NAuUaFlmrMxFz0dyRLEVRP_ym0sPPOiYWXqY4Yah4Se5CxnAxkGKv25O2p3ymtV35CKES8V_FuDV2jhAyrq0H3ySu_AeuB6scV6HZ_dC5khyrjpW37tj9J-UMcIvLwjsxpluWve6ANrKaURW-2NkYhRYhoCtZsQziLWSIz7DQwE",
+      alt: "Coffee XYZ reusable ceramic mug",
+      assetType: "product-photo",
+      description: "Coffee XYZ reusable ceramic mug.",
+      tags: ["mug", "product", "sustainable"],
+      usage: ["social-media", "advertising", "product-marketing"],
+      fileName: "coffee-xyz-mug.jpg",
+      fileType: "JPG",
+      isCoreAsset: true,
+    },
+    {
+      id: "asset-coffee-shop",
+      name: "Coffee Shop Interior",
+      imageUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuBGVc2YXf_R5hCspI-jCLdk8ax3pgdLSaFTLqJwf5TXfUmmpQBLtgMb4qQ1xIpFpmoDAXX2lNf8clQ1tUjR2vKYcqKVWlpOXIPWtTC4fRLlGDwkDILD7ceBiwNgT1SyQrPPZ_8tcRAr4undRinzKsBoPfxtXISKaFrS2Wy9SLHecmh-TUz7Z0uTXdvF0XYr0ObZVOiahBlY1HCvN2NWeQQ8g04afwjAF4ymOxGxdrX5_s86kNtgjH0B",
+      alt: "Modern eco-conscious coffee shop interior",
+      assetType: "store-location",
+      description: "Modern eco-conscious Coffee XYZ shop interior.",
+      tags: ["store", "interior", "lifestyle"],
+      usage: ["social-media", "website", "presentation"],
+      fileName: "coffee-xyz-store.jpg",
+      fileType: "JPG",
+      isCoreAsset: true,
+    },
+  ],
+  recommendation: {
+    id: "recommendation-primary",
+    title: "AI Recommendation",
+    message:
+      "Based on your latest campaign performance, users respond best to a Friendly voice with a Concise tone. Your current assets are performing 24% higher than industry average.",
+    highlightedVoice: "Friendly",
+    highlightedTone: "Concise",
+    performanceLift: 24,
+  },
+  analysis: {
+    status: "completed",
+    lastAnalyzedAt: "2026-07-08T09:00:00.000Z",
+    sources: [
+      { id: "source-website", label: "Coffee XYZ website", type: "website", status: "analyzed" },
+      { id: "source-assets", label: "Core brand assets", type: "asset", status: "analyzed" },
+      { id: "source-social", label: "Social performance", type: "social", status: "analyzed" },
+    ],
+  },
+  insights: {
+    voiceMatchScore: 92,
+    visualConsistencyScore: 88,
+    audienceFitScore: 90,
+    assetPerformanceScore: 84,
+  },
+};
