@@ -7,8 +7,11 @@ import { BrandVoiceMockModal } from "@/components/brand-brain/brand-voice-mock-m
 import { BrandAssetMockModal } from "@/components/brand-brain/brand-asset-mock-modal";
 import { BrandLogoMockModal, readableLogoType } from "@/components/brand-brain/brand-logo-mock-modal";
 import { ToneDialMockModal } from "@/components/brand-brain/tone-dial-mock-modal";
+import { ManageAssetsMockDrawer } from "@/components/brand-brain/manage-assets-mock-drawer";
+import { AnalyzeBrandMockModal } from "@/components/brand-brain/analyze-brand-mock-modal";
+import { BrandInsightsMockDrawer } from "@/components/brand-brain/brand-insights-mock-drawer";
 import { brandBrainReducer } from "@/lib/brand-brain/reducer";
-import type { BrandBrainState } from "@/lib/brand-brain/types";
+import type { BrandAnalysis, BrandBrainState, BrandRecommendation } from "@/lib/brand-brain/types";
 import type { BrandAsset } from "@/lib/brand-brain/types";
 
 type IconName =
@@ -53,9 +56,15 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
   const [isToneDialModalOpen, setIsToneDialModalOpen] = useState(false);
   const [isBrandLogoModalOpen, setIsBrandLogoModalOpen] = useState(false);
   const [isBrandAssetModalOpen, setIsBrandAssetModalOpen] = useState(false);
+  const [isManageAssetsDrawerOpen, setIsManageAssetsDrawerOpen] = useState(false);
+  const [isAnalyzeBrandModalOpen, setIsAnalyzeBrandModalOpen] = useState(false);
+  const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
+  const [analysisHighlight, setAnalysisHighlight] = useState(false);
+  const [isBrandInsightsDrawerOpen, setIsBrandInsightsDrawerOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const committedLogoBlobUrlRef = useRef(state.logo?.previewUrl.startsWith("blob:") ? state.logo.previewUrl : null);
   const committedAssetBlobUrlsRef = useRef(new Set(state.assets.filter((asset) => asset.imageUrl.startsWith("blob:")).map((asset) => asset.imageUrl)));
+  const recommendationRef = useRef<HTMLElement>(null);
   const toneDials = [
     { left: "Casual", right: "Formal", value: state.toneDial.casualFormal },
     { left: "Playful", right: "Serious", value: state.toneDial.playfulSerious },
@@ -67,6 +76,10 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
   const closeToneDialModal = useCallback(() => setIsToneDialModalOpen(false), []);
   const closeBrandLogoModal = useCallback(() => setIsBrandLogoModalOpen(false), []);
   const closeBrandAssetModal = useCallback(() => setIsBrandAssetModalOpen(false), []);
+  const closeManageAssetsDrawer = useCallback(() => setIsManageAssetsDrawerOpen(false), []);
+  const closeAnalyzeBrandModal = useCallback(() => setIsAnalyzeBrandModalOpen(false), []);
+  const changeAnalysisRunning = useCallback((running: boolean) => setIsAnalysisRunning(running), []);
+  const closeBrandInsightsDrawer = useCallback(() => setIsBrandInsightsDrawerOpen(false), []);
 
   useEffect(() => () => {
     const committedBlobUrl = committedLogoBlobUrlRef.current;
@@ -109,6 +122,88 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
     setSuccessMessage("Brand Asset added successfully.");
   }
 
+  function setCoreAsset(id: string) {
+    dispatch({ type: "SET_CORE_ASSET", payload: { id } });
+    setSuccessMessage("Asset added to Core Brand Assets.");
+  }
+
+  function removeCoreAsset(id: string) {
+    dispatch({ type: "REMOVE_CORE_ASSET", payload: { id } });
+    setSuccessMessage("Asset removed from Core Brand Assets.");
+  }
+
+  function replaceCoreAsset(oldId: string, newId: string) {
+    dispatch({ type: "REMOVE_CORE_ASSET", payload: { id: oldId } });
+    dispatch({ type: "SET_CORE_ASSET", payload: { id: newId } });
+    setSuccessMessage("Core Brand Asset replaced successfully.");
+  }
+
+  function updateBrandAsset(asset: BrandAsset) {
+    dispatch({ type: "UPDATE_ASSET", payload: { id: asset.id, changes: asset } });
+    setSuccessMessage("Brand Asset updated successfully.");
+  }
+
+  function deleteBrandAsset(asset: BrandAsset) {
+    dispatch({ type: "DELETE_ASSET", payload: { id: asset.id } });
+    if (asset.imageUrl.startsWith("blob:") && committedAssetBlobUrlsRef.current.has(asset.imageUrl)) {
+      URL.revokeObjectURL(asset.imageUrl);
+      committedAssetBlobUrlsRef.current.delete(asset.imageUrl);
+    }
+    setSuccessMessage("Brand Asset deleted successfully.");
+  }
+
+  const completeBrandAnalysis = useCallback((analysis: BrandAnalysis, sourceCount: number) => {
+    const coreAssetCount = state.assets.filter((asset) => asset.isCoreAsset).length;
+    const detailRecommendation = state.toneDial.conciseDetailed < 50
+      ? "Keep captions concise while maintaining reliable product information."
+      : state.toneDial.conciseDetailed <= 65
+        ? "Balance concise messaging with enough detail to support confident decisions."
+        : "Use richer and more detailed content to explain products and brand expertise.";
+    const friendly = state.voice.primaryPersonality.toLocaleLowerCase().includes("friendly");
+    const recommendation: BrandRecommendation = {
+      ...state.recommendation,
+      title: "Brand profile successfully analyzed",
+      description: `Your ${state.voice.primaryPersonality} personality and ${state.voice.communicationStyle} communication style create a clear, approachable brand presence. ${coreAssetCount === 3 ? "Your current visual assets provide a strong foundation for consistent content creation." : "Add more core visual references to improve content consistency."}`,
+      items: [
+        friendly ? "Continue using an approachable and knowledgeable voice." : "Keep the brand voice consistent across every channel.",
+        detailRecommendation,
+        `${state.logo ? "Your visual identity is established." : "Add a primary logo to establish visual identity."} ${sourceCount > 1 ? "Multiple sources improve brand understanding." : "Add more brand sources for a deeper analysis."}`,
+      ],
+      highlightedVoice: state.voice.primaryPersonality,
+      highlightedTone: state.voice.communicationStyle,
+      performanceLift: Math.max(state.recommendation.performanceLift, 24),
+    };
+    dispatch({ type: "UPDATE_ANALYSIS", payload: analysis });
+    dispatch({ type: "UPDATE_RECOMMENDATION", payload: recommendation });
+    setSuccessMessage("Brand analysis completed successfully.");
+    return recommendation.description;
+  }, [state.assets, state.logo, state.recommendation, state.toneDial.conciseDetailed, state.voice.communicationStyle, state.voice.primaryPersonality]);
+
+  const viewUpdatedRecommendation = useCallback(() => {
+    setIsAnalyzeBrandModalOpen(false);
+    window.requestAnimationFrame(() => {
+      recommendationRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      recommendationRef.current?.focus({ preventScroll: true });
+      setAnalysisHighlight(true);
+    });
+  }, []);
+
+  function openBrandInsights() {
+    setIsBrandVoiceModalOpen(false);
+    setIsToneDialModalOpen(false);
+    setIsBrandLogoModalOpen(false);
+    setIsBrandAssetModalOpen(false);
+    setIsManageAssetsDrawerOpen(false);
+    setIsAnalyzeBrandModalOpen(false);
+    setIsBrandInsightsDrawerOpen(true);
+  }
+
+  useEffect(() => {
+    if (!analysisHighlight) return;
+    const timer = window.setTimeout(() => setAnalysisHighlight(false), 1800);
+    return () => window.clearTimeout(timer);
+  }, [analysisHighlight]);
+
   return (
     <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] lg:pl-64">
       <BrainSidebar />
@@ -124,11 +219,13 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
             </div>
             <div className="flex items-center gap-4">
               <button
-                className="inline-flex items-center gap-2 rounded-lg border border-[#0058bc] px-4 py-2 text-sm font-bold text-[#0058bc] transition hover:bg-[#e5eeff]"
+                onClick={() => setIsAnalyzeBrandModalOpen(true)}
+                disabled={isAnalysisRunning}
+                className="inline-flex items-center gap-2 rounded-lg border border-[#0058bc] px-4 py-2 text-sm font-bold text-[#0058bc] transition hover:bg-[#e5eeff] disabled:cursor-not-allowed disabled:border-[#aab8ca] disabled:text-[#8b96a5] disabled:hover:bg-transparent"
                 type="button"
               >
                 <Icon name="spark" className="h-4 w-4" />
-                Analyze Brand Data
+                {isAnalysisRunning ? "Analyzing..." : state.analysis.status === "complete" ? "Re-analyze Brand Data" : "Analyze Brand Data"}
               </button>
               <Image
                 src={headerProfileImage}
@@ -220,6 +317,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
               </div>
               <div className="flex flex-wrap gap-2">
                 <button
+                  onClick={() => setIsManageAssetsDrawerOpen(true)}
                   className="inline-flex items-center gap-2 rounded-lg bg-[#e5eeff] px-3 py-2 text-sm font-bold text-[#414755] transition hover:bg-[#dce9ff]"
                   type="button"
                 >
@@ -266,26 +364,22 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
             </div>
           </BrainCard>
 
-          <section className="col-span-12 rounded-lg border border-l-4 border-[#0058bc] border-l-[#0058bc] bg-white p-6 shadow-sm">
+          <section ref={recommendationRef} tabIndex={-1} className={`col-span-12 rounded-lg border border-l-4 border-[#0058bc] border-l-[#0058bc] bg-white p-6 shadow-sm outline-none transition-all duration-300 ${analysisHighlight ? "ring-4 ring-blue-200 shadow-lg" : ""}`}>
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
               <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#0070eb] text-white">
                 <Icon name="spark" className="h-6 w-6" />
               </span>
               <div className="flex-1">
                 <h2 className="text-sm font-extrabold text-[#0058bc]">{state.recommendation.title}</h2>
-                <p className="mt-1 text-sm leading-6 text-[#0b1c30] sm:text-base">
-                  Based on your latest campaign performance, users respond best to a{" "}
-                  <span className="font-bold">{state.recommendation.highlightedVoice}</span> voice with a{" "}
-                  <span className="font-bold">{state.recommendation.highlightedTone}</span> tone. Your current assets are
-                  performing {state.recommendation.performanceLift}% higher than industry average.
-                </p>
+                <p className="mt-1 text-sm leading-6 text-[#0b1c30] sm:text-base">{state.recommendation.description}</p>
               </div>
-              <Link
+              <button
+                type="button"
+                onClick={openBrandInsights}
                 className="inline-flex w-fit items-center justify-center rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#004493]"
-                href="/analytics"
               >
                 View Insights
-              </Link>
+              </button>
             </div>
           </section>
         </div>
@@ -311,6 +405,34 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
 
       {isBrandAssetModalOpen ? (
         <BrandAssetMockModal isOpen currentAssets={state.assets} onClose={closeBrandAssetModal} onSave={saveBrandAsset} />
+      ) : null}
+
+      {isManageAssetsDrawerOpen ? (
+        <ManageAssetsMockDrawer
+          isOpen
+          assets={state.assets}
+          onClose={closeManageAssetsDrawer}
+          onSetCore={setCoreAsset}
+          onRemoveCore={removeCoreAsset}
+          onReplaceCore={replaceCoreAsset}
+          onUpdateAsset={updateBrandAsset}
+          onDeleteAsset={deleteBrandAsset}
+        />
+      ) : null}
+
+      {isAnalyzeBrandModalOpen ? (
+        <AnalyzeBrandMockModal
+          isOpen
+          currentAnalysis={state.analysis}
+          onClose={closeAnalyzeBrandModal}
+          onRunningChange={changeAnalysisRunning}
+          onComplete={completeBrandAnalysis}
+          onViewRecommendation={viewUpdatedRecommendation}
+        />
+      ) : null}
+
+      {isBrandInsightsDrawerOpen ? (
+        <BrandInsightsMockDrawer isOpen state={state} onClose={closeBrandInsightsDrawer} />
       ) : null}
     </main>
   );

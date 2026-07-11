@@ -51,30 +51,36 @@ export type BrandAsset = {
 export type BrandRecommendation = {
   id: string;
   title: string;
-  message: string;
+  description: string;
+  items: string[];
   highlightedVoice: string;
   highlightedTone: string;
   performanceLift: number;
 };
 
 export type BrandAnalysisSource = {
-  id: string;
-  label: string;
-  type: "website" | "social" | "asset" | "manual";
-  status: "pending" | "analyzed" | "failed";
+  websiteUrl: string;
+  instagramUsername: string;
+  linkedinPage: string;
+  brandGuidelinesFileName: string;
+  companyProfileFileName: string;
+  productCatalogueFileName: string;
 };
 
 export type BrandAnalysis = {
-  status: "idle" | "analyzing" | "completed" | "failed";
+  status: "idle" | "analyzing" | "complete" | "failed";
+  progress: number;
+  activeStep: number;
   lastAnalyzedAt: string | null;
-  sources: BrandAnalysisSource[];
+  sources: BrandAnalysisSource;
 };
 
 export type BrandInsights = {
-  voiceMatchScore: number;
-  visualConsistencyScore: number;
-  audienceFitScore: number;
-  assetPerformanceScore: number;
+  overallReadiness: number;
+  voiceConsistency: number;
+  toneAlignment: number;
+  visualReadiness: number;
+  assetQuality: number;
 };
 
 export type BrandBrainState = {

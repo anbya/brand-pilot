@@ -73,25 +73,36 @@ export const initialBrandBrainData: BrandBrainState = {
   recommendation: {
     id: "recommendation-primary",
     title: "AI Recommendation",
-    message:
+    description:
       "Based on your latest campaign performance, users respond best to a Friendly voice with a Concise tone. Your current assets are performing 24% higher than industry average.",
+    items: [
+      "Continue using an approachable and knowledgeable voice.",
+      "Keep captions concise while maintaining reliable product information.",
+      "Prioritize authentic coffee, product, and lifestyle visuals.",
+    ],
     highlightedVoice: "Friendly",
     highlightedTone: "Concise",
     performanceLift: 24,
   },
   analysis: {
-    status: "completed",
-    lastAnalyzedAt: "2026-07-08T09:00:00.000Z",
-    sources: [
-      { id: "source-website", label: "Coffee XYZ website", type: "website", status: "analyzed" },
-      { id: "source-assets", label: "Core brand assets", type: "asset", status: "analyzed" },
-      { id: "source-social", label: "Social performance", type: "social", status: "analyzed" },
-    ],
+    status: "idle",
+    progress: 0,
+    activeStep: 0,
+    lastAnalyzedAt: null,
+    sources: {
+      websiteUrl: "",
+      instagramUsername: "",
+      linkedinPage: "",
+      brandGuidelinesFileName: "",
+      companyProfileFileName: "",
+      productCatalogueFileName: "",
+    },
   },
   insights: {
-    voiceMatchScore: 92,
-    visualConsistencyScore: 88,
-    audienceFitScore: 90,
-    assetPerformanceScore: 84,
+    overallReadiness: 89,
+    voiceConsistency: 92,
+    toneAlignment: 86,
+    visualReadiness: 88,
+    assetQuality: 84,
   },
 };
