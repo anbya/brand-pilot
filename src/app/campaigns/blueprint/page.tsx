@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { CampaignAssetMap, StartBatchGenerationButton, type CampaignAssetRow } from "@/components/campaign-asset-map";
+import { ApproveAllBlueprintsButton, CampaignAssetMap, type CampaignDay, type ContentAsset } from "@/components/campaign-asset-map";
 
 type IconName =
   | "add"
@@ -43,8 +43,6 @@ type CampaignBlueprint = {
   endDate: string;
 };
 
-type AssetRow = CampaignAssetRow & { icon: IconName };
-
 const defaultCampaign: CampaignBlueprint = {
   name: "July Awareness",
   primaryObjective: "Brand Awareness & Engagement",
@@ -60,7 +58,7 @@ export default async function CampaignBlueprintPage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const campaign = parseCampaign(await searchParams);
-  const assetRows = buildAssetRows(campaign);
+  const campaignDays = buildCampaignDays(campaign);
   const durationDays = getDurationDays(campaign.startDate, campaign.endDate);
 
   return (
@@ -80,7 +78,7 @@ export default async function CampaignBlueprintPage({
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-[#414755] sm:text-base">
               AI has generated your {durationDays}-day strategy. Review the asset sequence
-              and hit Generate All to begin the rendering process.
+              and approve all blueprint assets when they are ready.
             </p>
           </div>
 
@@ -158,7 +156,7 @@ export default async function CampaignBlueprintPage({
           </section>
 
           <section className="col-span-12 overflow-hidden rounded-lg border border-[#d3e4fe]/70 bg-white shadow-sm lg:col-span-8">
-            <CampaignAssetMap initialRows={assetRows} />
+            <CampaignAssetMap initialDays={campaignDays} />
           </section>
 
           <section className="col-span-12 rounded-lg border border-[#d3e4fe]/70 bg-white p-6 shadow-sm sm:p-8">
@@ -186,7 +184,7 @@ export default async function CampaignBlueprintPage({
                   <p className="text-base font-extrabold text-[#0b1c30]">~14 Minutes</p>
                 </div>
                 <span className="hidden h-12 w-px bg-[#c1c6d7] sm:block" />
-                <StartBatchGenerationButton />
+                <ApproveAllBlueprintsButton />
               </div>
             </div>
           </section>
@@ -225,32 +223,52 @@ function getSearchList(value: string | string[] | undefined, fallback: string[])
   return items.length > 0 ? items : fallback;
 }
 
-function buildAssetRows(campaign: CampaignBlueprint): AssetRow[] {
+function buildCampaignDays(campaign: CampaignBlueprint): CampaignDay[] {
   const startDate = new Date(`${campaign.startDate}T00:00:00`);
   const topics = topicsForObjective(campaign.primaryObjective);
-  const firstPlatform = campaign.targetPlatforms[0] ?? "Instagram";
   const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
-  const assetTypes = ["Education Carousel", "Awareness Reel", "Insight Post", "Poll Story", "Case Study", "Behind-the-Scenes Reel", "Tips Carousel", "Customer Story", "Myth vs Fact Post", "Checklist Carousel", "Team Spotlight", "FAQ Reel", "Interactive Poll", "Monthly Recap", "Campaign Finale"];
   const topicPool = [...topics, "Behind the scenes: how the team works", "Three practical tips your audience can use today", "Customer story: from challenge to result", "Quick myth versus fact breakdown", "A simple checklist for better outcomes", "Meet the people behind the brand", "Frequently asked questions answered", "This or that: let the audience decide", "Monthly highlights and key learnings", "Campaign recap and next-step invitation"];
-  const icons: IconName[] = ["movie", "carousel", "post", "post", "carousel", "post", "movie", "poll", "carousel", "movie"];
-  const statuses: AssetRow["status"][] = ["BLUEPRINT", "READY", "BLUEPRINT", "GENERATING", "BLUEPRINT", "READY", "BLUEPRINT", "BLUEPRINT", "GENERATING", "BLUEPRINT"];
+  const platforms = campaign.targetPlatforms.length ? campaign.targetPlatforms : ["Instagram"];
+  const campaignId = `campaign-${slugify(campaign.name)}`;
 
-  return Array.from({ length: daysInMonth }, (_, index): AssetRow => {
-    const day = index + 1;
-    const scheduledDate = new Date(startDate.getFullYear(), startDate.getMonth(), day);
-    const status = statuses[index % statuses.length];
-    const platform = campaign.targetPlatforms[index % campaign.targetPlatforms.length] ?? firstPlatform;
+  return Array.from({ length: daysInMonth }, (_, dayIndex): CampaignDay => {
+    const dayNumber = dayIndex + 1;
+    const scheduledDate = new Date(startDate.getFullYear(), startDate.getMonth(), dayNumber);
+    const campaignDayId = `${campaignId}-day-${dayNumber}`;
     return {
-      day: `Day ${day}`,
-      date: formatScheduleDate(scheduledDate),
+      id: campaignDayId,
+      campaignId,
+      dayNumber,
       scheduledDate: formatISODate(scheduledDate),
-      type: `${platform} ${assetTypes[index % assetTypes.length]}`,
-      topic: topicPool[index % topicPool.length],
-      status,
-      action: status === "READY" ? "Preview" : status === "GENERATING" ? "Track" : "View Details",
-      icon: icons[index % icons.length],
+      assets: platforms.map((platform, platformIndex): ContentAsset => ({
+        id: `${campaignDayId}-${slugify(platform)}`,
+        campaignDayId,
+        platform,
+        assetType: assetTypeForPlatform(platform, dayIndex),
+        coreTopic: topicPool[dayIndex % topicPool.length],
+        status: "BLUEPRINT",
+        publishTime: ["09:00", "12:00", "18:00"][platformIndex % 3],
+        createdAt: `${formatISODate(scheduledDate)}T08:00:00.000Z`,
+        updatedAt: `${formatISODate(scheduledDate)}T08:00:00.000Z`,
+      })),
     };
   });
+}
+
+function assetTypeForPlatform(platform: string, dayIndex: number) {
+  const assetTypes: Record<string, string[]> = {
+    Instagram: ["Carousel", "Reel", "Story", "Single Image Post", "Poll Story"],
+    TikTok: ["Short Video", "Tutorial Video", "Product Demo", "Behind the Scenes"],
+    Facebook: ["Single Image Post", "Carousel", "Video", "Story", "Poll"],
+    LinkedIn: ["Insight Post", "Carousel", "Article", "Case Study", "Poll"],
+    YouTube: ["Shorts", "Long-form Video", "Tutorial", "Explainer Video"],
+  };
+  const options = assetTypes[platform] ?? ["Single Image Post", "Short Video", "Carousel", "Story"];
+  return options[dayIndex % options.length];
+}
+
+function slugify(value: string) {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 }
 
 function topicsForObjective(objective: string) {
@@ -327,14 +345,6 @@ function formatDate(value: string) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(`${value}T00:00:00`));
-}
-
-function formatScheduleDate(value: Date) {
-  return new Intl.DateTimeFormat("en", {
-    weekday: "short",
-    month: "long",
-    day: "numeric",
-  }).format(value);
 }
 
 function formatISODate(value: Date) {
