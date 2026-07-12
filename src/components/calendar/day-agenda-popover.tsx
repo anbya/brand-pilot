@@ -1,0 +1,7 @@
+"use client";
+import { CalendarEventCard } from "@/components/calendar/calendar-event-card";
+import { PostActionDialogShell } from "@/components/calendar/post-action-dialog-shell";
+import { parseLocalDate } from "@/lib/calendar/date-utils";
+import type { CalendarEventViewModel } from "@/lib/calendar/selectors";
+const formatter=new Intl.DateTimeFormat("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"});
+export function DayAgendaPopover({date,events,onEventClick,onClose}:{date?:string;events:CalendarEventViewModel[];onEventClick:(id:string)=>void;onClose:()=>void}){if(!date)return null;const sorted=[...events].sort((a,b)=>a.publishTime.localeCompare(b.publishTime)||a.title.localeCompare(b.title));const footer=<button type="button" onClick={onClose} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Close</button>;return <PostActionDialogShell open title="Day Agenda" description={formatter.format(parseLocalDate(date))} onClose={onClose} footer={footer} maxWidth="max-w-lg">{sorted.length?<div className="grid gap-3">{sorted.map(event=><CalendarEventCard key={event.id} event={event} onClick={onEventClick}/>)}</div>:<div className="rounded-xl border border-dashed p-6 text-center"><p className="font-extrabold">No posts on this date.</p><p className="mt-1 text-sm text-[#657080]">Close the agenda to continue planning.</p></div>}</PostActionDialogShell>}
