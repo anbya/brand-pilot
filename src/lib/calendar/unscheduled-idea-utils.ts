@@ -1,5 +1,0 @@
-import { platformAssetTypes } from "@/lib/calendar/platform-options";
-import type { UnscheduledIdea, UnscheduledIdeaFilters } from "@/lib/calendar/unscheduled-idea-types";
-export function filterUnscheduledIdeas(ideas: UnscheduledIdea[], filters: UnscheduledIdeaFilters): UnscheduledIdea[] { const search=filters.search.trim().toLowerCase(); return ideas.filter((idea)=>{ const haystack=[idea.title,idea.coreTopic,idea.mainMessage,idea.targetAudience,idea.notes??""].join(" ").toLowerCase(); return (!search||haystack.includes(search))&&(filters.pillarId==="all"||idea.pillarId===filters.pillarId)&&(filters.platform==="all"||idea.suggestedPlatform===filters.platform)&&(filters.source==="all"||idea.source===filters.source); }); }
-export function sortUnscheduledIdeas(ideas: UnscheduledIdea[]): UnscheduledIdea[] { return [...ideas].sort((a,b)=>b.updatedAt.localeCompare(a.updatedAt)||a.title.localeCompare(b.title)); }
-export function isSuggestedAssetTypeValid(idea: UnscheduledIdea): boolean { if(!idea.suggestedPlatform) return !idea.suggestedAssetType; return !idea.suggestedAssetType||platformAssetTypes[idea.suggestedPlatform].includes(idea.suggestedAssetType); }

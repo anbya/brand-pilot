@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { BrandVoiceMockModal } from "@/components/brand-brain/brand-voice-mock-modal";
 import { BrandAssetMockModal } from "@/components/brand-brain/brand-asset-mock-modal";
@@ -35,20 +34,8 @@ type IconName =
   | "view"
   | "voice";
 
-const profileImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuD5LtcSEZ7F5QffQjEpFdB4p3jqD2GVDvGjOPezI4zUOYKPK6IqzRZwAMUi9xvpAiVsZ81RRy_bbmzqkzqLaGPEZoGs-LQTRXzJlojqaC6BLHrNa-iu_stwKurd_kr30Pu52GcQJ48h7mj5pEF91bwZFXHnaEZS4JFXdalOTDUX9H_X-AzbxIMa9VQG87tdkaA4g32dcXsT3FBGWsgzbIC_mqPyFjj410cbXW19irJXn_0-Q9h_HKro";
-
 const headerProfileImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuD0caw30WtyUGSUyxpyOs2SGUK9WGKRo2RlKSgaAsv2NUD9hD0Kvc5oZd0WssRZ0-N2mKrGtArN10nMVusbyGXHwFRZjjI2NrKVqzxsz1fAlBTDq3Cqjib4E06nbJqfvVpl_IpDLuue1rASaOhvTCRTEnhgkT0XQA4db5J7aoQvgcMUiUbCSkyiI4WcowUgnxmBONblLjzkAsElucfKlhSIq9cHmwO-3ySjrkZ3JxOdIICjKnOV8ohr";
-
-const navItems = [
-  { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
-  { label: "Brands", icon: "brands", href: "/brands", active: true },
-  { label: "Campaigns", icon: "campaign", href: "/campaigns" },
-  { label: "Content Calendar", icon: "calendar", href: "/calendar" },
-  { label: "Assets", icon: "assets", href: "/assets" },
-  { label: "Analytics", icon: "analytics", href: "/analytics" },
-] satisfies Array<{ label: string; icon: IconName; href: string; active?: boolean }>;
 
 export function BrandBrainClient({ initialData }: { initialData: BrandBrainState }) {
   const [state, dispatch] = useReducer(brandBrainReducer, initialData);
@@ -205,8 +192,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
   }, [analysisHighlight]);
 
   return (
-    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] lg:pl-64">
-      <BrainSidebar />
+    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30]">
 
       <section className="min-h-screen">
         <header className="sticky top-0 z-30 border-b border-[#d3e4fe]/70 bg-white/80 px-4 py-5 backdrop-blur-xl sm:px-6 lg:px-10">
@@ -435,83 +421,6 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
         <BrandInsightsMockDrawer isOpen state={state} onClose={closeBrandInsightsDrawer} />
       ) : null}
     </main>
-  );
-}
-
-function BrainSidebar() {
-  return (
-    <aside className="border-b border-[#d3e4fe] bg-white lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-full lg:w-64 lg:flex-col lg:border-b-0 lg:border-r">
-      <div className="flex items-center justify-between gap-3 px-4 py-4 lg:block lg:p-4">
-        <Link className="flex items-center gap-3" href="/dashboard">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0058bc] text-white">
-            <Icon name="check" className="h-5 w-5" />
-          </span>
-          <span>
-            <span className="block text-base font-extrabold text-[#0058bc]">
-              AI Marketing OS
-            </span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#717786]">
-              Enterprise Suite
-            </span>
-          </span>
-        </Link>
-        <Link
-          className="inline-flex items-center gap-2 rounded-lg bg-[#4648d4] px-3 py-2 text-xs font-bold text-white lg:hidden"
-          href="/campaigns"
-        >
-          <Icon name="add" className="h-4 w-4" />
-          New Campaign
-        </Link>
-      </div>
-
-      <nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:mt-4 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-0">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            className={`inline-flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold transition ${
-              item.active
-                ? "bg-[#0070eb] text-white"
-                : "text-[#414755] hover:bg-[#eff4ff] hover:text-[#0b1c30]"
-            }`}
-            href={item.href}
-          >
-            <Icon name={item.icon} className="h-5 w-5" />
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="hidden border-t border-[#d3e4fe] p-4 lg:block">
-        <Link
-          className="mb-4 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#4648d4] px-4 py-3 text-sm font-bold text-white transition hover:bg-[#393bb8]"
-          href="/campaigns"
-        >
-          <Icon name="add" className="h-5 w-5" />
-          New Campaign
-        </Link>
-        <Link
-          className="mb-4 inline-flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-[#414755] transition hover:bg-[#eff4ff]"
-          href="/settings"
-        >
-          <Icon name="settings" className="h-5 w-5" />
-          Settings
-        </Link>
-        <div className="flex items-center gap-3 rounded-lg bg-[#eff4ff] p-2">
-          <Image
-            src={profileImage}
-            width={40}
-            height={40}
-            alt="Sarah Jenkins profile"
-            className="h-10 w-10 rounded-full border-2 border-white object-cover"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-[#0b1c30]">Sarah Jenkins</p>
-            <p className="truncate text-xs font-semibold text-[#717786]">Admin</p>
-          </div>
-          <Icon name="chevronDown" className="h-4 w-4 text-[#717786]" />
-        </div>
-      </div>
-    </aside>
   );
 }
 

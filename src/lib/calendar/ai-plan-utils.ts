@@ -33,6 +33,9 @@ export function normalizePreferredTimes(times: string[]): string[] {
 
 export function validateAiPlanRequest(request: AiPlanRequest): AiPlanValidationErrors {
   const errors: AiPlanValidationErrors = {};
+  if (!request.title.trim()) errors.title = "Brief title is required.";
+  if (!request.campaignId.trim() || !request.campaignName.trim()) errors.campaignId = "Campaign is required.";
+  if (!request.brandId.trim() || !request.brandName.trim()) errors.brandId = "Brand is required.";
   if (!request.startDate) errors.startDate = "Start date is required.";
   if (!request.endDate) errors.endDate = "End date is required.";
   let rangeValid = false;

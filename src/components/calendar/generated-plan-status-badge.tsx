@@ -1,0 +1,3 @@
+import type { GeneratedPlanStatus } from "@/lib/calendar/generated-plan-types";
+const map: Record<GeneratedPlanStatus, { label: string; className: string }> = { generated: { label: "Generated", className: "bg-blue-50 text-blue-800" }, partially_approved: { label: "Partially Added to Calendar", className: "bg-amber-50 text-amber-800" }, approved_to_calendar: { label: "Added to Calendar", className: "bg-emerald-50 text-emerald-800" } };
+export function GeneratedPlanStatusBadge({ status }: { status: GeneratedPlanStatus }) { const value = map[status]; return <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.08em] ${value.className}`}>{value.label}</span>; }

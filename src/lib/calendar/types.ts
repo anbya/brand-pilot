@@ -4,6 +4,7 @@ export type ContentObjective = "educate" | "engage" | "inform" | "sell";
 
 export type ContentCreationSource =
   | "manual"
+  | "generated_plan"
   | "ai"
   | "template"
   | "repurposed"
@@ -34,6 +35,21 @@ export type ContentIdea = {
   targetAudience: string;
   mainMessage: string;
   campaignId?: string;
+  campaignName?: string;
+  brandId?: string;
+  brandName?: string;
+  planningBriefId?: string;
+  generatedPlanId?: string;
+  generatedPlanItemId?: string;
+  ownerId?: string;
+  ownerName?: string;
+  approvalNote?: string;
+  submittedAt?: string;
+  submittedBy?: string;
+  approvedAt?: string;
+  approvedBy?: string;
+  changesRequestedAt?: string;
+  changesRequestedBy?: string;
   creationSource: ContentCreationSource;
   createdAt: string;
   updatedAt: string;
@@ -55,6 +71,9 @@ export type ContentVersion = {
   timezone: string;
   status: ContentStatus;
   createdBy: string;
+  planningBriefId?: string;
+  generatedPlanId?: string;
+  generatedPlanItemId?: string;
   createdAt: string;
   updatedAt: string;
 };

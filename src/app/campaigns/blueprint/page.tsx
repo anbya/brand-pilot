@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ApproveAllBlueprintsButton, CampaignAssetMap, type CampaignDay, type ContentAsset } from "@/components/campaign-asset-map";
 
@@ -14,7 +13,6 @@ type IconName =
   | "chevronDown"
   | "chevronRight"
   | "dashboard"
-  | "edit"
   | "layers"
   | "lightbulb"
   | "movie"
@@ -22,17 +20,6 @@ type IconName =
   | "post"
   | "settings"
   | "spark";
-
-const profileImage =
-  "https://lh3.googleusercontent.com/aida-public/AB6AXuD5LtcSEZ7F5QffQjEpFdB4p3jqD2GVDvGjOPezI4zUOYKPK6IqzRZwAMUi9xvpAiVsZ81RRy_bbmzqkzqLaGPEZoGs-LQTRXzJlojqaC6BLHrNa-iu_stwKurd_kr30Pu52GcQJ48h7mj5pEF91bwZFXHnaEZS4JFXdalOTDUX9H_X-AzbxIMa9VQG87tdkaA4g32dcXsT3FBGWsgzbIC_mqPyFjj410cbXW19irJXn_0-Q9h_HKro";
-
-const navItems = [
-  { label: "Dashboard", icon: "dashboard", href: "/dashboard" },
-  { label: "Brands", icon: "brands", href: "/brands" },
-  { label: "Campaigns", icon: "campaign", href: "/campaigns", active: true },
-  { label: "Content Calendar", icon: "calendar", href: "/calendar" },
-  { label: "Analytics", icon: "analytics", href: "/analytics" },
-] satisfies Array<{ label: string; icon: IconName; href: string; active?: boolean }>;
 
 type CampaignBlueprint = {
   name: string;
@@ -62,8 +49,7 @@ export default async function CampaignBlueprintPage({
   const durationDays = getDurationDays(campaign.startDate, campaign.endDate);
 
   return (
-    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30] lg:pl-64">
-      <CampaignSidebar />
+    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30]">
 
       <section className="mx-auto min-h-screen w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
         <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
@@ -82,15 +68,12 @@ export default async function CampaignBlueprintPage({
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <Link
-              className="inline-flex items-center gap-2 rounded-lg border border-[#c1c6d7] bg-white px-5 py-3 text-sm font-bold text-[#0b1c30] transition hover:bg-[#eff4ff]"
-              href="/campaigns"
-            >
-              <Icon name="edit" className="h-4 w-4" />
-              Edit Strategy
-            </Link>
-          </div>
+          <Link
+            className="inline-flex min-h-11 items-center rounded-lg border border-[#c1c6d7] bg-white px-5 py-3 text-sm font-bold text-[#0b1c30] outline-none transition hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2"
+            href="/campaigns"
+          >
+            Back to Campaigns
+          </Link>
         </header>
 
         <div className="mt-8 grid grid-cols-12 gap-6">
@@ -354,69 +337,6 @@ function formatISODate(value: Date) {
   return `${year}-${month}-${day}`;
 }
 
-function CampaignSidebar() {
-  return (
-    <aside className="border-b border-[#d3e4fe] bg-white lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-full lg:w-64 lg:flex-col lg:border-b-0 lg:border-r">
-      <div className="flex items-center justify-between gap-3 px-4 py-4 lg:block lg:p-4">
-        <Link className="flex items-center gap-3" href="/dashboard">
-          <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0058bc] text-white">
-            <Icon name="check" className="h-5 w-5" />
-          </span>
-          <span>
-            <span className="block text-base font-extrabold text-[#0058bc]">
-              AI Marketing OS
-            </span>
-            <span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#717786]">
-              Enterprise Suite
-            </span>
-          </span>
-        </Link>
-      </div>
-
-      <nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:mt-4 lg:flex-1 lg:flex-col lg:overflow-visible lg:pb-0">
-        {navItems.map((item) => (
-          <Link
-            key={item.label}
-            className={`inline-flex shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold transition ${
-              item.active
-                ? "bg-[#0070eb] text-white"
-                : "text-[#414755] hover:bg-[#eff4ff] hover:text-[#0b1c30]"
-            }`}
-            href={item.href}
-          >
-            <Icon name={item.icon} className="h-5 w-5" />
-            {item.label}
-          </Link>
-        ))}
-      </nav>
-
-      <div className="hidden border-t border-[#d3e4fe] p-4 lg:block">
-        <Link
-          className="mb-4 inline-flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold text-[#414755] transition hover:bg-[#eff4ff]"
-          href="/settings"
-        >
-          <Icon name="settings" className="h-5 w-5" />
-          Settings
-        </Link>
-        <div className="flex items-center gap-3 rounded-lg bg-[#eff4ff] p-2">
-          <Image
-            src={profileImage}
-            width={40}
-            height={40}
-            alt="Sarah Jenkins profile"
-            className="h-10 w-10 rounded-full border-2 border-white object-cover"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold text-[#0b1c30]">Sarah Jenkins</p>
-            <p className="truncate text-xs font-semibold text-[#717786]">Admin</p>
-          </div>
-          <Icon name="chevronDown" className="h-4 w-4 text-[#717786]" />
-        </div>
-      </div>
-    </aside>
-  );
-}
-
 function SpecBlock({
   children,
   label,
@@ -447,7 +367,6 @@ function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: str
     chevronDown: <path d="m6 9 6 6 6-6" />,
     chevronRight: <path d="m9 6 6 6-6 6" />,
     dashboard: <path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z" />,
-    edit: <path d="M4 20h4l11-11-4-4L4 16v4ZM13 7l4 4" />,
     layers: <path d="m12 3 9 5-9 5-9-5 9-5Zm-7 9 7 4 7-4M5 16l7 4 7-4" />,
     lightbulb: <path d="M9 18h6M10 22h4M8 14a6 6 0 1 1 8 0c-.8.7-1 1.5-1 2H9c0-.5-.2-1.3-1-2Z" />,
     movie: <path d="M4 5h16v14H4zM8 5l2 4M14 5l2 4M4 9h16" />,

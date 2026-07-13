@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
+import type { Dispatch } from "react";
 import { AiPlanDialog } from "@/components/calendar/ai-plan-dialog";
-import { AiPlanItemDialog } from "@/components/calendar/ai-plan-item-dialog";
 import { AiPlanResultDialog } from "@/components/calendar/ai-plan-result-dialog";
-import { CalendarHeader } from "@/components/calendar/calendar-header";
+import { CalendarWorkspaceHeader } from "@/components/calendar/calendar-workspace-header";
+import { CalendarWorkspaceShell } from "@/components/calendar/calendar-workspace-shell";
 import { CalendarLegend } from "@/components/calendar/calendar-legend";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { DayAgendaPopover } from "@/components/calendar/day-agenda-popover";
@@ -13,48 +14,52 @@ import { DeletePostDialog } from "@/components/calendar/delete-post-dialog";
 import { EditPostDialog, type EditPostPayload } from "@/components/calendar/edit-post-dialog";
 import { MonthGrid } from "@/components/calendar/month-grid";
 import { PostDetailDrawer } from "@/components/calendar/post-detail-drawer";
+import { PlanningBriefPreviewDrawer } from "@/components/calendar/planning-brief-preview-drawer";
 import { ReschedulePostDialog, type ReschedulePostPayload } from "@/components/calendar/reschedule-post-dialog";
 import { SchedulePostDialog, type SchedulePostPayload } from "@/components/calendar/schedule-post-dialog";
-import { ScheduleUnscheduledIdeaDialog, type ScheduleUnscheduledIdeaPayload } from "@/components/calendar/schedule-unscheduled-idea-dialog";
-import { DeleteUnscheduledIdeaDialog } from "@/components/calendar/delete-unscheduled-idea-dialog";
-import { UnscheduledIdeaDialog, type UnscheduledIdeaFormPayload } from "@/components/calendar/unscheduled-idea-dialog";
-import { UnscheduledIdeasPanel } from "@/components/calendar/unscheduled-ideas-panel";
 import { WeekGrid } from "@/components/calendar/week-grid";
 import { initialCalendarState } from "@/lib/calendar/mock-data";
 import type { AiPlanRequest } from "@/lib/calendar/ai-plan-types";
-import { derivePlanTime, detectAiPlanConflicts, generateMockAiPlan, getAvailablePlanDates } from "@/lib/calendar/ai-plan-generator";
-import type { AiPlanDraftItem } from "@/lib/calendar/ai-plan-result-types";
-import { platformAssetTypes } from "@/lib/calendar/platform-options";
-import { initialUnscheduledIdeas } from "@/lib/calendar/unscheduled-idea-mock-data";
-import { filterUnscheduledIdeas, sortUnscheduledIdeas } from "@/lib/calendar/unscheduled-idea-utils";
-import type { UnscheduledIdea, UnscheduledIdeaFilters } from "@/lib/calendar/unscheduled-idea-types";
-import { calendarReducer } from "@/lib/calendar/reducer";
+import { generateMockAiPlan } from "@/lib/calendar/ai-plan-generator";
+import { createGeneratedPlan, getGeneratedPlanByBriefId, getGeneratedPlanById, readGeneratedPlans, saveGeneratedPlan } from "@/lib/calendar/generated-plan-store";
+import type { GeneratedDraftPlan, GeneratedDraftPlanItem } from "@/lib/calendar/generated-plan-types";
+import { getGeneratedItemScheduleIssue, getGeneratedItemTime } from "@/lib/calendar/generated-plan-utils";
+import { readPlanningBriefs, savePlanningBrief } from "@/lib/calendar/planning-brief-store";
+import { activePlanningBriefPermissions, getPlanningBriefPermissions } from "@/lib/calendar/planning-brief-permissions";
+import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
+import { getManualPostById, manualPostToInput, readManualPosts, saveManualPostDraft } from "@/lib/calendar/manual-post-store";
+import { activeManualPostPermissions } from "@/lib/calendar/manual-post-permissions";
+import type { ManualPostDraft } from "@/lib/calendar/manual-post-types";
+import { calendarReducer, type CalendarAction } from "@/lib/calendar/reducer";
 import { getCalendarEvents, getFilteredVersions, getIdeaById, getPillarById, getVersionById } from "@/lib/calendar/selectors";
-import type { ContentVersion } from "@/lib/calendar/types";
+import type { CalendarState, ContentIdea, ContentVersion } from "@/lib/calendar/types";
 
 const today = "2026-07-11";
+const planningBriefPermissions = activePlanningBriefPermissions;
+const planningBriefViewerPermissions = getPlanningBriefPermissions("viewer");
 type PostAction = "edit" | "reschedule" | "delete";
-type UnscheduledIdeaAction = "create" | "edit" | "schedule" | "delete";
-const navItems = [["Dashboard", "/dashboard"], ["Brands", "/brands"], ["Campaigns", "/campaigns"], ["Content Calendar", "/calendar"], ["Assets", "/assets"], ["Analytics", "/analytics"]] as const;
 
 export function CalendarClient() {
+  const router = useRouter();
   const [state, dispatch] = useReducer(calendarReducer, initialCalendarState);
   const [agendaDate, setAgendaDate] = useState<string>();
   const [activePostAction, setActivePostAction] = useState<PostAction>();
   const [actionVersionId, setActionVersionId] = useState<string>();
   const [pendingAiPlanRequest, setPendingAiPlanRequest] = useState<AiPlanRequest>();
-  const [pendingAiPlanResult, setPendingAiPlanResult] = useState<AiPlanDraftItem[]>([]);
+  const [editingPlanningBrief, setEditingPlanningBrief] = useState<PlanningBrief>();
+  const [editingManualPost, setEditingManualPost] = useState<ManualPostDraft>();
+  const [activeGeneratedPlan, setActiveGeneratedPlan] = useState<GeneratedDraftPlan>();
+  const [storedGeneratedPlans, setStoredGeneratedPlans] = useState<GeneratedDraftPlan[]>([]);
+  const [storedPlanningBriefs, setStoredPlanningBriefs] = useState<PlanningBrief[]>([]);
+  const [pendingAiPlanResult, setPendingAiPlanResult] = useState<GeneratedDraftPlanItem[]>([]);
   const [aiPlanResultOpen, setAiPlanResultOpen] = useState(false);
-  const [aiPlanGenerating, setAiPlanGenerating] = useState(false);
-  const [activeAiPlanItemId, setActiveAiPlanItemId] = useState<string>();
-  const [aiPlanItemMode, setAiPlanItemMode] = useState<"create" | "edit">();
-  const [aiApprovalError, setAiApprovalError] = useState("");
-  const aiGenerationTimerRef = useRef<number | undefined>(undefined);
-  const manualAiItemCounterRef = useRef(0);
-  const [unscheduledIdeas, setUnscheduledIdeas] = useState<UnscheduledIdea[]>(initialUnscheduledIdeas);
-  const [unscheduledIdeaFilters, setUnscheduledIdeaFilters] = useState<UnscheduledIdeaFilters>({ search: "", pillarId: "all", platform: "all", source: "all" });
-  const [activeUnscheduledAction, setActiveUnscheduledAction] = useState<UnscheduledIdeaAction>();
-  const [activeUnscheduledIdeaId, setActiveUnscheduledIdeaId] = useState<string>();
+  const [aiPlanMessage, setAiPlanMessage] = useState("");
+  const [focusedGeneratedItemId, setFocusedGeneratedItemId] = useState<string>();
+  const [generatedPlanReadOnly, setGeneratedPlanReadOnly] = useState(false);
+  const [returnToPostVersionId, setReturnToPostVersionId] = useState<string>();
+  const [sourcePlanningBriefId, setSourcePlanningBriefId] = useState<string>();
+  const [newlyAddedVersionIds, setNewlyAddedVersionIds] = useState<ReadonlySet<string>>(() => new Set());
+  const manualPostSaveRef = useRef(false);
   const drawerTriggerRef = useRef<HTMLElement | null>(null);
   const filteredVersions = getFilteredVersions(state);
   const calendarEvents = getCalendarEvents(state);
@@ -64,43 +69,57 @@ export function CalendarClient() {
   const selectedVersion = state.selectedVersionId ? getVersionById(state, state.selectedVersionId) : undefined;
   const selectedIdea = selectedVersion ? getIdeaById(state, selectedVersion.contentIdeaId) : undefined;
   const selectedPillar = selectedIdea ? getPillarById(state, selectedIdea.pillarId) : undefined;
+  const selectedGeneratedPlanId = selectedIdea?.generatedPlanId ?? selectedVersion?.generatedPlanId;
+  const selectedGeneratedItemId = selectedIdea?.generatedPlanItemId ?? selectedVersion?.generatedPlanItemId;
+  const selectedPlanningBriefId = selectedIdea?.planningBriefId ?? selectedVersion?.planningBriefId;
+  const selectedGeneratedPlan = selectedGeneratedPlanId ? storedGeneratedPlans.find((plan) => plan.id === selectedGeneratedPlanId) : undefined;
+  const selectedGeneratedItem = selectedGeneratedItemId ? selectedGeneratedPlan?.items.find((item) => item.id === selectedGeneratedItemId) : undefined;
+  const selectedPlanningBrief = selectedPlanningBriefId ? storedPlanningBriefs.find((brief) => brief.id === selectedPlanningBriefId) : undefined;
+  const sourcePlanningBrief = sourcePlanningBriefId ? storedPlanningBriefs.find((brief) => brief.id === sourcePlanningBriefId) : undefined;
   const actionVersion = actionVersionId ? getVersionById(state, actionVersionId) : undefined;
   const actionIdea = actionVersion ? getIdeaById(state, actionVersion.contentIdeaId) : undefined;
   const siblingVersions = actionIdea ? state.versions.filter((version) => version.contentIdeaId === actionIdea.id) : [];
-  const activeAiPlanItem = activeAiPlanItemId ? pendingAiPlanResult.find((item) => item.id === activeAiPlanItemId) : undefined;
-  const aiPlanItem = aiPlanItemMode === "create" && pendingAiPlanRequest && activeAiPlanItemId ? createManualAiItem(pendingAiPlanRequest, state.pillars, activeAiPlanItemId) : activeAiPlanItem;
-  const visibleUnscheduledIdeas = sortUnscheduledIdeas(filterUnscheduledIdeas(unscheduledIdeas, unscheduledIdeaFilters));
-  const activeUnscheduledIdea = activeUnscheduledIdeaId ? unscheduledIdeas.find((idea) => idea.id === activeUnscheduledIdeaId) : undefined;
 
-  useEffect(() => () => { if (aiGenerationTimerRef.current !== undefined) window.clearTimeout(aiGenerationTimerRef.current); }, []);
+  useEffect(() => {
+    let active = true;
+    window.queueMicrotask(() => {
+      if (!active) return;
+      const params = new URLSearchParams(window.location.search);
+      const editId = params.get("editBrief"); const generateId = params.get("generateBrief"); const viewPlanId = params.get("viewPlan"); const create = params.get("newBrief"); const editDraftId = params.get("editDraft"); const createPost = params.get("createPost"); const postId = params.get("post");
+      const briefs = readPlanningBriefs(window.localStorage);
+      const plans = readGeneratedPlans(window.localStorage);
+      const manualPosts = readManualPosts(window.localStorage);
+      setStoredPlanningBriefs(briefs);
+      setStoredGeneratedPlans(plans);
+      restoreGeneratedCalendarPosts(plans, dispatch);
+      restoreManualCalendarPosts(manualPosts, dispatch);
+      if (generateId && !planningBriefPermissions.canGenerate) return;
+      if (editDraftId && activeManualPostPermissions.canEdit) { const post = getManualPostById(manualPosts, editDraftId); if (post && (post.status === "draft" || post.status === "changes_requested")) { setEditingManualPost(post); dispatch({ type: "OPEN_SCHEDULE_DIALOG" }); } }
+      else if (postId) { const post = manualPosts.find((item) => item.versions.some((version) => version.id === postId) && item.status === "scheduled"); const version = post?.versions.find((item) => item.id === postId); if (version) { dispatch({ type: "SET_CURRENT_DATE", payload: version.publishDate }); dispatch({ type: "OPEN_POST_DETAIL", payload: version.id }); } }
+      else if (editId) { const brief = briefs.find((item) => item.id === editId && (item.status === "draft" || item.status === "changes_requested")); if (brief) { setEditingPlanningBrief(brief); setPendingAiPlanRequest(brief.request); dispatch({ type: "OPEN_AI_PLAN_DIALOG" }); } }
+      else if (generateId) { const brief = briefs.find((item) => item.id === generateId && item.status === "approved"); if (brief) { const plan = getGeneratedPlanByBriefId(plans, brief.id) ?? createGeneratedPlan(window.localStorage, brief, generateMockAiPlan(brief.request, initialCalendarState.pillars, initialCalendarState.versions)); setStoredGeneratedPlans((current) => upsertGeneratedPlan(current, plan)); setPendingAiPlanRequest(brief.request); setActiveGeneratedPlan(plan); setPendingAiPlanResult(plan.items); setGeneratedPlanReadOnly(false); setAiPlanResultOpen(true); } }
+      else if (viewPlanId) { const plan = getGeneratedPlanById(plans, viewPlanId); setActiveGeneratedPlan(plan); setPendingAiPlanResult(plan?.items ?? []); setGeneratedPlanReadOnly(false); setAiPlanResultOpen(true); }
+      else if (create) dispatch({ type: "OPEN_AI_PLAN_DIALOG" });
+      else if (createPost && activeManualPostPermissions.canCreate) dispatch({ type: "OPEN_SCHEDULE_DIALOG" });
+    });
+    return () => { active = false; };
+  }, []);
 
   function openEvent(versionId: string) {
     drawerTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    setNewlyAddedVersionIds((current) => current.has(versionId) ? new Set([...current].filter((id) => id !== versionId)) : current);
     setAgendaDate(undefined);
     dispatch({ type: "OPEN_POST_DETAIL", payload: versionId });
   }
 
   function handleSchedulePost(payload: SchedulePostPayload) {
-    const suffix = Date.now().toString();
-    const timestamp = new Date().toISOString();
-    const ideaId = `idea-${suffix}`;
-    dispatch({
-      type: "ADD_IDEA",
-      payload: { id: ideaId, ...payload.idea, createdAt: timestamp, updatedAt: timestamp },
-    });
-    for (const version of payload.versions) {
-      dispatch({
-        type: "ADD_VERSION",
-        payload: {
-          id: `version-${version.platform}-${suffix}`,
-          contentIdeaId: ideaId,
-          ...version,
-          createdAt: timestamp,
-          updatedAt: timestamp,
-        },
-      });
-    }
+    if (manualPostSaveRef.current) return;
+    manualPostSaveRef.current = true;
+    saveManualPostDraft(window.localStorage, payload, editingManualPost);
+    window.sessionStorage.setItem("post-draft-message", "Post saved as draft.");
+    setEditingManualPost(undefined);
     dispatch({ type: "CLOSE_SCHEDULE_DIALOG" });
+    router.push("/calendar/drafts");
   }
 
   function openPostAction(action: PostAction, versionId: string) {
@@ -158,85 +177,137 @@ export function CalendarClient() {
   }
 
   function handleSaveAiPlanRequest(request: AiPlanRequest) {
-    setPendingAiPlanRequest(request);
+    const brief = savePlanningBrief(window.localStorage, request, editingPlanningBrief);
+    setStoredPlanningBriefs((current) => [brief, ...current.filter((item) => item.id !== brief.id)]);
+    window.sessionStorage.setItem("planning-brief-message", editingPlanningBrief ? "Planning Brief updated." : "Planning Brief saved as Draft.");
+    setPendingAiPlanRequest(request); setEditingPlanningBrief(undefined);
     dispatch({ type: "CLOSE_AI_PLAN_DIALOG" });
+    router.push("/calendar/planning-briefs");
   }
 
-  function runAiGeneration(request: AiPlanRequest) {
-    if (aiGenerationTimerRef.current !== undefined) window.clearTimeout(aiGenerationTimerRef.current);
-    setAiPlanResultOpen(true); setAiPlanGenerating(true); setPendingAiPlanResult([]); setAiApprovalError("");
-    aiGenerationTimerRef.current = window.setTimeout(() => {
-      setPendingAiPlanResult(generateMockAiPlan(request, state.pillars, state.versions));
-      setAiPlanGenerating(false); aiGenerationTimerRef.current = undefined;
-    }, 800);
+  function closeAiResult() { const versionId = returnToPostVersionId; setAiPlanResultOpen(false); setAiPlanMessage(""); setFocusedGeneratedItemId(undefined); setGeneratedPlanReadOnly(false); setReturnToPostVersionId(undefined); if (versionId) dispatch({ type: "OPEN_POST_DETAIL", payload: versionId }); }
+
+  function viewGeneratedPlan(planId: string, itemId: string, versionId: string) {
+    const plan = storedGeneratedPlans.find((item) => item.id === planId);
+    if (!plan) return;
+    dispatch({ type: "CLOSE_POST_DETAIL" });
+    setActiveGeneratedPlan(plan);
+    setPendingAiPlanResult(plan.items.map((item) => ({ ...item, selected: false })));
+    setFocusedGeneratedItemId(itemId);
+    setGeneratedPlanReadOnly(true);
+    setReturnToPostVersionId(versionId);
+    setAiPlanMessage("");
+    setAiPlanResultOpen(true);
   }
 
-  function handleGenerateAiPlan(request: AiPlanRequest) {
-    setPendingAiPlanRequest(request);
-    dispatch({ type: "CLOSE_AI_PLAN_DIALOG" });
-    runAiGeneration(request);
+  function viewPlanningBrief(briefId: string, versionId: string) {
+    if (!storedPlanningBriefs.some((brief) => brief.id === briefId)) return;
+    dispatch({ type: "CLOSE_POST_DETAIL" });
+    setReturnToPostVersionId(versionId);
+    setSourcePlanningBriefId(briefId);
   }
 
-  function closeAiResult() { if (aiGenerationTimerRef.current !== undefined) window.clearTimeout(aiGenerationTimerRef.current); aiGenerationTimerRef.current = undefined; setAiPlanGenerating(false); setAiPlanResultOpen(false); setAiPlanItemMode(undefined); setActiveAiPlanItemId(undefined); }
-  function recalculate(items: AiPlanDraftItem[]) { return detectAiPlanConflicts(items, state.versions); }
-  function saveAiPlanItem(item: AiPlanDraftItem) { const next = aiPlanItemMode === "edit" ? pendingAiPlanResult.map((current) => current.id === item.id ? item : current) : [...pendingAiPlanResult, item]; setPendingAiPlanResult(recalculate(next)); setAiPlanItemMode(undefined); setActiveAiPlanItemId(undefined); setAiApprovalError(""); }
-  function removeAiPlanItem(id: string) { setPendingAiPlanResult((current) => recalculate(current.filter((item) => item.id !== id))); setAiApprovalError(""); }
-  function openCreateAiItem() { manualAiItemCounterRef.current += 1; setActiveAiPlanItemId(`ai-plan-manual-${manualAiItemCounterRef.current}`); setAiPlanItemMode("create"); }
+  function closeSourcePlanningBrief() {
+    const versionId = returnToPostVersionId;
+    setSourcePlanningBriefId(undefined);
+    setReturnToPostVersionId(undefined);
+    if (versionId) dispatch({ type: "OPEN_POST_DETAIL", payload: versionId });
+  }
+
+  function viewPlanFromSourcePlanningBrief(planId: string) {
+    const plan = storedGeneratedPlans.find((item) => item.id === planId);
+    if (!plan) return;
+    setSourcePlanningBriefId(undefined);
+    setActiveGeneratedPlan(plan);
+    setPendingAiPlanResult(plan.items.map((item) => ({ ...item, selected: false })));
+    setFocusedGeneratedItemId(undefined);
+    setGeneratedPlanReadOnly(true);
+    setAiPlanMessage("");
+    setAiPlanResultOpen(true);
+  }
+
+  function viewActivePlanInCalendar() {
+    if (!activeGeneratedPlan) return;
+    const targetItems = activeGeneratedPlan.items.filter((item) => item.calendarStatus === "added_to_calendar" && item.calendarPostId && !getGeneratedItemScheduleIssue(item)).sort((first, second) => first.publishDate.localeCompare(second.publishDate) || first.id.localeCompare(second.id));
+    const target = targetItems[0];
+    if (!target?.calendarPostId) return;
+    const targetVersion = getVersionById(state, target.calendarPostId);
+    const targetIdea = targetVersion ? getIdeaById(state, targetVersion.contentIdeaId) : undefined;
+    if (targetVersion) revealTargetThroughFilters(state, targetVersion, targetIdea, dispatch);
+    setNewlyAddedVersionIds(new Set(targetItems.flatMap((item) => item.calendarPostId ? [item.calendarPostId] : [])));
+    setReturnToPostVersionId(undefined);
+    setFocusedGeneratedItemId(undefined);
+    setGeneratedPlanReadOnly(false);
+    setAiPlanResultOpen(false);
+    dispatch({ type: "SET_CURRENT_DATE", payload: target.publishDate });
+  }
 
   function approveAiPlan() {
-    const selected = pendingAiPlanResult.filter((item) => item.selected);
-    if (!selected.length) return setAiApprovalError("Select at least one plan item.");
-    if (selected.some((item) => item.conflicts.length)) return setAiApprovalError("Resolve schedule conflicts before approving selected posts.");
-    const suffix = Date.now().toString(); const timestamp = new Date().toISOString();
-    selected.forEach((item, index) => { const ideaId = `idea-ai-${suffix}-${index + 1}`; dispatch({ type: "ADD_IDEA", payload: { id: ideaId, title: item.title, coreTopic: item.coreTopic, pillarId: item.pillarId, objective: item.objective, targetAudience: item.targetAudience, mainMessage: item.mainMessage, creationSource: "ai", createdAt: timestamp, updatedAt: timestamp } }); dispatch({ type: "ADD_VERSION", payload: { id: `version-ai-${item.platform}-${suffix}-${index + 1}`, contentIdeaId: ideaId, platform: item.platform, assetType: item.assetType, headline: item.headline, caption: item.caption, cta: item.cta, hashtags: item.hashtags, visualBrief: item.visualBrief, publishDate: item.publishDate, publishTime: item.publishTime, timezone: item.timezone, status: "draft", createdBy: "AI Planner", createdAt: timestamp, updatedAt: timestamp } }); });
-    setPendingAiPlanResult([]); setAiPlanResultOpen(false); setAiPlanItemMode(undefined); setActiveAiPlanItemId(undefined); setAiApprovalError("");
+    if (!activeGeneratedPlan) return;
+    const selected = pendingAiPlanResult.filter((item) => item.selected && item.calendarStatus === "not_added" && !item.calendarPostId);
+    if (!selected.length || selected.some((item) => item.conflicts.length)) return;
+    const valid = selected.filter((item) => !getGeneratedItemScheduleIssue(item));
+    const invalidCount = selected.length - valid.length;
+    if (!valid.length) { setAiPlanMessage(`${invalidCount} selected item${invalidCount === 1 ? " needs" : "s need"} a date or platform before it can be added.`); return; }
+    const timestamp = new Date().toISOString();
+    valid.forEach((item) => addGeneratedItemToCalendar(item, activeGeneratedPlan, timestamp, dispatch));
+    const addedIds = new Set(valid.map((item) => item.id));
+    const items = pendingAiPlanResult.map((item): GeneratedDraftPlanItem => addedIds.has(item.id) ? { ...item, selected: false, calendarStatus: "added_to_calendar", calendarPostId: generatedVersionId(item.id) } : item);
+    const plan = saveGeneratedPlan(window.localStorage, { ...activeGeneratedPlan, items });
+    setStoredGeneratedPlans((current) => upsertGeneratedPlan(current, plan));
+    setActiveGeneratedPlan(plan); setPendingAiPlanResult(plan.items); setAiPlanMessage(formatApprovalResult(valid, invalidCount));
   }
 
-  function editAiBrief() { closeAiResult(); dispatch({ type: "OPEN_AI_PLAN_DIALOG" }); }
-
-  function openUnscheduledAction(action: UnscheduledIdeaAction, ideaId?: string) {
-    setAgendaDate(undefined); dispatch({ type: "CLOSE_POST_DETAIL" }); dispatch({ type: "CLOSE_SCHEDULE_DIALOG" }); dispatch({ type: "CLOSE_AI_PLAN_DIALOG" });
-    setActivePostAction(undefined); setActionVersionId(undefined); closeAiResult();
-    setActiveUnscheduledIdeaId(ideaId); setActiveUnscheduledAction(action);
-  }
-  function closeUnscheduledAction() { setActiveUnscheduledAction(undefined); setActiveUnscheduledIdeaId(undefined); }
-  function saveUnscheduledIdea(payload: UnscheduledIdeaFormPayload) { const timestamp=new Date().toISOString(); if(activeUnscheduledAction==="edit"&&activeUnscheduledIdea){setUnscheduledIdeas(current=>current.map(idea=>idea.id===activeUnscheduledIdea.id?{...idea,...payload,id:idea.id,createdAt:idea.createdAt,updatedAt:timestamp}:idea));}else{setUnscheduledIdeas(current=>[{...payload,id:`unscheduled-idea-${Date.now()}`,createdAt:timestamp,updatedAt:timestamp},...current]);}closeUnscheduledAction(); }
-  function deleteUnscheduledIdea() { if(activeUnscheduledIdeaId)setUnscheduledIdeas(current=>current.filter(idea=>idea.id!==activeUnscheduledIdeaId)); closeUnscheduledAction(); }
-  function scheduleUnscheduledIdea(payload: ScheduleUnscheduledIdeaPayload) { const suffix=Date.now().toString();const timestamp=new Date().toISOString();const ideaId=`idea-unscheduled-${suffix}`;dispatch({type:"ADD_IDEA",payload:{id:ideaId,title:payload.idea.title,coreTopic:payload.idea.coreTopic,pillarId:payload.idea.pillarId,objective:payload.idea.objective,targetAudience:payload.idea.targetAudience,mainMessage:payload.idea.mainMessage,campaignId:payload.idea.campaignId,creationSource:payload.idea.creationSource,createdAt:timestamp,updatedAt:timestamp}});payload.versions.forEach((version,index)=>dispatch({type:"ADD_VERSION",payload:{id:`version-unscheduled-${version.platform}-${suffix}-${index+1}`,contentIdeaId:ideaId,...version,createdAt:timestamp,updatedAt:timestamp}}));if(payload.removeAfterScheduling)setUnscheduledIdeas(current=>current.filter(idea=>idea.id!==payload.idea.id));closeUnscheduledAction(); }
-
-  return <main className="min-h-screen overflow-x-hidden bg-[#f8f9ff] text-[#0b1c30] lg:pl-64">
-    <CalendarSidebar />
-    <section className="min-h-screen">
-      <CalendarHeader view={state.view} onViewChange={(view) => dispatch({ type: "SET_VIEW", payload: view })} onSchedulePost={() => dispatch({ type: "OPEN_SCHEDULE_DIALOG" })} onOpenAiPlan={openAiPlan} />
-      <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-        <CalendarToolbar view={state.view} currentDate={state.currentDate} filters={state.filters} pillars={state.pillars} creators={creators} onPrevious={() => dispatch({ type: "GO_TO_PREVIOUS_PERIOD" })} onNext={() => dispatch({ type: "GO_TO_NEXT_PERIOD" })} onToday={() => dispatch({ type: "GO_TO_TODAY", payload: today })} onFilterChange={(key, value) => dispatch({ type: "SET_FILTER", payload: { key, value } })} onResetFilters={() => dispatch({ type: "RESET_FILTERS" })} />
+  return <>
+    <CalendarWorkspaceShell header={<CalendarWorkspaceHeader variant="calendar" view={state.view} onViewChange={(view) => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "SET_VIEW", payload: view }); }} onCreatePost={activeManualPostPermissions.canCreate ? () => { manualPostSaveRef.current = false; setEditingManualPost(undefined); dispatch({ type: "OPEN_SCHEDULE_DIALOG" }); } : undefined} onOpenAiPlan={planningBriefPermissions.canCreate ? openAiPlan : undefined} />}>
+        <CalendarToolbar view={state.view} currentDate={state.currentDate} filters={state.filters} pillars={state.pillars} creators={creators} onPrevious={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_PREVIOUS_PERIOD" }); }} onNext={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_NEXT_PERIOD" }); }} onToday={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_TODAY", payload: today }); }} onFilterChange={(key, value) => dispatch({ type: "SET_FILTER", payload: { key, value } })} onResetFilters={() => dispatch({ type: "RESET_FILTERS" })} />
         <CalendarLegend pillars={state.pillars} />
         {filteredVersions.length === 0 && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d3e4fe] bg-white px-4 py-3 text-sm text-[#657080]"><span>No content matches the selected filters.</span><button type="button" disabled={!filtersActive} onClick={() => dispatch({ type: "RESET_FILTERS" })} className="font-bold text-[#0058bc] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reset filters</button></div>}
-        {state.view === "month" ? <MonthGrid currentDate={state.currentDate} events={calendarEvents} today={today} onEventClick={openEvent} onMoreClick={setAgendaDate} /> : <WeekGrid currentDate={state.currentDate} events={calendarEvents} today={today} onEventClick={openEvent} />}
-        <UnscheduledIdeasPanel ideas={visibleUnscheduledIdeas} totalCount={unscheduledIdeas.length} filters={unscheduledIdeaFilters} pillars={state.pillars} onFilterChange={(key,value)=>setUnscheduledIdeaFilters(current=>({...current,[key]:value}))} onResetFilters={()=>setUnscheduledIdeaFilters({search:"",pillarId:"all",platform:"all",source:"all"})} onCreate={()=>openUnscheduledAction("create")} onEdit={(id)=>openUnscheduledAction("edit",id)} onSchedule={(id)=>openUnscheduledAction("schedule",id)} onDelete={(id)=>openUnscheduledAction("delete",id)} />
-      </div>
-    </section>
+        {state.view === "month" ? <MonthGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} onMoreClick={setAgendaDate} /> : <WeekGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} />}
+    </CalendarWorkspaceShell>
     <DayAgendaPopover date={agendaDate} events={agendaEvents} onEventClick={openEvent} onClose={() => setAgendaDate(undefined)} />
-    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onEdit={(id) => openPostAction("edit", id)} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} />
-    {state.scheduleDialogOpen && <SchedulePostDialog open pillars={state.pillars} defaultDate={state.selectedDate ?? state.currentDate} onClose={() => dispatch({ type: "CLOSE_SCHEDULE_DIALOG" })} onSubmit={handleSchedulePost} />}
+    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} generatedPlan={selectedGeneratedPlan} generatedItem={selectedGeneratedItem} planningBrief={selectedPlanningBrief} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onEdit={(id) => openPostAction("edit", id)} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} onViewGeneratedPlan={viewGeneratedPlan} onViewPlanningBrief={viewPlanningBrief} />
+    {state.scheduleDialogOpen && <SchedulePostDialog open pillars={state.pillars} defaultDate={state.selectedDate ?? state.currentDate} initialPayload={editingManualPost ? manualPostToInput(editingManualPost) : undefined} onClose={() => { const returnToDrafts = Boolean(editingManualPost); setEditingManualPost(undefined); dispatch({ type: "CLOSE_SCHEDULE_DIALOG" }); if (returnToDrafts) router.push("/calendar/drafts"); }} onSubmit={handleSchedulePost} />}
     {activePostAction === "edit" && <EditPostDialog open idea={actionIdea} version={actionVersion} pillars={state.pillars} onClose={() => closePostAction()} onSubmit={handleEditPost} />}
     {activePostAction === "reschedule" && <ReschedulePostDialog open idea={actionIdea} version={actionVersion} onClose={() => closePostAction()} onSubmit={handleReschedulePost} />}
     {activePostAction === "delete" && <DeletePostDialog open idea={actionIdea} version={actionVersion} siblingVersionCount={siblingVersions.length} onClose={() => closePostAction()} onConfirm={handleDeletePost} />}
-    {state.aiPlanDialogOpen && <AiPlanDialog open pillars={state.pillars} defaultStartDate={state.currentDate} initialRequest={pendingAiPlanRequest} onClose={() => dispatch({ type: "CLOSE_AI_PLAN_DIALOG" })} onSubmit={handleSaveAiPlanRequest} onGenerate={handleGenerateAiPlan} />}
-    {aiPlanResultOpen && !aiPlanItemMode && <AiPlanResultDialog open loading={aiPlanGenerating} request={pendingAiPlanRequest} items={pendingAiPlanResult} pillars={state.pillars} approvalError={aiApprovalError} onClose={closeAiResult} onRegenerate={() => pendingAiPlanRequest && runAiGeneration(pendingAiPlanRequest)} onEditBrief={editAiBrief} onToggleItem={(id, selected) => { setPendingAiPlanResult((current) => current.map((item) => item.id === id ? { ...item, selected } : item)); setAiApprovalError(""); }} onSelectAll={() => setPendingAiPlanResult((current) => current.map((item) => ({ ...item, selected: true })))} onClearSelection={() => setPendingAiPlanResult((current) => current.map((item) => ({ ...item, selected: false })))} onEditItem={(id) => { setActiveAiPlanItemId(id); setAiPlanItemMode("edit"); }} onRemoveItem={removeAiPlanItem} onAddItem={openCreateAiItem} onApproveSelected={approveAiPlan} />}
-    {aiPlanItemMode && <AiPlanItemDialog open mode={aiPlanItemMode} item={aiPlanItem} request={pendingAiPlanRequest} pillars={state.pillars} onClose={() => { setAiPlanItemMode(undefined); setActiveAiPlanItemId(undefined); }} onSubmit={saveAiPlanItem} />}
-    {(activeUnscheduledAction==="create"||activeUnscheduledAction==="edit")&&<UnscheduledIdeaDialog open mode={activeUnscheduledAction} idea={activeUnscheduledIdea} pillars={state.pillars} onClose={closeUnscheduledAction} onSubmit={saveUnscheduledIdea}/>} 
-    {activeUnscheduledAction==="schedule"&&<ScheduleUnscheduledIdeaDialog open idea={activeUnscheduledIdea} pillars={state.pillars} defaultDate={state.currentDate} onClose={closeUnscheduledAction} onSubmit={scheduleUnscheduledIdea}/>} 
-    {activeUnscheduledAction==="delete"&&<DeleteUnscheduledIdeaDialog open idea={activeUnscheduledIdea} pillar={state.pillars.find(pillar=>pillar.id===activeUnscheduledIdea?.pillarId)} onClose={closeUnscheduledAction} onConfirm={deleteUnscheduledIdea}/>} 
-  </main>;
+    {state.aiPlanDialogOpen && <AiPlanDialog open pillars={state.pillars} defaultStartDate={state.currentDate} initialRequest={pendingAiPlanRequest} onClose={() => dispatch({ type: "CLOSE_AI_PLAN_DIALOG" })} onSubmit={handleSaveAiPlanRequest} />}
+    {aiPlanResultOpen && <AiPlanResultDialog open plan={activeGeneratedPlan} items={pendingAiPlanResult} canApprove={!generatedPlanReadOnly} message={aiPlanMessage} focusedItemId={focusedGeneratedItemId} onViewInCalendar={activeGeneratedPlan?.items.some((item) => item.calendarStatus === "added_to_calendar" && item.calendarPostId) ? viewActivePlanInCalendar : undefined} onClose={closeAiResult} onToggleItem={(id, selected) => { if (generatedPlanReadOnly) return; setPendingAiPlanResult((current) => current.map((item) => item.id === id && item.calendarStatus === "not_added" ? { ...item, selected } : item)); setAiPlanMessage(""); }} onSelectAll={() => { if (!generatedPlanReadOnly) setPendingAiPlanResult((current) => current.map((item) => ({ ...item, selected: item.calendarStatus === "not_added" }))); }} onClearSelection={() => { if (!generatedPlanReadOnly) setPendingAiPlanResult((current) => current.map((item) => ({ ...item, selected: false }))); }} onApproveSelected={approveAiPlan} />}
+    {sourcePlanningBrief && <PlanningBriefPreviewDrawer brief={sourcePlanningBrief} generatedPlan={getGeneratedPlanByBriefId(storedGeneratedPlans, sourcePlanningBrief.id)} permissions={planningBriefViewerPermissions} onClose={closeSourcePlanningBrief} onSubmit={() => undefined} onApprove={() => undefined} onRequestChanges={() => undefined} onViewGeneratedPlan={viewPlanFromSourcePlanningBrief} />}
+  </>;
 }
 
-function createManualAiItem(request: AiPlanRequest, pillars: import("@/lib/calendar/types").ContentPillar[], id: string): AiPlanDraftItem | undefined {
-  const dates = getAvailablePlanDates(request); const platform = request.platforms[0]; const pillar = pillars.find((value) => request.pillarIds.includes(value.id));
-  if (!dates[0] || !platform || !pillar) return undefined;
-  return { id, selected: true, title: "Manual Draft Content Idea", coreTopic: `Content for ${request.targetAudience}`, pillarId: pillar.id, objective: request.objective, targetAudience: request.targetAudience, mainMessage: "A manually added item for this draft plan.", isPromotional: false, platform, assetType: platformAssetTypes[platform][0], headline: "New Draft Post", caption: "Draft caption ready for refinement.", cta: "Learn more", hashtags: ["contentplan", platform], visualBrief: `Create a clear ${platform} visual.`, publishDate: dates[0], publishTime: derivePlanTime(request.preferredTimes, 0), timezone: "Asia/Jakarta", conflicts: [] };
+function generatedIdeaId(itemId: string) { return `idea-generated-${itemId}`; }
+function generatedVersionId(itemId: string) { return `version-generated-${itemId}`; }
+function addGeneratedItemToCalendar(item: GeneratedDraftPlanItem, plan: GeneratedDraftPlan, timestamp: string, dispatch: Dispatch<CalendarAction>) {
+  const ideaId = generatedIdeaId(item.id); const versionId = generatedVersionId(item.id);
+  dispatch({ type: "ADD_IDEA", payload: { id: ideaId, title: item.title, coreTopic: item.coreTopic, pillarId: item.pillarId, objective: item.objective, targetAudience: item.targetAudience, mainMessage: item.mainMessage, campaignId: plan.campaignId, campaignName: plan.campaignName, brandId: plan.brandId, brandName: plan.brandName, creationSource: "generated_plan", planningBriefId: plan.planningBriefId, generatedPlanId: plan.id, generatedPlanItemId: item.id, createdAt: timestamp, updatedAt: timestamp } });
+  dispatch({ type: "ADD_VERSION", payload: { id: versionId, contentIdeaId: ideaId, platform: item.platform, assetType: item.assetType, headline: item.headline, caption: item.caption, cta: item.cta, hashtags: item.hashtags, visualBrief: item.visualBrief, publishDate: item.publishDate, publishTime: getGeneratedItemTime(item), timezone: item.timezone, status: "scheduled", createdBy: plan.generatedBy, planningBriefId: plan.planningBriefId, generatedPlanId: plan.id, generatedPlanItemId: item.id, createdAt: timestamp, updatedAt: timestamp } });
+}
+function restoreGeneratedCalendarPosts(plans: GeneratedDraftPlan[], dispatch: Dispatch<CalendarAction>) {
+  for (const plan of plans) for (const item of plan.items) if (item.calendarStatus === "added_to_calendar" && item.calendarPostId && !getGeneratedItemScheduleIssue(item)) addGeneratedItemToCalendar(item, plan, plan.updatedAt, dispatch);
+}
+function restoreManualCalendarPosts(posts: ManualPostDraft[], dispatch: Dispatch<CalendarAction>) {
+  for (const post of posts) if (post.status === "scheduled") { dispatch({ type: "ADD_IDEA", payload: { ...post.idea, approvalNote: post.approvalNote, submittedAt: post.submittedAt, submittedBy: post.submittedBy, approvedAt: post.approvedAt, approvedBy: post.approvedBy, changesRequestedAt: post.changesRequestedAt, changesRequestedBy: post.changesRequestedBy } }); for (const version of post.versions) dispatch({ type: "ADD_VERSION", payload: { ...version, status: "scheduled" } }); }
 }
 
-function CalendarSidebar() {
-  return <aside className="border-b border-[#d3e4fe] bg-white lg:fixed lg:left-0 lg:top-0 lg:z-40 lg:flex lg:h-full lg:w-64 lg:flex-col lg:border-b-0 lg:border-r"><div className="px-4 py-4"><Link className="flex items-center gap-3" href="/dashboard"><span className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#0058bc] font-black text-white">✓</span><span><span className="block text-base font-extrabold text-[#0058bc]">AI Marketing OS</span><span className="block text-[10px] font-bold uppercase tracking-[0.18em] text-[#717786]">Enterprise Suite</span></span></Link></div><nav className="flex gap-2 overflow-x-auto px-4 pb-4 lg:mt-4 lg:flex-1 lg:flex-col lg:overflow-visible">{navItems.map(([label, href]) => <Link key={href} href={href} className={`inline-flex shrink-0 rounded-lg px-4 py-3 text-sm font-bold ${href === "/calendar" ? "bg-[#0070eb] text-white" : "text-[#414755] hover:bg-[#eff4ff]"}`}>{label}</Link>)}</nav><div className="hidden border-t border-[#d3e4fe] p-4 lg:block"><Link href="/campaigns" className="block rounded-lg bg-[#4648d4] px-4 py-3 text-center text-sm font-bold text-white">+ New Campaign</Link></div></aside>;
+function upsertGeneratedPlan(plans: GeneratedDraftPlan[], plan: GeneratedDraftPlan): GeneratedDraftPlan[] { return [plan, ...plans.filter((item) => item.id !== plan.id)]; }
+function revealTargetThroughFilters(state: CalendarState, version: ContentVersion, idea: ContentIdea | undefined, dispatch: Dispatch<CalendarAction>) {
+  if (state.filters.platform !== "all" && state.filters.platform !== version.platform) dispatch({ type: "SET_FILTER", payload: { key: "platform", value: "all" } });
+  if (state.filters.status !== "all" && state.filters.status !== version.status) dispatch({ type: "SET_FILTER", payload: { key: "status", value: "all" } });
+  if (state.filters.createdBy !== "all" && state.filters.createdBy !== version.createdBy) dispatch({ type: "SET_FILTER", payload: { key: "createdBy", value: "all" } });
+  if (idea && state.filters.pillarId !== "all" && state.filters.pillarId !== idea.pillarId) dispatch({ type: "SET_FILTER", payload: { key: "pillarId", value: "all" } });
+}
+function formatApprovalResult(items: GeneratedDraftPlanItem[], invalidCount: number): string {
+  if (invalidCount) return `${items.length} post${items.length === 1 ? "" : "s"} added to Calendar. ${invalidCount} item${invalidCount === 1 ? " still needs" : "s still need"} schedule information.`;
+  const dates = [...new Set(items.map((item) => item.publishDate))].sort();
+  if (dates.length === 1) return `${items.length} post${items.length === 1 ? "" : "s"} added to Calendar on ${formatCalendarDate(dates[0])}.`;
+  return `${items.length} post${items.length === 1 ? "" : "s"} added to Calendar for ${formatCalendarDateRange(dates[0], dates[dates.length - 1])}.`;
+}
+function parseCalendarDate(value: string): Date { const [year, month, day] = value.split("-").map(Number); return new Date(year, month - 1, day); }
+function formatCalendarDate(value: string): string { return new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" }).format(parseCalendarDate(value)); }
+function formatCalendarDateRange(first: string, last: string): string {
+  const start = parseCalendarDate(first); const end = parseCalendarDate(last);
+  if (start.getFullYear() === end.getFullYear() && start.getMonth() === end.getMonth()) return `${new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric" }).format(start)}–${end.getDate()}, ${end.getFullYear()}`;
+  return `${formatCalendarDate(first)}–${formatCalendarDate(last)}`;
 }

@@ -22,6 +22,8 @@ export type CalendarEventViewModel = {
   timezone: string;
   status: ContentStatus;
   createdBy: string;
+  creationSource: ContentIdea["creationSource"];
+  isGenerated: boolean;
 };
 
 export function getIdeaById(state: CalendarState, id: string): ContentIdea | undefined {
@@ -44,6 +46,7 @@ export function getFilteredVersions(state: CalendarState): ContentVersion[] {
   return state.versions.filter((version) => {
     const idea = getIdeaById(state, version.contentIdeaId);
     return (
+      (version.status === "scheduled" || version.status === "published") &&
       (state.filters.platform === "all" || version.platform === state.filters.platform) &&
       (state.filters.pillarId === "all" || idea?.pillarId === state.filters.pillarId) &&
       (state.filters.status === "all" || version.status === state.filters.status) &&
@@ -72,6 +75,8 @@ export function getCalendarEvents(state: CalendarState): CalendarEventViewModel[
       timezone: version.timezone,
       status: version.status,
       createdBy: version.createdBy,
+      creationSource: idea.creationSource,
+      isGenerated: idea.creationSource === "generated_plan" || Boolean(idea.generatedPlanId && idea.generatedPlanItemId),
     }];
   });
 }

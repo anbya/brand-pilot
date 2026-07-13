@@ -70,7 +70,7 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
     case "RESET_FILTERS":
       return { ...state, filters: emptyFilters };
     case "ADD_IDEA":
-      return { ...state, ideas: [...state.ideas, action.payload] };
+      return state.ideas.some((idea) => idea.id === action.payload.id) ? state : { ...state, ideas: [...state.ideas, action.payload] };
     case "UPDATE_IDEA":
       return { ...state, ideas: state.ideas.map((idea) => idea.id === action.payload.id ? action.payload : idea) };
     case "DELETE_IDEA": {
@@ -86,7 +86,7 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
     }
     case "ADD_VERSION":
     case "DUPLICATE_VERSION":
-      return { ...state, versions: [...state.versions, action.payload] };
+      return state.versions.some((version) => version.id === action.payload.id) ? state : { ...state, versions: [...state.versions, action.payload] };
     case "UPDATE_VERSION":
       return { ...state, versions: state.versions.map((version) => version.id === action.payload.id ? action.payload : version) };
     case "DELETE_VERSION": {

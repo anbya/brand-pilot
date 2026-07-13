@@ -1,0 +1,5 @@
+import type { ManualPostDraft } from "@/lib/calendar/manual-post-types";
+
+export function isValidManualPostDate(value: string): boolean { if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false; const [year, month, day] = value.split("-").map(Number); const date = new Date(year, month - 1, day); return date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day; }
+export function isValidManualPostTime(value: string): boolean { return /^(?:[01]\d|2[0-3]):[0-5]\d$/.test(value); }
+export function isManualPostComplete(post: ManualPostDraft): boolean { return Boolean(post.idea.title.trim() && post.idea.coreTopic.trim() && post.idea.pillarId.trim() && post.idea.targetAudience.trim() && post.versions.length && post.versions.every((version) => version.platform && version.assetType.trim() && version.headline.trim() && version.caption.trim() && version.cta.trim() && isValidManualPostDate(version.publishDate) && isValidManualPostTime(version.publishTime) && version.timezone.trim())); }

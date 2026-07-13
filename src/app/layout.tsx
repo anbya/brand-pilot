@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { ConditionalTopNav } from "@/components/conditional-top-nav";
+import { WorkspaceLayout } from "@/components/workspace-layout";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -17,7 +18,7 @@ export default function RootLayout({
     <html lang="id" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         <ConditionalTopNav />
-        {children}
+        <WorkspaceLayout>{children}</WorkspaceLayout>
       </body>
     </html>
   );
