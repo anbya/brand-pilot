@@ -1,0 +1,10 @@
+import Link from "next/link";
+import { CampaignSummaryRow } from "@/components/dashboard/campaign-summary-row";
+import { DashboardPanel } from "@/components/dashboard/dashboard-panel";
+import type { DashboardViewModel } from "@/lib/dashboard/types";
+
+type Props = { campaigns: DashboardViewModel["campaigns"]; totalCampaignCount: number; filteredCampaignCount: number; canViewAll?: boolean; viewAllHref?: "/campaigns" };
+
+export function RecentCampaigns({ campaigns, totalCampaignCount, filteredCampaignCount, canViewAll = true, viewAllHref = "/campaigns" }: Props) {
+  return <DashboardPanel className="overflow-hidden p-0"><div className="flex min-w-0 items-center justify-between gap-2 border-b border-[#d3e4fe]/80 px-4 py-4 sm:gap-4 sm:px-6"><h2 className="min-w-0 break-words text-lg font-bold text-[#0b1c30]">Recent Campaigns</h2>{canViewAll && <Link aria-label="View all campaigns" className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-md px-2 text-sm font-bold text-[#0058bc] outline-none transition hover:text-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc]" href={viewAllHref}>View All<span aria-hidden="true">→</span></Link>}</div>{campaigns.length ? <ul className="grid min-w-0 gap-3 p-3 min-[375px]:p-4 sm:p-6">{campaigns.map((campaign) => <li className="min-w-0" key={campaign.id}><CampaignSummaryRow campaign={campaign} /></li>)}</ul> : <div className="p-3 min-[375px]:p-4 sm:p-6"><div className="rounded-lg border border-dashed border-[#c5d2e5] px-3 py-8 text-center min-[375px]:px-5 sm:py-10"><h3 className="break-words text-base font-extrabold text-[#0b1c30]">{totalCampaignCount === 0 ? "No campaigns yet" : "No campaigns match these filters"}</h3><p className="mt-2 break-words text-sm text-[#657080]">{totalCampaignCount === 0 ? "Workspace campaigns will appear here when they become available." : "Try another brand or date range."}</p></div></div>}{filteredCampaignCount > campaigns.length && <p className="break-words border-t border-[#d3e4fe]/80 px-4 py-3 text-xs font-semibold text-[#657080] sm:px-5">Showing 4 of {filteredCampaignCount} matching campaigns.</p>}</DashboardPanel>;
+}

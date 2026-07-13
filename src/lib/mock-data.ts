@@ -81,13 +81,6 @@ export const workspaceBrands = [
   { name: "Klinik Sehat", owner: "1 Campaign", status: "active" },
 ];
 
-export const dashboardStats = [
-  { label: "Campaign Active", value: "23", hint: "Across 3 workspaces" },
-  { label: "Generated Posts", value: "220", hint: "This month" },
-  { label: "Ready to Publish", value: "18", hint: "Approved by team" },
-  { label: "Asset Created", value: "158", hint: "Images and videos" },
-];
-
 export const trendMetrics = [
   { label: "July awareness", value: "30" },
   { label: "Draft content", value: "12" },
