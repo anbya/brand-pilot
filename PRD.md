@@ -184,10 +184,71 @@ Download ZIP
 
 ### Module 5 --- Content Calendar
 
-Generate otomatis 30 hari.
+#### CCA-606 Generated Content Workflow (Source of Truth)
 
-Setiap item berisi: - Topic - Hook - Objective - CTA - Asset Needed -
-Caption Preview - Status
+```text
+AI Plan Content / Create Content
+    -> Idea Draft
+    -> Preview / Edit Idea Draft
+    -> Approve Draft
+    -> Generated Ideas
+    -> Preview Generated Ideas (read-only)
+    -> Approve or Reject
+    -> Generated Content Mock
+    -> Content List
+    -> View Post (read-only)
+    -> Schedule Date and Time
+    -> Calendar Grid
+```
+
+CCA-606 melanjutkan interaction flow CCA-605. `Approve Draft` langsung menghasilkan Generated Ideas dan menutup detail
+drawer. Generated Ideas bersifat read-only dan hanya menyediakan `Approve`
+atau `Reject`. Reject mengembalikan item ke Idea Draft agar dapat diedit dan
+di-approve ulang. Approve langsung menghasilkan Generated Content dengan
+status `Unscheduled`.
+
+Generated Content dibuat oleh deterministic mock generator terpusat tanpa
+backend atau API AI. Output bertipe ini menyimpan judul, platform, asset type,
+headline, caption, CTA, hashtags, visual brief, metadata generator, dan status
+awal `Unscheduled`. Output yang sama tampil di Content List.
+
+Content List menyediakan action `View Post` yang membuka drawer detail seluruh
+output generated content. Post berstatus Unscheduled hanya dapat diberi tanggal
+dan waktu dari drawer tersebut; isi generated content tidak dapat diedit. Item tidak boleh tampil pada Month/Week Calendar Grid
+sampai semua versi memiliki tanggal dan waktu, lalu pengguna menjalankan aksi
+schedule. Planning Brief juga tidak boleh langsung membuat Calendar Post.
+
+#### CCA-607 Generated Content Read-Only
+
+```text
+Idea Draft
+    -> View / Edit / Approve
+Generated Ideas
+    -> View (read-only) / Approve / Reject
+Generated Content
+    -> View (read-only) / Schedule
+Scheduled Generated Content
+    -> View through Calendar (read-only)
+```
+
+Setelah Generated Ideas di-approve, seluruh hasil Generated Content bersifat
+read-only. Perbaikan konten harus dilakukan sebelum approval Generated Ideas.
+Content List tidak menyediakan action `Edit Post`; perubahan yang diizinkan
+hanya `publishDate` dan `publishTime` selama item masih berstatus Unscheduled.
+
+#### CCA-604 Dedicated Content Input Pages
+
+Input Content Calendar tidak menggunakan modal. Navigasi input menggunakan:
+
+```text
+/calendar
+/calendar/ai-plan/new
+/calendar/content/new
+```
+
+`AI Plan Content` membuka `/calendar/ai-plan/new` dan `Create Post` membuka
+`/calendar/content/new`. Kedua halaman menyimpan hasil sebagai `Idea Draft`
+dan melanjutkan state machine CCA-606 tanpa melewati tahap approval.
 
 ------------------------------------------------------------------------
 

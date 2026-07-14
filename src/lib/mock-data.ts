@@ -1,3 +1,5 @@
+import type { SocialPlatform } from "@/lib/platforms";
+
 export type AppStatus =
   | "draft"
   | "generating"
@@ -11,7 +13,7 @@ export type Campaign = {
   id: string;
   name: string;
   goal: "awareness" | "sales" | "promotion" | "education" | "event";
-  platforms: string[];
+  platforms: SocialPlatform[];
   durationDays: 7 | 14 | 30;
   status: AppStatus;
   strategy: string;
@@ -29,7 +31,7 @@ export type CalendarItem = {
   cta: string;
   assetNeeded: string;
   captionPreview: string;
-  platform: "instagram" | "tiktok" | "facebook";
+  platform: SocialPlatform;
   status: AppStatus;
 };
 
@@ -58,6 +60,7 @@ export const brandProfile = {
   instagram: "@coffeexyz",
   facebook: "Coffee XYZ",
   tiktok: "@coffeexyz",
+  youtube: "@coffeexyz",
   primaryColor: "#6D4CFF",
   secondaryColor: "#D6BCFA",
   aiSummary: "Coffee-focused brand with modern visual identity and educational positioning.",

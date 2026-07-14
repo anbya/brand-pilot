@@ -2,6 +2,7 @@ import { DashboardIcon } from "@/components/dashboard/dashboard-icon";
 import { DashboardProgress } from "@/components/dashboard/dashboard-progress";
 import { formatDashboardDateRange } from "@/lib/dashboard/selectors";
 import type { DashboardCampaignStatus, DashboardPlatform, DashboardViewModel } from "@/lib/dashboard/types";
+import { socialPlatformLabels } from "@/lib/platforms";
 
 type Campaign = DashboardViewModel["campaigns"][number];
 const statusStyles: Record<DashboardCampaignStatus, string> = { active: "bg-emerald-50 text-emerald-700", planning: "bg-blue-50 text-blue-700", paused: "bg-amber-50 text-amber-700", draft: "bg-slate-100 text-slate-700", completed: "bg-emerald-100 text-emerald-800" };
@@ -15,4 +16,4 @@ export function CampaignSummaryRow({ campaign }: { campaign: Campaign }) {
 }
 
 function formatLabel(value: string) { return value.replaceAll("_", " ").replace(/\b\w/g, (character) => character.toUpperCase()); }
-function formatPlatform(platform: DashboardPlatform) { return platform === "tiktok" ? "TikTok" : platform === "linkedin" ? "LinkedIn" : platform === "youtube" ? "YouTube" : formatLabel(platform); }
+function formatPlatform(platform: DashboardPlatform) { return socialPlatformLabels[platform]; }

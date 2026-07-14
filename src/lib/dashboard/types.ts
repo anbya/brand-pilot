@@ -1,6 +1,8 @@
+import type { SocialPlatform } from "@/lib/platforms";
+
 export type DashboardCampaignStatus = "draft" | "planning" | "active" | "paused" | "completed";
 export type DashboardUserRole = "admin" | "manager" | "editor" | "viewer";
-export type DashboardPlatform = "instagram" | "tiktok" | "facebook" | "linkedin" | "youtube";
+export type DashboardPlatform = SocialPlatform;
 export type DashboardAttentionType = "failed_publish" | "overdue" | "approval" | "missing_asset" | "low_credit";
 export type DashboardActivityType = "campaign_created" | "post_approved" | "post_scheduled" | "asset_uploaded" | "brand_brain_updated" | "ai_ideas_generated";
 export type DashboardActivityHref = "/campaigns" | "/calendar" | "/assets" | "/brain";

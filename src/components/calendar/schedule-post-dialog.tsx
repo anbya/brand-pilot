@@ -1,31 +1,32 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { DedicatedInputPageShell } from "@/components/calendar/dedicated-input-page-shell";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { normalizeHashtags } from "@/lib/calendar/form-utils";
 import { assetLibraryMockData } from "@/lib/assets/mock-data";
 import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
-import { isValidManualPostDate, isValidManualPostTime } from "@/lib/calendar/manual-post-validation";
 import { formatAssetTypeLabel, formatPlatformLabel, platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
 import type { ContentObjective, ContentPillar, SocialPlatform } from "@/lib/calendar/types";
 
 export type SchedulePostPayload = ManualPostInput;
 
-type SchedulePostDialogProps = { open: boolean; pillars: ContentPillar[]; defaultDate?: string; initialPayload?: SchedulePostPayload; onClose: () => void; onSubmit: (payload: SchedulePostPayload) => void };
+type SchedulePostDialogProps = { open: boolean; pillars: ContentPillar[]; defaultDate?: string; initialPayload?: SchedulePostPayload; presentation?: "dialog" | "page"; onClose: () => void; onSubmit: (payload: SchedulePostPayload) => void };
 type StrategyDraft = SchedulePostPayload["idea"];
 type VersionDraft = Omit<SchedulePostPayload["versions"][number], "hashtags"> & { hashtags: string };
 type Errors = Record<string, string>;
 
-const steps = ["Strategy", "Platforms", "Content & Planned Schedule", "Review"];
+const steps = ["Strategy", "Platforms", "Idea Draft", "Review"];
 const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
 const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
 
 function createVersion(platform: SocialPlatform, defaultDate: string): VersionDraft {
-  return { platform, assetType: platformAssetTypes[platform][0], headline: "", caption: "", cta: "", hashtags: "", assetId: "", visualBrief: "", publishDate: defaultDate, publishTime: "09:00", timezone: "Asia/Jakarta", createdBy: "Wanda" };
+  void defaultDate;
+  return { platform, assetType: platformAssetTypes[platform][0], headline: "", caption: "", cta: "", hashtags: "", assetId: "", visualBrief: "", publishDate: "", publishTime: "", timezone: "Asia/Jakarta", createdBy: "Wanda" };
 }
 function createInitialVersions(initialPayload: SchedulePostPayload | undefined, defaultDate: string): Partial<Record<SocialPlatform, VersionDraft>> { if (!initialPayload) return { instagram: createVersion("instagram", defaultDate) }; return Object.fromEntries(initialPayload.versions.map((version) => [version.platform, { ...version, hashtags: version.hashtags.join(", ") }])) as Partial<Record<SocialPlatform, VersionDraft>>; }
 
-export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", initialPayload, onClose, onSubmit }: SchedulePostDialogProps) {
+export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", initialPayload, presentation = "dialog", onClose, onSubmit }: SchedulePostDialogProps) {
   const dirtyRef = useRef(false);
   const [step, setStep] = useState(0);
   const [strategy, setStrategy] = useState<StrategyDraft>(() => initialPayload?.idea ?? { title: "", coreTopic: "", pillarId: pillars[0]?.id ?? "", objective: "educate", targetAudience: "", mainMessage: "", campaignId: "", campaignName: "", brandId: "brand-default", brandName: "Default Brand" });
@@ -51,7 +52,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   function validatePlatforms() { if (selectedPlatforms.length) { setErrors({}); return true; } setErrors({ platforms: "Select at least one platform." }); focusField("platform-instagram"); return false; }
   function validateVersions() {
     const next: Errors = {};
-    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "publishDate", "publishTime", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; if (draft.publishDate && !isValidManualPostDate(draft.publishDate)) next[`${platform}-publishDate`] = "Enter a valid planned date."; if (draft.publishTime && !isValidManualPostTime(draft.publishTime)) next[`${platform}-publishTime`] = "Enter a valid planned time."; }
+    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; }
     setErrors(next); const first = Object.keys(next)[0]; if (first) { const platform = first.split("-")[0] as SocialPlatform; if (selectedPlatforms.includes(platform)) setActivePlatform(platform); focusField(first); } return !first;
   }
   function nextStep() { const valid = step === 0 ? validateStrategy() : step === 1 ? validatePlatforms() : step === 2 ? validateVersions() : true; if (valid) { setErrors({}); setStep((current) => Math.min(current + 1, 3)); } }
@@ -60,15 +61,17 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
 
   const footer = <><button type="button" onClick={requestClose} className="rounded-lg px-4 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#0058bc]">Cancel</button><div className="flex w-full flex-wrap gap-2 min-[480px]:w-auto">{step > 0 && <button type="button" onClick={() => { setErrors({}); setStep((current) => current - 1); }} className="min-h-11 flex-1 rounded-lg border border-[#c5d2e5] bg-white px-5 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] min-[480px]:flex-none">Back</button>}{step < 3 ? <button type="button" onClick={nextStep} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Next</button> : <button type="button" onClick={submit} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Save as Draft</button>}</div></>;
 
-  return <ResponsiveOverlayShell open title={initialPayload ? "Edit Post Draft" : "Create Post"} description="The post will be saved as a draft and will not appear on the Calendar until it is approved." footer={footer} maxWidth="max-w-[900px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" closeLabel="Close post draft dialog" onClose={requestClose}>
-      <ol aria-label="Create post steps" className="flex shrink-0 overflow-x-auto border-b border-[#d3e4fe] bg-[#f8faff] px-4 py-3 sm:px-7">{steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={`flex min-w-fit items-center text-xs font-bold ${step === index ? "text-[#0058bc]" : index < step ? "text-emerald-700" : "text-[#8b96a5]"}`}><span className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${step === index ? "bg-[#0058bc] text-white" : index < step ? "bg-emerald-100" : "bg-[#e5eeff]"}`}>{index + 1}</span>{label}{index < steps.length - 1 && <span aria-hidden="true" className="mx-3 h-px w-6 bg-[#c5d2e5] sm:w-10" />}</li>)}</ol>
+  const content = <>
+    <ol aria-label="Create post steps" className="flex shrink-0 overflow-x-auto border-b border-[#d3e4fe] bg-[#f8faff] px-4 py-3 sm:px-7">{steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={`flex min-w-fit items-center text-xs font-bold ${step === index ? "text-[#0058bc]" : index < step ? "text-emerald-700" : "text-[#8b96a5]"}`}><span className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${step === index ? "bg-[#0058bc] text-white" : index < step ? "bg-emerald-100" : "bg-[#e5eeff]"}`}>{index + 1}</span>{label}{index < steps.length - 1 && <span aria-hidden="true" className="mx-3 h-px w-6 bg-[#c5d2e5] sm:w-10" />}</li>)}</ol>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
         {step === 0 && <StrategyStep strategy={strategy} pillars={pillars} errors={errors} onChange={updateStrategy} />}
         {step === 1 && <PlatformStep selected={selectedPlatforms} error={errors.platforms} onToggle={togglePlatform} />}
         {step === 2 && <ContentStep platforms={selectedPlatforms} versions={versions} activePlatform={activePlatform} errors={errors} onActivePlatform={setActivePlatform} onChange={updateVersion} />}
         {step === 3 && <ReviewStep strategy={strategy} versions={versions} platforms={selectedPlatforms} pillars={pillars} />}
       </div>
-  </ResponsiveOverlayShell>;
+  </>;
+  if (presentation === "page") return <DedicatedInputPageShell title={initialPayload ? "Edit Idea Draft" : "Create Content"} description="Create an Idea Draft for the CCA-603 workflow. Scheduling remains unavailable until generated content reaches Unscheduled." footer={footer}>{content}</DedicatedInputPageShell>;
+  return <ResponsiveOverlayShell open title={initialPayload ? "Edit Idea Draft" : "Create Content"} description="Save an Idea Draft first. Scheduling is available only after both idea approvals and content generation." footer={footer} maxWidth="max-w-[900px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" closeLabel="Close idea draft dialog" onClose={requestClose}>{content}</ResponsiveOverlayShell>;
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) { return message ? <p id={`${id}-error`} className="mt-1.5 text-xs font-semibold text-rose-600">{message}</p> : null; }
@@ -103,8 +106,6 @@ function ContentStep({ platforms, versions, activePlatform, errors, onActivePlat
     <Field id={`${activePlatform}-cta`} label="CTA" error={error("cta")}><input id={`${activePlatform}-cta`} value={draft.cta} onChange={(event) => onChange(activePlatform, "cta", event.target.value)} placeholder="Save this guide" aria-invalid={Boolean(error("cta"))} className={fieldClass} /></Field>
     <Field id={`${activePlatform}-hashtags`} label="Hashtags" optional><input id={`${activePlatform}-hashtags`} value={draft.hashtags} onChange={(event) => onChange(activePlatform, "hashtags", event.target.value)} placeholder="coffee, brewing, homebarista" className={fieldClass} /></Field>
     <Field id={`${activePlatform}-assetId`} label="Asset Library File" optional><select id={`${activePlatform}-assetId`} value={draft.assetId ?? ""} onChange={(event) => onChange(activePlatform, "assetId", event.target.value)} className={fieldClass}><option value="">No asset selected</option>{assetLibraryMockData.filter((asset) => asset.kind !== "document").map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></Field>
-    <Field id={`${activePlatform}-publishDate`} label="Planned Date" error={error("publishDate")}><input id={`${activePlatform}-publishDate`} type="date" value={draft.publishDate} onChange={(event) => onChange(activePlatform, "publishDate", event.target.value)} aria-invalid={Boolean(error("publishDate"))} className={fieldClass} /></Field>
-    <Field id={`${activePlatform}-publishTime`} label="Planned Time" error={error("publishTime")}><input id={`${activePlatform}-publishTime`} type="time" value={draft.publishTime} onChange={(event) => onChange(activePlatform, "publishTime", event.target.value)} aria-invalid={Boolean(error("publishTime"))} className={fieldClass} /></Field>
     <Field id={`${activePlatform}-createdBy`} label="Created By" error={error("createdBy")}><input id={`${activePlatform}-createdBy`} value={draft.createdBy} onChange={(event) => onChange(activePlatform, "createdBy", event.target.value)} aria-invalid={Boolean(error("createdBy"))} className={fieldClass} /></Field>
     <div className="sm:col-span-2"><Field id={`${activePlatform}-visualBrief`} label="Visual Brief" optional><textarea id={`${activePlatform}-visualBrief`} value={draft.visualBrief ?? ""} onChange={(event) => onChange(activePlatform, "visualBrief", event.target.value)} rows={3} className={textareaClass} /></Field></div>
   </div></div></div>;
@@ -112,6 +113,6 @@ function ContentStep({ platforms, versions, activePlatform, errors, onActivePlat
 
 function ReviewStep({ strategy, versions, platforms, pillars }: { strategy: StrategyDraft; versions: Partial<Record<SocialPlatform, VersionDraft>>; platforms: SocialPlatform[]; pillars: ContentPillar[] }) {
   const pillar = pillars.find((item) => item.id === strategy.pillarId);
-  return <div><h3 className="text-lg font-extrabold">Review post draft</h3><p className="mt-1 text-sm text-[#657080]">The post will be saved as a draft and will not appear on the Calendar until it is approved.</p><section className="mt-5 rounded-xl border border-[#d3e4fe] p-5"><h4 className="text-sm font-extrabold text-[#0058bc]">Idea summary</h4><dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2"><ReviewItem label="Title" value={strategy.title} /><ReviewItem label="Core Topic" value={strategy.coreTopic} /><ReviewItem label="Content Pillar" value={pillar?.name ?? strategy.pillarId} /><ReviewItem label="Objective" value={formatAssetTypeLabel(strategy.objective)} /><ReviewItem label="Target Audience" value={strategy.targetAudience} /><ReviewItem label="Creation Source" value="Manual" /><ReviewItem label="Brand" value={strategy.brandName || "Not specified"} /><ReviewItem label="Linked Campaign" value={strategy.campaignName || strategy.campaignId || "Not linked"} /></dl></section><div className="mt-4 grid gap-4">{platforms.map((platform) => { const draft = versions[platform]; if (!draft) return null; return <section key={platform} className="rounded-xl border border-[#d3e4fe] bg-[#f8faff] p-5"><h4 className="text-sm font-extrabold text-[#0058bc]">{formatPlatformLabel(platform)}</h4><dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3"><ReviewItem label="Asset Type" value={formatAssetTypeLabel(draft.assetType)} /><ReviewItem label="Headline" value={draft.headline} /><ReviewItem label="Planned Schedule" value={`${draft.publishDate} at ${draft.publishTime}`} /><ReviewItem label="Timezone" value={draft.timezone} /><ReviewItem label="Status" value="Draft" /><ReviewItem label="Created By" value={draft.createdBy} /></dl></section>; })}</div></div>;
+  return <div><h3 className="text-lg font-extrabold">Review idea draft</h3><p className="mt-1 text-sm text-[#657080]">This stays in Content List as an Idea Draft and does not create a Calendar Post.</p><section className="mt-5 rounded-xl border border-[#d3e4fe] p-5"><h4 className="text-sm font-extrabold text-[#0058bc]">Idea summary</h4><dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2"><ReviewItem label="Title" value={strategy.title} /><ReviewItem label="Core Topic" value={strategy.coreTopic} /><ReviewItem label="Content Pillar" value={pillar?.name ?? strategy.pillarId} /><ReviewItem label="Objective" value={formatAssetTypeLabel(strategy.objective)} /><ReviewItem label="Target Audience" value={strategy.targetAudience} /><ReviewItem label="Creation Source" value="Manual" /><ReviewItem label="Brand" value={strategy.brandName || "Not specified"} /><ReviewItem label="Linked Campaign" value={strategy.campaignName || strategy.campaignId || "Not linked"} /></dl></section><div className="mt-4 grid gap-4">{platforms.map((platform) => { const draft = versions[platform]; if (!draft) return null; return <section key={platform} className="rounded-xl border border-[#d3e4fe] bg-[#f8faff] p-5"><h4 className="text-sm font-extrabold text-[#0058bc]">{formatPlatformLabel(platform)}</h4><dl className="mt-4 grid gap-4 text-sm sm:grid-cols-2 lg:grid-cols-3"><ReviewItem label="Asset Type" value={formatAssetTypeLabel(draft.assetType)} /><ReviewItem label="Headline" value={draft.headline} /><ReviewItem label="Status" value="Idea Draft" /><ReviewItem label="Created By" value={draft.createdBy} /></dl></section>; })}</div></div>;
 }
 function ReviewItem({ label, value }: { label: string; value: string }) { return <div><dt className="text-xs font-bold uppercase tracking-[.08em] text-[#8b96a5]">{label}</dt><dd className="mt-1 font-semibold text-[#0b1c30]">{value}</dd></div>; }

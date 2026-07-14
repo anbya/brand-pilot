@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ApproveAllBlueprintsButton, CampaignAssetMap, type CampaignDay, type ContentAsset } from "@/components/campaign-asset-map";
+import { isSocialPlatform, socialPlatformLabels, socialPlatforms, type SocialPlatformLabel } from "@/lib/platforms";
 
 type IconName =
   | "add"
@@ -24,7 +25,7 @@ type IconName =
 type CampaignBlueprint = {
   name: string;
   primaryObjective: string;
-  targetPlatforms: string[];
+  targetPlatforms: SocialPlatformLabel[];
   toneOfVoice: string[];
   startDate: string;
   endDate: string;
@@ -33,7 +34,7 @@ type CampaignBlueprint = {
 const defaultCampaign: CampaignBlueprint = {
   name: "July Awareness",
   primaryObjective: "Brand Awareness & Engagement",
-  targetPlatforms: ["Instagram", "TikTok", "LinkedIn"],
+  targetPlatforms: socialPlatforms.map((platform) => socialPlatformLabels[platform]),
   toneOfVoice: ["Visionary", "Reliable", "Professional"],
   startDate: "2026-07-01",
   endDate: "2026-07-30",
@@ -181,7 +182,7 @@ function parseCampaign(searchParams: Record<string, string | string[] | undefine
   return {
     name: getSearchValue(searchParams.name, defaultCampaign.name),
     primaryObjective: getSearchValue(searchParams.objective, defaultCampaign.primaryObjective),
-    targetPlatforms: getSearchList(searchParams.platforms, defaultCampaign.targetPlatforms),
+    targetPlatforms: normalizePlatformLabels(getSearchList(searchParams.platforms, defaultCampaign.targetPlatforms)),
     toneOfVoice: getSearchList(searchParams.tone, defaultCampaign.toneOfVoice),
     startDate: getSearchValue(searchParams.start, defaultCampaign.startDate),
     endDate: getSearchValue(searchParams.end, defaultCampaign.endDate),
@@ -206,12 +207,20 @@ function getSearchList(value: string | string[] | undefined, fallback: string[])
   return items.length > 0 ? items : fallback;
 }
 
+function normalizePlatformLabels(values: string[]): SocialPlatformLabel[] {
+  const labels = values.flatMap((value) => {
+    const platform = value.toLowerCase();
+    return isSocialPlatform(platform) ? [socialPlatformLabels[platform]] : [];
+  });
+  return labels.length ? [...new Set(labels)] : defaultCampaign.targetPlatforms;
+}
+
 function buildCampaignDays(campaign: CampaignBlueprint): CampaignDay[] {
   const startDate = new Date(`${campaign.startDate}T00:00:00`);
   const topics = topicsForObjective(campaign.primaryObjective);
   const daysInMonth = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0).getDate();
   const topicPool = [...topics, "Behind the scenes: how the team works", "Three practical tips your audience can use today", "Customer story: from challenge to result", "Quick myth versus fact breakdown", "A simple checklist for better outcomes", "Meet the people behind the brand", "Frequently asked questions answered", "This or that: let the audience decide", "Monthly highlights and key learnings", "Campaign recap and next-step invitation"];
-  const platforms = campaign.targetPlatforms.length ? campaign.targetPlatforms : ["Instagram"];
+  const platforms = campaign.targetPlatforms.length ? campaign.targetPlatforms : defaultCampaign.targetPlatforms;
   const campaignId = `campaign-${slugify(campaign.name)}`;
 
   return Array.from({ length: daysInMonth }, (_, dayIndex): CampaignDay => {
@@ -242,9 +251,8 @@ function assetTypeForPlatform(platform: string, dayIndex: number) {
   const assetTypes: Record<string, string[]> = {
     Instagram: ["Carousel", "Reel", "Story", "Single Image Post", "Poll Story"],
     TikTok: ["Short Video", "Tutorial Video", "Product Demo", "Behind the Scenes"],
-    Facebook: ["Single Image Post", "Carousel", "Video", "Story", "Poll"],
-    LinkedIn: ["Insight Post", "Carousel", "Article", "Case Study", "Poll"],
     YouTube: ["Shorts", "Long-form Video", "Tutorial", "Explainer Video"],
+    Facebook: ["Single Image Post", "Carousel", "Video", "Story", "Poll"],
   };
   const options = assetTypes[platform] ?? ["Single Image Post", "Short Video", "Carousel", "Story"];
   return options[dayIndex % options.length];
@@ -297,10 +305,6 @@ function topicsForObjective(objective: string) {
 function platformIcon(platform: string): IconName {
   if (platform === "TikTok" || platform === "YouTube") {
     return "movie";
-  }
-
-  if (platform === "LinkedIn") {
-    return "layers";
   }
 
   if (platform === "Instagram") {

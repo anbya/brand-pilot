@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
-const items = [{ label: "Calendar", href: "/calendar" }, { label: "Planning Briefs", href: "/calendar/planning-briefs" }, { label: "Post Drafts", href: "/calendar/drafts" }] as const;
+const items = [{ label: "Calendar", href: "/calendar" }, { label: "Content List", href: "/calendar/content" }] as const;
 
 export function CalendarSubNavigation() {
   const pathname = usePathname();

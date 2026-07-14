@@ -1,5 +1,6 @@
 import type { AiPlanRequest } from "@/lib/calendar/ai-plan-types";
 import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
+import { isSocialPlatform } from "@/lib/platforms";
 
 export const planningBriefStorageKey = "brand-pilot:planning-briefs:v1";
 
@@ -43,5 +44,5 @@ export function savePlanningBrief(storage: Pick<Storage, "getItem" | "setItem">,
 function isPlanningBrief(value: unknown): value is PlanningBrief {
   if (!value || typeof value !== "object") return false;
   const item = value as Partial<PlanningBrief>;
-  return typeof item.id === "string" && typeof item.title === "string" && typeof item.status === "string" && Boolean(item.request);
+  return typeof item.id === "string" && typeof item.title === "string" && typeof item.status === "string" && Boolean(item.request) && Array.isArray(item.request?.platforms) && item.request.platforms.length > 0 && item.request.platforms.every(isSocialPlatform);
 }

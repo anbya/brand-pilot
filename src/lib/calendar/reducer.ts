@@ -15,12 +15,8 @@ export type CalendarAction =
   | { type: "GO_TO_TODAY"; payload: string }
   | { type: "SELECT_DATE"; payload?: string }
   | { type: "SELECT_VERSION"; payload?: string }
-  | { type: "OPEN_SCHEDULE_DIALOG" }
-  | { type: "CLOSE_SCHEDULE_DIALOG" }
   | { type: "OPEN_POST_DETAIL"; payload: string }
   | { type: "CLOSE_POST_DETAIL" }
-  | { type: "OPEN_AI_PLAN_DIALOG" }
-  | { type: "CLOSE_AI_PLAN_DIALOG" }
   | { type: "SET_FILTER"; payload: { key: keyof CalendarFilters; value: CalendarFilters[keyof CalendarFilters] } }
   | { type: "RESET_FILTERS" }
   | { type: "ADD_IDEA"; payload: ContentIdea }
@@ -53,18 +49,10 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
       return { ...state, selectedDate: action.payload };
     case "SELECT_VERSION":
       return { ...state, selectedVersionId: action.payload };
-    case "OPEN_SCHEDULE_DIALOG":
-      return { ...state, scheduleDialogOpen: true };
-    case "CLOSE_SCHEDULE_DIALOG":
-      return { ...state, scheduleDialogOpen: false };
     case "OPEN_POST_DETAIL":
       return { ...state, selectedVersionId: action.payload, postDetailDrawerOpen: true };
     case "CLOSE_POST_DETAIL":
       return { ...state, selectedVersionId: undefined, postDetailDrawerOpen: false };
-    case "OPEN_AI_PLAN_DIALOG":
-      return { ...state, aiPlanDialogOpen: true };
-    case "CLOSE_AI_PLAN_DIALOG":
-      return { ...state, aiPlanDialogOpen: false };
     case "SET_FILTER":
       return { ...state, filters: { ...state.filters, [action.payload.key]: action.payload.value } };
     case "RESET_FILTERS":

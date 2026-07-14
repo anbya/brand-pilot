@@ -1,6 +1,7 @@
 import type { AiPlanDraftItem } from "@/lib/calendar/ai-plan-result-types";
 import type { GeneratedDraftPlan, GeneratedDraftPlanItem, GeneratedPlanStatus } from "@/lib/calendar/generated-plan-types";
 import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
+import { isSocialPlatform } from "@/lib/platforms";
 
 export const generatedPlanStorageKey = "brand-pilot:generated-draft-plans:v1";
 
@@ -36,4 +37,4 @@ function isConflict(value: unknown): boolean { if (!value || typeof value !== "o
 function isStringArray(value: unknown): value is string[] { return Array.isArray(value) && value.every((item) => typeof item === "string"); }
 function isStatus(value: unknown): value is GeneratedPlanStatus { return value === "generated" || value === "partially_approved" || value === "approved_to_calendar"; }
 function isObjective(value: unknown): boolean { return value === "educate" || value === "engage" || value === "inform" || value === "sell"; }
-function isPlatform(value: unknown): boolean { return value === "" || value === "instagram" || value === "tiktok" || value === "linkedin" || value === "facebook" || value === "youtube"; }
+function isPlatform(value: unknown): boolean { return isSocialPlatform(value); }

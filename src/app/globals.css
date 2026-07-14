@@ -43,16 +43,3 @@ button {
   background: rgba(37, 99, 235, 0.16);
   color: #0f172a;
 }
-
-.asset-detail-sheet:has(textarea) > :last-child {
-  display: none;
-}
-
-.asset-detail-sheet:has(.status-ready) > :last-child,
-.asset-detail-sheet:has(.status-generating) > :last-child {
-  display: none;
-}
-
-.asset-detail-sheet:has(.status-published) > :last-child {
-  display: none;
-}

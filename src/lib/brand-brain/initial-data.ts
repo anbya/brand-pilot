@@ -43,7 +43,7 @@ export const initialBrandBrainData: BrandBrainState = {
     sources: {
       websiteUrl: "",
       instagramUsername: "",
-      linkedinPage: "",
+      youtubeChannel: "",
       brandGuidelinesFileName: "",
       companyProfileFileName: "",
       productCatalogueFileName: "",

@@ -1,3 +1,3 @@
-import { PostDraftList } from "@/components/calendar/post-draft-list";
+import { redirect } from "next/navigation";
 
-export default function PostDraftsPage() { return <PostDraftList />; }
+export default function PostDraftsPage() { redirect("/calendar/content"); }

@@ -1,6 +1,7 @@
 import type { DashboardUser, DashboardUserRole } from "@/lib/dashboard/types";
+import type { SocialPlatform } from "@/lib/platforms";
 
-export type AnalyticsPlatform = "instagram" | "facebook" | "linkedin" | "tiktok" | "youtube" | "meta-ads";
+export type AnalyticsPlatform = SocialPlatform;
 export type AnalyticsContentType = "image" | "video" | "carousel" | "story" | "document";
 export type AnalyticsDateRangeId = "7-days" | "30-days" | "all-time";
 export type AnalyticsTrendState = "increase" | "decrease" | "no-change" | "new-activity" | "no-baseline" | "unavailable";

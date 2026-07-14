@@ -1,3 +1,6 @@
+import type { SocialPlatform } from "@/lib/platforms";
+export type { SocialPlatform } from "@/lib/platforms";
+
 export type CalendarView = "month" | "week";
 
 export type ContentObjective = "educate" | "engage" | "inform" | "sell";
@@ -11,13 +14,6 @@ export type ContentCreationSource =
   | "brand-asset";
 
 export type ContentStatus = "draft" | "ready" | "scheduled" | "published" | "failed";
-
-export type SocialPlatform =
-  | "instagram"
-  | "tiktok"
-  | "linkedin"
-  | "facebook"
-  | "youtube";
 
 export type ContentPillar = {
   id: string;
@@ -92,9 +88,7 @@ export type CalendarState = {
   currentDate: string;
   selectedDate?: string;
   selectedVersionId?: string;
-  scheduleDialogOpen: boolean;
   postDetailDrawerOpen: boolean;
-  aiPlanDialogOpen: boolean;
   filters: CalendarFilters;
   pillars: ContentPillar[];
   ideas: ContentIdea[];

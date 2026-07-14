@@ -1,23 +1,17 @@
 import type { SocialPlatform } from "@/lib/calendar/types";
+import { socialPlatformLabels, socialPlatforms } from "@/lib/platforms";
 
-export const platformOptions: Array<{ value: SocialPlatform; label: string }> = [
-  { value: "instagram", label: "Instagram" },
-  { value: "tiktok", label: "TikTok" },
-  { value: "linkedin", label: "LinkedIn" },
-  { value: "facebook", label: "Facebook" },
-  { value: "youtube", label: "YouTube" },
-];
+export const platformOptions: Array<{ value: SocialPlatform; label: string }> = socialPlatforms.map((value) => ({ value, label: socialPlatformLabels[value] }));
 
 export const platformAssetTypes: Record<SocialPlatform, string[]> = {
   instagram: ["image", "carousel", "reel", "story"],
   tiktok: ["short-video", "photo-post"],
-  linkedin: ["text-post", "image-post", "carousel", "article", "video"],
-  facebook: ["text-post", "image-post", "video", "story"],
   youtube: ["short-video", "long-video", "community-post"],
+  facebook: ["text-post", "image-post", "video", "story"],
 };
 
 export function formatPlatformLabel(platform: SocialPlatform): string {
-  return platformOptions.find((option) => option.value === platform)?.label ?? platform;
+  return socialPlatformLabels[platform];
 }
 
 export function formatAssetTypeLabel(assetType: string): string {

@@ -61,7 +61,7 @@ export type BrandRecommendation = {
 export type BrandAnalysisSource = {
   websiteUrl: string;
   instagramUsername: string;
-  linkedinPage: string;
+  youtubeChannel: string;
   brandGuidelinesFileName: string;
   companyProfileFileName: string;
   productCatalogueFileName: string;

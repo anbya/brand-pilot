@@ -1,5 +1,6 @@
 import type { ManualPostDraft, ManualPostInput, ManualPostStatus } from "@/lib/calendar/manual-post-types";
 import { isManualPostComplete } from "@/lib/calendar/manual-post-validation";
+import { isSocialPlatform } from "@/lib/platforms";
 
 export const manualPostStorageKey = "brand-pilot:manual-post-drafts:v1";
 export type ManualPostReadResult = { status: "ready"; posts: ManualPostDraft[] } | { status: "error"; posts: []; message: string };
@@ -41,4 +42,4 @@ function isManualPostDraft(value: unknown): value is ManualPostDraft {
 }
 function isStatus(value: unknown): value is ManualPostStatus { return value === "draft" || value === "pending_approval" || value === "changes_requested" || value === "scheduled"; }
 function isIdea(value: unknown): boolean { if (!value || typeof value !== "object") return false; const idea = value as Record<string, unknown>; return ["id", "title", "coreTopic", "pillarId", "objective", "targetAudience", "mainMessage", "creationSource", "createdAt", "updatedAt"].every((key) => typeof idea[key] === "string"); }
-function isVersion(value: unknown): boolean { if (!value || typeof value !== "object") return false; const version = value as Record<string, unknown>; return ["id", "contentIdeaId", "platform", "assetType", "headline", "caption", "cta", "publishDate", "publishTime", "timezone", "status", "createdBy", "createdAt", "updatedAt"].every((key) => typeof version[key] === "string") && Array.isArray(version.hashtags) && version.hashtags.every((item) => typeof item === "string"); }
+function isVersion(value: unknown): boolean { if (!value || typeof value !== "object") return false; const version = value as Record<string, unknown>; return ["id", "contentIdeaId", "assetType", "headline", "caption", "cta", "publishDate", "publishTime", "timezone", "status", "createdBy", "createdAt", "updatedAt"].every((key) => typeof version[key] === "string") && isSocialPlatform(version.platform) && Array.isArray(version.hashtags) && version.hashtags.every((item) => typeof item === "string"); }

@@ -4,15 +4,12 @@ import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { campaigns as seedCampaigns, type Campaign } from "@/lib/mock-data";
+import { normalizeSocialPlatforms, socialPlatformLabels, socialPlatforms, type SocialPlatform } from "@/lib/platforms";
 
 type IconName = "add" | "analytics" | "assets" | "brands" | "calendar" | "campaign" | "check" | "chevronDown" | "close" | "dashboard" | "layers" | "movie" | "post" | "search" | "settings" | "spark";
-type CampaignForm = { primaryObjective: string; targetPlatforms: string[]; toneOfVoice: string[]; startDate: string; endDate: string };
+type CampaignForm = { primaryObjective: string; targetPlatforms: SocialPlatform[]; toneOfVoice: string[]; startDate: string; endDate: string };
 
-const platforms = [
-  { label: "Instagram", icon: "post" }, { label: "TikTok", icon: "movie" },
-  { label: "Facebook", icon: "campaign" }, { label: "LinkedIn", icon: "layers" },
-  { label: "YouTube", icon: "movie" },
-] satisfies Array<{ label: string; icon: IconName }>;
+const platforms = socialPlatforms.map((value) => ({ value, label: socialPlatformLabels[value], icon: value === "instagram" ? "post" : value === "facebook" ? "campaign" : "movie" })) satisfies Array<{ value: SocialPlatform; label: string; icon: IconName }>;
 const tones = ["Visionary", "Reliable", "Professional", "Friendly", "Bold", "Educational"];
 const campaignStorageKey = "brand-pilot-campaigns";
 const initialForm: CampaignForm = { primaryObjective: "", targetPlatforms: [], toneOfVoice: [], startDate: "2026-07-01", endDate: "2026-07-30" };
@@ -32,7 +29,7 @@ export default function CampaignsPage() {
         const storedCampaigns = window.localStorage.getItem(campaignStorageKey);
         if (storedCampaigns) {
           const parsedCampaigns = JSON.parse(storedCampaigns) as unknown;
-          if (Array.isArray(parsedCampaigns)) setCampaigns(parsedCampaigns as Campaign[]);
+          if (Array.isArray(parsedCampaigns)) setCampaigns((parsedCampaigns as Campaign[]).map((campaign) => ({ ...campaign, platforms: normalizeSocialPlatforms(campaign.platforms, ["instagram"]) })));
         }
       } catch {
         window.localStorage.removeItem(campaignStorageKey);
@@ -56,7 +53,8 @@ export default function CampaignsPage() {
 
   function openModal() { setForm(initialForm); setError(""); setSaved(false); setModalOpen(true); }
   function update<K extends keyof CampaignForm>(key: K, value: CampaignForm[K]) { setForm((current) => ({ ...current, [key]: value })); setError(""); setSaved(false); }
-  function toggle(key: "targetPlatforms" | "toneOfVoice", value: string) { update(key, form[key].includes(value) ? form[key].filter((item) => item !== value) : [...form[key], value]); }
+  function togglePlatform(value: SocialPlatform) { update("targetPlatforms", form.targetPlatforms.includes(value) ? form.targetPlatforms.filter((item) => item !== value) : [...form.targetPlatforms, value]); }
+  function toggleTone(value: string) { update("toneOfVoice", form.toneOfVoice.includes(value) ? form.toneOfVoice.filter((item) => item !== value) : [...form.toneOfVoice, value]); }
   function validate() {
     if (!form.primaryObjective.trim()) return "Primary objective wajib diisi.";
     if (!form.targetPlatforms.length) return "Pilih minimal satu target platform.";
@@ -80,7 +78,7 @@ export default function CampaignsPage() {
       id: `cmp-${Date.now()}`,
       name: objective,
       goal: objectiveToGoal(objective),
-      platforms: form.targetPlatforms.map((platform) => platform.toLowerCase()),
+      platforms: form.targetPlatforms,
       durationDays: durationFromDates(form.startDate, form.endDate),
       status: "review",
       strategy: "Campaign strategy submitted and waiting for review.",
@@ -108,7 +106,7 @@ export default function CampaignsPage() {
             <label className="relative block w-full sm:max-w-sm"><Icon name="search" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77808d]" /><input aria-label="Search campaigns" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search campaigns..." className="h-11 w-full rounded-lg border border-[#d7e2f3] pl-11 pr-4 text-sm outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></label>
             <select aria-label="Filter campaign status" value={status} onChange={(e) => setStatus(e.target.value)} className="h-11 rounded-lg border border-[#d7e2f3] bg-white px-4 text-sm font-semibold outline-none"><option>All status</option><option value="approved">Approved</option><option value="review">In review</option><option value="draft">Draft</option></select>
           </div>
-          <div className="overflow-x-auto"><table className="w-full min-w-[940px] text-left"><thead className="bg-[#f8faff] text-[11px] font-extrabold uppercase tracking-[.14em] text-[#727b89]"><tr><th className="px-6 py-4">Campaign</th><th className="px-6 py-4">Objective</th><th className="px-6 py-4">Platforms</th><th className="px-6 py-4">Duration</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-[#e9eff8]">{campaignRows.map((campaign) => <tr key={campaign.id}><td className="px-6 py-5"><p className="font-extrabold">{campaign.name}</p><p className="mt-1 text-xs text-[#7a8390]">Updated Jul 8, 2026</p></td><td className="px-6 py-5 text-sm capitalize text-[#495463]">{campaign.goal}</td><td className="px-6 py-5"><div className="flex flex-wrap gap-1.5">{campaign.platforms.map((item) => <span key={item} className="rounded-md bg-[#eef4ff] px-2 py-1 text-xs font-bold capitalize text-[#075cbe]">{item}</span>)}</div></td><td className="px-6 py-5 text-sm text-[#495463]">{campaign.durationDays} days</td><td className="px-6 py-5"><Status status={campaign.status} /></td><td className="px-6 py-5 text-right"><Link href={campaignBlueprintHref(campaign)} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#bfd6f6] px-4 text-sm font-bold text-[#075cbe] outline-none transition hover:bg-[#eaf3ff] focus-visible:ring-2 focus-visible:ring-[#0869e8] focus-visible:ring-offset-2">View Campaign<span className="sr-only"> {campaign.name}</span></Link></td></tr>)}</tbody></table></div>
+          <div className="overflow-x-auto"><table className="w-full min-w-[940px] text-left"><thead className="bg-[#f8faff] text-[11px] font-extrabold uppercase tracking-[.14em] text-[#727b89]"><tr><th className="px-6 py-4">Campaign</th><th className="px-6 py-4">Objective</th><th className="px-6 py-4">Platforms</th><th className="px-6 py-4">Duration</th><th className="px-6 py-4">Status</th><th className="px-6 py-4 text-right">Actions</th></tr></thead><tbody className="divide-y divide-[#e9eff8]">{campaignRows.map((campaign) => <tr key={campaign.id}><td className="px-6 py-5"><p className="font-extrabold">{campaign.name}</p><p className="mt-1 text-xs text-[#7a8390]">Updated Jul 8, 2026</p></td><td className="px-6 py-5 text-sm capitalize text-[#495463]">{campaign.goal}</td><td className="px-6 py-5"><div className="flex flex-wrap gap-1.5">{campaign.platforms.map((item) => <span key={item} className="rounded-md bg-[#eef4ff] px-2 py-1 text-xs font-bold text-[#075cbe]">{socialPlatformLabels[item]}</span>)}</div></td><td className="px-6 py-5 text-sm text-[#495463]">{campaign.durationDays} days</td><td className="px-6 py-5"><Status status={campaign.status} /></td><td className="px-6 py-5 text-right"><Link href={campaignBlueprintHref(campaign)} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#bfd6f6] px-4 text-sm font-bold text-[#075cbe] outline-none transition hover:bg-[#eaf3ff] focus-visible:ring-2 focus-visible:ring-[#0869e8] focus-visible:ring-offset-2">View Campaign<span className="sr-only"> {campaign.name}</span></Link></td></tr>)}</tbody></table></div>
           {!campaignRows.length && <div className="px-6 py-16 text-center text-sm text-[#737d8b]">No campaigns match your search.</div>}
           <div className="flex items-center justify-between border-t border-[#e9eff8] px-6 py-4 text-xs font-semibold text-[#737d8b]"><span>Showing {campaignRows.length} of {campaigns.length} campaigns</span><span>Page 1 of 1</span></div>
         </section>
@@ -118,8 +116,8 @@ export default function CampaignsPage() {
         <form id="create-campaign-form" onSubmit={submit}>
           <div className="grid gap-6">
             <FieldLabel label="Primary Objective"><input autoFocus value={form.primaryObjective} onChange={(e) => update("primaryObjective", e.target.value)} className="h-14 rounded-lg border border-[#bdd7ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel>
-            <ChoiceGroup label="Target Platforms">{platforms.map((item) => <Choice key={item.label} active={form.targetPlatforms.includes(item.label)} onClick={() => toggle("targetPlatforms", item.label)} className="h-14 justify-start px-5"><Icon name={item.icon} />{item.label}</Choice>)}</ChoiceGroup>
-            <ChoiceGroup label="Tone of Voice" compact>{tones.map((tone) => <Choice key={tone} active={form.toneOfVoice.includes(tone)} onClick={() => toggle("toneOfVoice", tone)} className="h-12 px-4">{tone}</Choice>)}</ChoiceGroup>
+            <ChoiceGroup label="Target Platforms">{platforms.map((item) => <Choice key={item.value} active={form.targetPlatforms.includes(item.value)} onClick={() => togglePlatform(item.value)} className="h-14 justify-start px-5"><Icon name={item.icon} />{item.label}</Choice>)}</ChoiceGroup>
+            <ChoiceGroup label="Tone of Voice" compact>{tones.map((tone) => <Choice key={tone} active={form.toneOfVoice.includes(tone)} onClick={() => toggleTone(tone)} className="h-12 px-4">{tone}</Choice>)}</ChoiceGroup>
             <div className="grid gap-4 sm:grid-cols-2"><FieldLabel label="Campaign Start Date"><input type="date" value={form.startDate} onChange={(e) => update("startDate", e.target.value)} className="h-14 rounded-lg border border-[#cfe0ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel><FieldLabel label="Campaign End Date"><input type="date" value={form.endDate} onChange={(e) => update("endDate", e.target.value)} className="h-14 rounded-lg border border-[#cfe0ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel></div>
             {error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p>}
           </div>
