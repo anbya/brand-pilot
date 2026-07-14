@@ -5,6 +5,7 @@ import { initialCalendarState } from "@/lib/calendar/mock-data";
 import { platformAssetTypes } from "@/lib/calendar/platform-options";
 import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
 import { generateDeterministicContentMock } from "@/lib/calendar/generated-content-mock";
+import { canEditContent } from "@/lib/calendar/content-mutation-policy";
 import type { ContentWorkflowFilters, ContentWorkflowItem, ContentWorkflowStage, GeneratedContentMock } from "@/lib/calendar/content-workflow-types";
 import { isSocialPlatform, normalizeSocialPlatforms } from "@/lib/platforms";
 
@@ -32,6 +33,7 @@ export function writeContentWorkflow(storage: Pick<Storage, "setItem">, items: C
 }
 
 export function saveAiPlanWorkflow(storage: WriteStorage, request: AiPlanRequest, existing?: ContentWorkflowItem) {
+  if (existing && !canEditContent({ entityType: "content_work_item", stage: existing.stage })) return existing;
   const now = new Date().toISOString();
   const item: ContentWorkflowItem = {
     id: existing?.id ?? `content-ai-${Date.now()}`,
@@ -53,6 +55,7 @@ export function saveAiPlanWorkflow(storage: WriteStorage, request: AiPlanRequest
 }
 
 export function saveManualWorkflow(storage: WriteStorage, input: ManualPostInput, existing?: ContentWorkflowItem) {
+  if (existing && !canEditContent({ entityType: "content_work_item", stage: existing.stage })) return existing;
   const now = new Date().toISOString();
   const item: ContentWorkflowItem = {
     id: existing?.id ?? `content-manual-${Date.now()}`,

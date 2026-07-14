@@ -4,7 +4,9 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { CalendarWorkspaceHeader } from "@/components/calendar/calendar-workspace-header";
 import { CalendarWorkspaceShell } from "@/components/calendar/calendar-workspace-shell";
+import { GeneratedPostVisualPreview } from "@/components/calendar/generated-post-visual-preview";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
+import { canEditContent } from "@/lib/calendar/content-mutation-policy";
 import { approveDraft, approveGeneratedIdeas, filterContentWorkflow, readContentWorkflow, rejectGeneratedIdeas, scheduleWorkflow, updateWorkflowSchedule } from "@/lib/calendar/content-workflow-store";
 import type { ContentWorkflowFilters, ContentWorkflowItem, ContentWorkflowStage } from "@/lib/calendar/content-workflow-types";
 
@@ -111,7 +113,7 @@ function ContentPreview({ item, onClose, onChange, act, actAndClose }: { item: C
 
   const footer = <>
     <button type="button" onClick={onClose} className="min-h-11 rounded-lg border border-[#c5d2e5] px-5 text-sm font-bold">Close</button>
-    {item.stage === "idea_draft" && <Link href={`${item.source === "ai_plan" ? "/calendar/ai-plan/new" : "/calendar/content/new"}?edit=${encodeURIComponent(item.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">Edit Draft</Link>}
+    {canEditContent({ entityType: "content_work_item", stage: item.stage }) && <Link href={`${item.source === "ai_plan" ? "/calendar/ai-plan/new" : "/calendar/content/new"}?edit=${encodeURIComponent(item.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">Edit Draft</Link>}
     {item.stage === "unscheduled" && <button type="button" onClick={() => setScheduling((value) => !value)} className="min-h-11 rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">{scheduling ? "Cancel Scheduling" : "Schedule Date and Time"}</button>}
     {scheduling && <button type="button" onClick={saveSchedule} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Save Schedule</button>}
     {item.stage === "idea_draft" && <button type="button" onClick={() => actAndClose((storage, current) => approveDraft(storage, current, "Sarah Jenkins"))} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Approve Draft</button>}
@@ -120,7 +122,7 @@ function ContentPreview({ item, onClose, onChange, act, actAndClose }: { item: C
     {item.stage === "unscheduled" && scheduleComplete && !scheduling && <button type="button" onClick={() => act(scheduleWorkflow)} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Add to Calendar Grid</button>}
   </>;
 
-  return <ResponsiveOverlayShell variant={isPostDetails ? "drawer" : "dialog"} eyebrow={isPostDetails ? "Content Details" : undefined} title={isPostDetails ? item.stage === "scheduled" ? "Scheduled Content" : "Generated Content" : item.title} description={`${sourceLabel(item)} · ${stageLabel(item.stage)}`} maxWidth={isPostDetails ? "max-w-md" : "max-w-[900px]"} onClose={onClose} footer={footer}>
+  return <ResponsiveOverlayShell variant={isPostDetails ? "drawer" : "dialog"} eyebrow={isPostDetails ? "Content Details" : undefined} title={isPostDetails ? item.stage === "scheduled" ? "Scheduled Content" : "Generated Content" : item.title} description={`${sourceLabel(item)} · ${stageLabel(item.stage)}`} maxWidth={isPostDetails ? "max-w-[620px]" : "max-w-[900px]"} onClose={onClose} footer={footer}>
     {item.approvalNote && <div role="note" className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm"><b>Previous generated ideas rejected:</b> {item.approvalNote}</div>}
     {!isPostDetails && <dl className="grid gap-3 sm:grid-cols-2"><Info label="Brand" value={item.brandName || "Not linked"} /><Info label="Campaign" value={item.campaignName || "Not linked"} /><Info label="Owner" value={item.ownerName} /><Info label="Stage" value={stageLabel(item.stage)} /></dl>}
     {scheduling && schedulingRecord ? <ScheduleEditor records={item.drafts} record={schedulingRecord} draft={scheduleDraft} onChoose={chooseRecord} onDraftChange={setScheduleDraft} /> : isPostDetails && item.drafts.length ? <PostDetailsView item={item} /> : records.length ? <div className="mt-6 grid gap-4">{records.map((record) => <ContentRecord key={record.id} record={record} />)}</div> : <DraftSourcePreview item={item} />}
@@ -148,20 +150,9 @@ function PostDetailsView({ item }: { item: ContentWorkflowItem }) {
     {item.drafts.map((record, index) => <section key={record.id} aria-labelledby={`post-detail-${record.id}`} className={`${index ? "border-t border-[#d3e4fe] pt-6" : ""}`}>
       {item.drafts.length > 1 && <p id={`post-detail-${record.id}`} className="mb-5 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#0058bc]">Post {index + 1} of {item.drafts.length}</p>}
       <dl className="grid gap-5"><DetailInfo label="Date" value={record.publishDate ? formatPublishDate(record.publishDate) : "Not scheduled"} /><DetailInfo label="Platform" value={formatContentLabel(record.platform)} /><DetailInfo label="Asset Type" value={formatContentLabel(record.assetType)} /><DetailInfo label="Publish Time" value={record.publishTime || "Not scheduled"} /><DetailInfo label="Core Topic" value={record.coreTopic || record.title} /></dl>
-      <PostMockup item={item} record={record} />
+      <div className="mt-5"><GeneratedPostVisualPreview platform={record.platform} assetType={record.assetType} brandName={item.brandName} headline={record.headline || record.coreTopic || record.title} caption={record.caption || record.mainMessage} cta={record.cta} hashtags={record.hashtags} visualBrief={record.visualBrief} status={item.stage} publishTime={record.publishTime} /></div>
     </section>)}
   </div>;
-}
-
-function PostMockup({ item, record }: { item: ContentWorkflowItem; record: ContentWorkflowItem["drafts"][number] }) {
-  const scheduled = item.stage === "scheduled";
-  const video = /video|reel|short|tutorial|demo|behind the scenes/i.test(record.assetType);
-  const hashtags = record.hashtags.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(" ");
-  return <article aria-label={`${formatContentLabel(record.platform)} post mockup`} className="mt-5 overflow-hidden rounded-xl border border-[#d3e4fe] bg-white shadow-sm">
-    <div className="flex items-center justify-between border-b border-[#e5edf8] px-4 py-3"><div className="flex min-w-0 items-center gap-2"><span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0058bc] text-[10px] font-black text-white">{brandInitials(item.brandName)}</span><div className="min-w-0"><p className="truncate text-xs font-extrabold text-[#0b1c30]">{item.brandName || "Brand Pilot"}</p><p className="truncate text-[10px] font-semibold text-[#717786]">{formatContentLabel(record.platform)} · {scheduled ? `Scheduled ${record.publishTime}` : "Generated draft"}</p></div></div><span aria-hidden="true" className="text-lg font-bold tracking-widest text-[#717786]">•••</span></div>
-    <div className="relative flex aspect-square flex-col justify-between overflow-hidden bg-gradient-to-br from-[#dceaff] via-[#f9fbff] to-[#e8e4ff] p-6"><span className="w-fit rounded-full bg-white/90 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.14em] text-[#0058bc]">{formatContentLabel(record.assetType)}</span>{video && <span aria-hidden="true" className="absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-[#0058bc] text-2xl text-white shadow-xl">▶</span>}<div><p className="text-2xl font-black leading-tight tracking-[-.03em] text-[#0b1c30]">{record.headline || record.coreTopic || record.title}</p>{record.cta && <p className="mt-3 text-xs font-bold uppercase tracking-[.14em] text-[#0058bc]">{record.cta} →</p>}</div>{!video && /carousel/i.test(record.assetType) && <span className="absolute bottom-4 right-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-extrabold text-[#0058bc]">1 / 5</span>}</div>
-    <div className="p-4"><div aria-hidden="true" className="mb-3 flex gap-4 text-lg text-[#26384d]"><span>♡</span><span>○</span><span>⌁</span></div><p className="whitespace-pre-wrap text-xs leading-5 text-[#414755]"><b className="mr-1 text-[#0b1c30]">{contentHandle(item.brandName)}</b>{record.caption || record.mainMessage}</p>{hashtags && <p className="mt-2 text-xs leading-5 text-[#0058bc]">{hashtags}</p>}<p className={`mt-3 text-[10px] font-bold uppercase tracking-[.12em] ${scheduled ? "text-emerald-700" : "text-violet-700"}`}>{scheduled ? `Scheduled for ${formatPublishDate(record.publishDate)} at ${record.publishTime}` : "Generated · Awaiting schedule"}</p></div>
-  </article>;
 }
 
 function DraftSourcePreview({ item }: { item: ContentWorkflowItem }) {
@@ -181,7 +172,5 @@ function EditField({ label, children }: { label: string; children: React.ReactNo
 function formatDate(value: string) { return new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date(value)); }
 function formatPublishDate(value: string) { const [year, month, day] = value.split("-").map(Number); return new Intl.DateTimeFormat("en", { weekday: "short", month: "long", day: "numeric", year: "numeric" }).format(new Date(year, month - 1, day)); }
 function formatContentLabel(value: string) { return value.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
-function brandInitials(name?: string) { const initials = (name || "Brand Pilot").split(/\s+/).filter(Boolean).slice(0, 2).map((word) => word[0]).join("").toUpperCase(); return initials || "BP"; }
-function contentHandle(name?: string) { return (name || "brandpilot").toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 24) || "brandpilot"; }
 function Loading() { return <div role="status" className="mt-6 animate-pulse rounded-xl border bg-white p-6"><span className="sr-only">Loading content list</span><div className="h-6 w-48 rounded bg-slate-200" /><div className="mt-4 h-24 rounded bg-slate-100" /></div>; }
 function Empty({ hasItems }: { hasItems: boolean }) { return <section className="mt-6 rounded-xl border border-dashed border-[#c5d2e5] bg-white p-10 text-center"><h3 className="text-lg font-extrabold">{hasItems ? "No content matches these filters" : "No content work yet"}</h3><p className="mt-2 text-sm text-[#657080]">{hasItems ? "Try resetting the filters." : "Save an AI Plan or Create Post draft to start the staged workflow."}</p>{!hasItems && <div className="mt-5 flex flex-wrap justify-center gap-3"><Link href="/calendar/ai-plan/new" className="inline-flex min-h-11 items-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">AI Plan Content</Link><Link href="/calendar/content/new" className="inline-flex min-h-11 items-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Create Post</Link></div>}</section>; }

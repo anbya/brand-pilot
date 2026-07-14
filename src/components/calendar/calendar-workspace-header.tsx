@@ -13,6 +13,7 @@ type CalendarHeaderProps = {
   onViewChange: (view: CalendarView) => void;
   canCreateAiPlan?: boolean;
   canCreatePost?: boolean;
+  onResetDemoData: () => void;
 };
 
 type ListHeaderProps =
@@ -46,6 +47,7 @@ export function CalendarWorkspaceHeader(props: CalendarWorkspaceHeaderProps) {
             {teamImages.map((src) => <Image key={src} src={src} width={32} height={32} alt="" className="h-8 w-8 rounded-full border-2 border-[#f8f9ff] object-cover" />)}
             <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#f8f9ff] bg-[#0070eb] text-[10px] font-extrabold text-white">+3</span>
           </div>
+          {props.variant === "calendar" && <button type="button" onClick={props.onResetDemoData} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#c93838] px-4 text-sm font-bold text-[#a52222] outline-none hover:bg-[#fff0f0] focus-visible:ring-2 focus-visible:ring-[#c93838]">Reset Demo Data</button>}
           {props.variant === "calendar" && props.canCreateAiPlan && <Link href="/calendar/ai-plan/new" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#4648d4] px-4 text-sm font-bold text-[#4648d4] outline-none hover:bg-[#e1e0ff] focus-visible:ring-2 focus-visible:ring-[#4648d4]">AI Plan Content</Link>}
           {props.variant === "calendar" && props.canCreatePost && <Link href="/calendar/content/new" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0058bc] px-4 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">+ Create Post</Link>}
           {props.variant === "planning-briefs" && props.canCreate && <PrimaryAction href="/calendar/ai-plan/new">Create Planning Brief</PrimaryAction>}

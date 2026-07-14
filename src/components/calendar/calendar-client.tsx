@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
-import type { Dispatch } from "react";
 import { AiPlanResultDialog } from "@/components/calendar/ai-plan-result-dialog";
 import { CalendarWorkspaceHeader } from "@/components/calendar/calendar-workspace-header";
 import { CalendarWorkspaceShell } from "@/components/calendar/calendar-workspace-shell";
@@ -9,7 +8,6 @@ import { CalendarLegend } from "@/components/calendar/calendar-legend";
 import { CalendarToolbar } from "@/components/calendar/calendar-toolbar";
 import { DayAgendaPopover } from "@/components/calendar/day-agenda-popover";
 import { DeletePostDialog } from "@/components/calendar/delete-post-dialog";
-import { EditPostDialog, type EditPostPayload } from "@/components/calendar/edit-post-dialog";
 import { MonthGrid } from "@/components/calendar/month-grid";
 import { PostDetailDrawer } from "@/components/calendar/post-detail-drawer";
 import { PlanningBriefPreviewDrawer } from "@/components/calendar/planning-brief-preview-drawer";
@@ -26,17 +24,21 @@ import { readManualPosts } from "@/lib/calendar/manual-post-store";
 import { activeManualPostPermissions } from "@/lib/calendar/manual-post-permissions";
 import { readContentWorkflow } from "@/lib/calendar/content-workflow-store";
 import type { ContentWorkflowItem } from "@/lib/calendar/content-workflow-types";
-import { calendarReducer, type CalendarAction } from "@/lib/calendar/reducer";
+import { createLocalCalendarStateRepository } from "@/lib/calendar/calendar-state-repository";
+import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
+import { calendarReducer } from "@/lib/calendar/reducer";
 import { getCalendarEvents, getFilteredVersions, getIdeaById, getPillarById, getVersionById } from "@/lib/calendar/selectors";
-import type { ContentVersion } from "@/lib/calendar/types";
+import type { CalendarState, ContentVersion } from "@/lib/calendar/types";
+import { clearPrototypeData } from "@/lib/prototype-data-repository";
 
 const today = "2026-07-11";
 const planningBriefPermissions = activePlanningBriefPermissions;
 const planningBriefViewerPermissions = getPlanningBriefPermissions("viewer");
-type PostAction = "edit" | "reschedule" | "delete";
+type PostAction = "reschedule" | "delete";
 
 export function CalendarClient() {
   const [state, dispatch] = useReducer(calendarReducer, initialCalendarState);
+  const [calendarHydrated, setCalendarHydrated] = useState(false);
   const [agendaDate, setAgendaDate] = useState<string>();
   const [activePostAction, setActivePostAction] = useState<PostAction>();
   const [actionVersionId, setActionVersionId] = useState<string>();
@@ -81,9 +83,13 @@ export function CalendarClient() {
       const plans = readGeneratedPlans(window.localStorage);
       const manualPosts = readManualPosts(window.localStorage);
       const workflowItems = readContentWorkflow(window.localStorage);
+      const calendarRepository = createLocalCalendarStateRepository(window.localStorage);
+      const restoredCalendarState = mergeWorkflowCalendarPosts(calendarRepository.load(), workflowItems);
+      calendarRepository.save(restoredCalendarState);
+      dispatch({ type: "HYDRATE_STATE", payload: restoredCalendarState });
+      setCalendarHydrated(true);
       setStoredPlanningBriefs(briefs);
       setStoredGeneratedPlans(plans);
-      restoreWorkflowCalendarPosts(workflowItems, dispatch);
       if (generateId && !planningBriefPermissions.canGenerate) return;
       if (postId) { const post = manualPosts.find((item) => item.versions.some((version) => version.id === postId) && item.status === "scheduled"); const version = post?.versions.find((item) => item.id === postId); if (version) { dispatch({ type: "SET_CURRENT_DATE", payload: version.publishDate }); dispatch({ type: "OPEN_POST_DETAIL", payload: version.id }); } }
       else if (generateId) { const brief = briefs.find((item) => item.id === generateId && item.status === "approved"); if (brief) { const plan = getGeneratedPlanByBriefId(plans, brief.id) ?? createGeneratedPlan(window.localStorage, brief, generateMockAiPlan(brief.request, initialCalendarState.pillars, initialCalendarState.versions)); setStoredGeneratedPlans((current) => upsertGeneratedPlan(current, plan)); setActiveGeneratedPlan(plan); setPendingAiPlanResult(plan.items); setGeneratedPlanReadOnly(false); setAiPlanResultOpen(true); } }
@@ -91,6 +97,28 @@ export function CalendarClient() {
     });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    if (!calendarHydrated) return;
+    createLocalCalendarStateRepository(window.localStorage).save(state);
+  }, [calendarHydrated, state]);
+
+  function handleResetDemoData() {
+    if (!window.confirm("Reset all prototype data to the initial demo state?")) return;
+
+    clearPrototypeData(window.localStorage);
+    clearPrototypeData(window.sessionStorage);
+    const resetState = createLocalCalendarStateRepository(window.localStorage).reset();
+    dispatch({ type: "HYDRATE_STATE", payload: resetState });
+    setStoredGeneratedPlans([]);
+    setStoredPlanningBriefs([]);
+    setAgendaDate(undefined);
+    setActivePostAction(undefined);
+    setActionVersionId(undefined);
+    setAiPlanResultOpen(false);
+    setSourcePlanningBriefId(undefined);
+    setNewlyAddedVersionIds(new Set());
+  }
 
   function openEvent(versionId: string) {
     drawerTriggerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
@@ -100,6 +128,10 @@ export function CalendarClient() {
   }
 
   function openPostAction(action: PostAction, versionId: string) {
+    const version = getVersionById(state, versionId);
+    if (!version) return;
+    const allowed = getCalendarPostActions(version.status);
+    if ((action === "reschedule" && !allowed.canReschedule) || (action === "delete" && !allowed.canDelete)) return;
     setAgendaDate(undefined);
     setActionVersionId(versionId);
     setActivePostAction(action);
@@ -113,34 +145,29 @@ export function CalendarClient() {
     if (reopenDrawer && versionId && getVersionById(state, versionId)) dispatch({ type: "OPEN_POST_DETAIL", payload: versionId });
   }
 
-  function handleEditPost(payload: EditPostPayload) {
-    const timestamp = new Date().toISOString();
-    dispatch({ type: "UPDATE_IDEA", payload: { ...payload.idea, updatedAt: timestamp } });
-    dispatch({ type: "UPDATE_VERSION", payload: { ...payload.version, updatedAt: timestamp } });
-    setActivePostAction(undefined); setActionVersionId(undefined);
-    dispatch({ type: "OPEN_POST_DETAIL", payload: payload.version.id });
-  }
-
   function handleDuplicatePost(versionId: string) {
     const original = getVersionById(state, versionId); if (!original) return;
+    if (!getCalendarPostActions(original.status).canDuplicate) return;
     const suffix = Date.now().toString(); const timestamp = new Date().toISOString();
     const duplicate: ContentVersion = { ...original, id: `version-${original.platform}-${suffix}`, headline: `${original.headline} Copy`, status: "draft", createdAt: timestamp, updatedAt: timestamp };
-    dispatch({ type: "DUPLICATE_VERSION", payload: duplicate });
+    dispatch({ type: "DUPLICATE_VERSION", payload: { sourceVersionId: original.id, duplicate } });
     dispatch({ type: "OPEN_POST_DETAIL", payload: duplicate.id });
   }
 
   function handleReschedulePost(payload: ReschedulePostPayload) {
     const version = getVersionById(state, payload.versionId); if (!version) return closePostAction(false);
-    const updated = { ...version, publishDate: payload.publishDate, publishTime: payload.publishTime, timezone: payload.timezone, status: payload.status, updatedAt: new Date().toISOString() };
-    dispatch({ type: "UPDATE_VERSION", payload: updated });
+    if (!getCalendarPostActions(version.status).canReschedule) return closePostAction(false);
+    const updated = { id: version.id, publishDate: payload.publishDate, publishTime: payload.publishTime, timezone: payload.timezone, updatedAt: new Date().toISOString() };
+    dispatch({ type: "RESCHEDULE_VERSION", payload: updated });
     setActivePostAction(undefined); setActionVersionId(undefined);
     dispatch({ type: "OPEN_POST_DETAIL", payload: updated.id });
   }
 
   function handleDeletePost() {
     if (!actionVersion || !actionIdea) return closePostAction(false);
-    if (siblingVersions.length <= 1) dispatch({ type: "DELETE_IDEA", payload: actionIdea.id });
-    else dispatch({ type: "DELETE_VERSION", payload: actionVersion.id });
+    if (!getCalendarPostActions(actionVersion.status).canDelete) return closePostAction(false);
+    if (siblingVersions.length <= 1) dispatch({ type: "DELETE_SCHEDULED_IDEA", payload: actionIdea.id });
+    else dispatch({ type: "DELETE_SCHEDULED_VERSION", payload: actionVersion.id });
     closePostAction(false);
   }
 
@@ -186,15 +213,14 @@ export function CalendarClient() {
   }
 
   return <>
-    <CalendarWorkspaceShell header={<CalendarWorkspaceHeader variant="calendar" view={state.view} onViewChange={(view) => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "SET_VIEW", payload: view }); }} canCreatePost={activeManualPostPermissions.canCreate} canCreateAiPlan={planningBriefPermissions.canCreate} />}>
+    <CalendarWorkspaceShell header={<CalendarWorkspaceHeader variant="calendar" view={state.view} onViewChange={(view) => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "SET_VIEW", payload: view }); }} canCreatePost={activeManualPostPermissions.canCreate} canCreateAiPlan={planningBriefPermissions.canCreate} onResetDemoData={handleResetDemoData} />}>
         <CalendarToolbar view={state.view} currentDate={state.currentDate} filters={state.filters} pillars={state.pillars} creators={creators} onPrevious={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_PREVIOUS_PERIOD" }); }} onNext={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_NEXT_PERIOD" }); }} onToday={() => { setNewlyAddedVersionIds(new Set()); dispatch({ type: "GO_TO_TODAY", payload: today }); }} onFilterChange={(key, value) => dispatch({ type: "SET_FILTER", payload: { key, value } })} onResetFilters={() => dispatch({ type: "RESET_FILTERS" })} />
         <CalendarLegend pillars={state.pillars} />
         {filteredVersions.length === 0 && <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-[#d3e4fe] bg-white px-4 py-3 text-sm text-[#657080]"><span>No content matches the selected filters.</span><button type="button" disabled={!filtersActive} onClick={() => dispatch({ type: "RESET_FILTERS" })} className="font-bold text-[#0058bc] outline-none hover:underline focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reset filters</button></div>}
         {state.view === "month" ? <MonthGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} onMoreClick={setAgendaDate} /> : <WeekGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} />}
     </CalendarWorkspaceShell>
     <DayAgendaPopover date={agendaDate} events={agendaEvents} onEventClick={openEvent} onClose={() => setAgendaDate(undefined)} />
-    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} generatedPlan={selectedGeneratedPlan} generatedItem={selectedGeneratedItem} planningBrief={selectedPlanningBrief} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onEdit={(id) => openPostAction("edit", id)} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} onViewGeneratedPlan={viewGeneratedPlan} onViewPlanningBrief={viewPlanningBrief} />
-    {activePostAction === "edit" && <EditPostDialog open idea={actionIdea} version={actionVersion} pillars={state.pillars} onClose={() => closePostAction()} onSubmit={handleEditPost} />}
+    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} generatedPlan={selectedGeneratedPlan} generatedItem={selectedGeneratedItem} planningBrief={selectedPlanningBrief} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} onViewGeneratedPlan={viewGeneratedPlan} onViewPlanningBrief={viewPlanningBrief} />
     {activePostAction === "reschedule" && <ReschedulePostDialog open idea={actionIdea} version={actionVersion} onClose={() => closePostAction()} onSubmit={handleReschedulePost} />}
     {activePostAction === "delete" && <DeletePostDialog open idea={actionIdea} version={actionVersion} siblingVersionCount={siblingVersions.length} onClose={() => closePostAction()} onConfirm={handleDeletePost} />}
     {aiPlanResultOpen && <AiPlanResultDialog open plan={activeGeneratedPlan} items={pendingAiPlanResult} canApprove={false} message={aiPlanMessage || "Legacy generated plans are read-only. Use Content List for the CCA-606 workflow."} focusedItemId={focusedGeneratedItemId} onClose={closeAiResult} onToggleItem={() => undefined} onSelectAll={() => undefined} onClearSelection={() => undefined} onApproveSelected={() => undefined} />}
@@ -202,16 +228,18 @@ export function CalendarClient() {
   </>;
 }
 
-function restoreWorkflowCalendarPosts(items: ContentWorkflowItem[], dispatch: Dispatch<CalendarAction>) {
+function mergeWorkflowCalendarPosts(state: CalendarState, items: ContentWorkflowItem[]): CalendarState {
+  let nextState = state;
   for (const item of items) {
     if (item.stage !== "scheduled") continue;
     item.drafts.forEach((draft, index) => {
       const ideaId = `workflow-idea-${item.id}-${index}`;
       const versionId = `workflow-version-${item.id}-${index}`;
-      dispatch({ type: "ADD_IDEA", payload: { id: ideaId, title: draft.title, coreTopic: draft.coreTopic, pillarId: draft.pillarId, objective: draft.objective, targetAudience: draft.targetAudience, mainMessage: draft.mainMessage, campaignId: item.campaignId, campaignName: item.campaignName, brandId: item.brandId, brandName: item.brandName, ownerName: item.ownerName, approvedAt: item.approvedAt, approvedBy: item.approvedBy, creationSource: item.source === "ai_plan" ? "generated_plan" : "manual", createdAt: item.createdAt, updatedAt: item.updatedAt } });
-      dispatch({ type: "ADD_VERSION", payload: { id: versionId, contentIdeaId: ideaId, platform: draft.platform, assetType: draft.assetType, headline: draft.headline, caption: draft.caption, cta: draft.cta, hashtags: draft.hashtags, visualBrief: draft.visualBrief, publishDate: draft.publishDate, publishTime: draft.publishTime, timezone: draft.timezone, status: "scheduled", createdBy: item.ownerName, createdAt: item.createdAt, updatedAt: item.updatedAt } });
+      nextState = calendarReducer(nextState, { type: "ADD_IDEA", payload: { id: ideaId, title: draft.title, coreTopic: draft.coreTopic, pillarId: draft.pillarId, objective: draft.objective, targetAudience: draft.targetAudience, mainMessage: draft.mainMessage, campaignId: item.campaignId, campaignName: item.campaignName, brandId: item.brandId, brandName: item.brandName, ownerName: item.ownerName, approvedAt: item.approvedAt, approvedBy: item.approvedBy, creationSource: item.source === "ai_plan" ? "generated_plan" : "manual", createdAt: item.createdAt, updatedAt: item.updatedAt } });
+      nextState = calendarReducer(nextState, { type: "ADD_VERSION", payload: { id: versionId, contentIdeaId: ideaId, platform: draft.platform, assetType: draft.assetType, headline: draft.headline, caption: draft.caption, cta: draft.cta, hashtags: draft.hashtags, visualBrief: draft.visualBrief, publishDate: draft.publishDate, publishTime: draft.publishTime, timezone: draft.timezone, status: "scheduled", createdBy: item.ownerName, createdAt: item.createdAt, updatedAt: item.updatedAt } });
     });
   }
+  return nextState;
 }
 
 function upsertGeneratedPlan(plans: GeneratedDraftPlan[], plan: GeneratedDraftPlan): GeneratedDraftPlan[] { return [plan, ...plans.filter((item) => item.id !== plan.id)]; }

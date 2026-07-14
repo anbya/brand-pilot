@@ -236,6 +236,62 @@ read-only. Perbaikan konten harus dilakukan sebelum approval Generated Ideas.
 Content List tidak menyediakan action `Edit Post`; perubahan yang diizinkan
 hanya `publishDate` dan `publishTime` selama item masih berstatus Unscheduled.
 
+#### CCA-608 Content Calendar Prototype Persistence
+
+```text
+First load without a saved snapshot
+    -> Normalize initial mock state
+    -> Persist versioned local snapshot
+User mutation
+    -> Persist updated snapshot
+Browser refresh
+    -> Restore latest snapshot
+Reset Demo Data
+    -> Clear prototype storage
+    -> Persist initial mock state again
+```
+
+Calendar state disimpan melalui typed repository dengan schema version, bukan
+diakses langsung oleh reducer. Repository melakukan validasi, normalisasi, dan
+deduplikasi berdasarkan ID ketika snapshot dibaca. State UI sementara seperti
+drawer yang terbuka tidak dipulihkan. Seluruh store prototype tetap lokal dan
+tidak menggunakan backend atau API; interface repository menjadi boundary agar
+adapter `localStorage` dapat diganti pada tahap integrasi berikutnya.
+
+#### CCA-609 Generated Post Visual Preview
+
+Generated Content menampilkan visual post preview selain metadata. Preview
+menggunakan komponen presentasional yang sama pada Content List, generated post
+dialog, dan Content Details Drawer yang dibuka dari Calendar Grid. Tampilan
+menyesuaikan platform Instagram, TikTok, YouTube, atau Facebook serta content
+type seperti carousel dan video.
+
+Preview memuat brand identity, platform, asset type, headline, CTA, caption,
+hashtags, schedule/status, indikator carousel, dan play treatment untuk konten
+video. Preview hanya merepresentasikan output generated content dan tidak
+menambahkan action edit; aturan read-only CCA-607 tetap berlaku.
+
+#### CCA-610 Scheduled Calendar Posts Read-Only
+
+```text
+Idea Draft                  -> Edit / Approve
+Generated Ideas             -> Read-only / Approve / Reject
+Generated Content           -> Read-only / Schedule
+Calendar Post: Scheduled    -> Read-only / Delete / Duplicate / Reschedule
+Calendar Post: Published    -> Read-only / Duplicate
+```
+
+Post Details tidak menyediakan action atau handler `Edit Post`. Calendar Post
+tidak memiliki mutation generik untuk content fields; reducer hanya menerima
+`RESCHEDULE_VERSION` dengan field tanggal, waktu, timezone, dan timestamp, serta
+menolak mutation tersebut bila status bukan `scheduled`. Published Post tidak
+dapat di-reschedule.
+
+Policy `canEditContent` menjadi guard terpusat dan hanya mengizinkan entity
+`content_work_item` pada stage `idea_draft`. Store workflow juga menggunakan
+guard ini sebelum menyimpan perubahan draft agar URL atau handler lama tidak
+dapat mengubah Generated Ideas, Generated Content, Scheduled, atau Published.
+
 #### CCA-604 Dedicated Content Input Pages
 
 Input Content Calendar tidak menggunakan modal. Navigasi input menggunakan:

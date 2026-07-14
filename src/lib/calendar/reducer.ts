@@ -1,4 +1,5 @@
 import { addDays, addMonths } from "@/lib/calendar/date-utils";
+import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
 import type {
   CalendarFilters,
   CalendarState,
@@ -8,6 +9,7 @@ import type {
 } from "@/lib/calendar/types";
 
 export type CalendarAction =
+  | { type: "HYDRATE_STATE"; payload: CalendarState }
   | { type: "SET_VIEW"; payload: CalendarView }
   | { type: "SET_CURRENT_DATE"; payload: string }
   | { type: "GO_TO_PREVIOUS_PERIOD" }
@@ -20,12 +22,11 @@ export type CalendarAction =
   | { type: "SET_FILTER"; payload: { key: keyof CalendarFilters; value: CalendarFilters[keyof CalendarFilters] } }
   | { type: "RESET_FILTERS" }
   | { type: "ADD_IDEA"; payload: ContentIdea }
-  | { type: "UPDATE_IDEA"; payload: ContentIdea }
-  | { type: "DELETE_IDEA"; payload: string }
+  | { type: "DELETE_SCHEDULED_IDEA"; payload: string }
   | { type: "ADD_VERSION"; payload: ContentVersion }
-  | { type: "UPDATE_VERSION"; payload: ContentVersion }
-  | { type: "DELETE_VERSION"; payload: string }
-  | { type: "DUPLICATE_VERSION"; payload: ContentVersion };
+  | { type: "RESCHEDULE_VERSION"; payload: Pick<ContentVersion, "id" | "publishDate" | "publishTime" | "timezone" | "updatedAt"> }
+  | { type: "DELETE_SCHEDULED_VERSION"; payload: string }
+  | { type: "DUPLICATE_VERSION"; payload: { sourceVersionId: string; duplicate: ContentVersion } };
 
 const emptyFilters: CalendarFilters = {
   platform: "all",
@@ -36,6 +37,8 @@ const emptyFilters: CalendarFilters = {
 
 export function calendarReducer(state: CalendarState, action: CalendarAction): CalendarState {
   switch (action.type) {
+    case "HYDRATE_STATE":
+      return action.payload;
     case "SET_VIEW":
       return { ...state, view: action.payload };
     case "SET_CURRENT_DATE":
@@ -59,9 +62,9 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
       return { ...state, filters: emptyFilters };
     case "ADD_IDEA":
       return state.ideas.some((idea) => idea.id === action.payload.id) ? state : { ...state, ideas: [...state.ideas, action.payload] };
-    case "UPDATE_IDEA":
-      return { ...state, ideas: state.ideas.map((idea) => idea.id === action.payload.id ? action.payload : idea) };
-    case "DELETE_IDEA": {
+    case "DELETE_SCHEDULED_IDEA": {
+      const ideaVersions = state.versions.filter((version) => version.contentIdeaId === action.payload);
+      if (ideaVersions.length !== 1 || !getCalendarPostActions(ideaVersions[0].status).canDelete) return state;
       const deletedVersionIds = new Set(state.versions.filter((version) => version.contentIdeaId === action.payload).map((version) => version.id));
       const selectedWasDeleted = state.selectedVersionId ? deletedVersionIds.has(state.selectedVersionId) : false;
       return {
@@ -73,11 +76,22 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
       };
     }
     case "ADD_VERSION":
-    case "DUPLICATE_VERSION":
       return state.versions.some((version) => version.id === action.payload.id) ? state : { ...state, versions: [...state.versions, action.payload] };
-    case "UPDATE_VERSION":
-      return { ...state, versions: state.versions.map((version) => version.id === action.payload.id ? action.payload : version) };
-    case "DELETE_VERSION": {
+    case "DUPLICATE_VERSION": {
+      const source = state.versions.find((version) => version.id === action.payload.sourceVersionId);
+      if (!source || !getCalendarPostActions(source.status).canDuplicate || state.versions.some((version) => version.id === action.payload.duplicate.id)) return state;
+      return { ...state, versions: [...state.versions, action.payload.duplicate] };
+    }
+    case "RESCHEDULE_VERSION":
+      return {
+        ...state,
+        versions: state.versions.map((version) => version.id === action.payload.id && version.status === "scheduled"
+          ? { ...version, publishDate: action.payload.publishDate, publishTime: action.payload.publishTime, timezone: action.payload.timezone, updatedAt: action.payload.updatedAt }
+          : version),
+      };
+    case "DELETE_SCHEDULED_VERSION": {
+      const version = state.versions.find((item) => item.id === action.payload);
+      if (!version || !getCalendarPostActions(version.status).canDelete) return state;
       const selectedWasDeleted = state.selectedVersionId === action.payload;
       return {
         ...state,

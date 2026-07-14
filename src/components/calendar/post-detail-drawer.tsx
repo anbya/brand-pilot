@@ -3,8 +3,10 @@
 import type { RefObject } from "react";
 import { parseLocalDate } from "@/lib/calendar/date-utils";
 import { GeneratedPlanStatusBadge } from "@/components/calendar/generated-plan-status-badge";
+import { GeneratedPostVisualPreview } from "@/components/calendar/generated-post-visual-preview";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { formatAssetTypeLabel, formatPlatformLabel } from "@/lib/calendar/platform-options";
+import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
 import type { GeneratedDraftPlan, GeneratedDraftPlanItem } from "@/lib/calendar/generated-plan-types";
 import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
 import type { ContentIdea, ContentPillar, ContentVersion } from "@/lib/calendar/types";
@@ -19,7 +21,6 @@ type PostDetailDrawerProps = {
   planningBrief?: PlanningBrief;
   returnFocusRef?: RefObject<HTMLElement | null>;
   onClose: () => void;
-  onEdit: (versionId: string) => void;
   onDuplicate: (versionId: string) => void;
   onReschedule: (versionId: string) => void;
   onDelete: (versionId: string) => void;
@@ -38,7 +39,7 @@ const statusStyles = {
 const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" });
 const timestampFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
-export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, generatedItem, planningBrief, returnFocusRef, onClose, onEdit, onDuplicate, onReschedule, onDelete, onViewGeneratedPlan, onViewPlanningBrief }: PostDetailDrawerProps) {
+export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, generatedItem, planningBrief, returnFocusRef, onClose, onDuplicate, onReschedule, onDelete, onViewGeneratedPlan, onViewPlanningBrief }: PostDetailDrawerProps) {
   if (!open) return null;
 
   const headline = version?.headline.trim() || idea?.title || "Post details";
@@ -50,9 +51,9 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
   const generatedPost = Boolean(idea?.creationSource === "generated_plan" || (generatedPlanId && generatedItemId));
   const manualPost = idea?.creationSource === "manual" && !generatedPost;
   const approvedManualPost = Boolean(version?.status === "scheduled" && manualPost && idea?.approvedAt);
-  const readOnlyScheduledPost = generatedPost || approvedManualPost;
+  const actions = version ? getCalendarPostActions(version.status) : undefined;
 
-  return <ResponsiveOverlayShell open variant="drawer" title={headline} showHeader={false} maxWidth="max-w-[520px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" returnFocusRef={returnFocusRef} onClose={onClose}>
+  return <ResponsiveOverlayShell open variant="drawer" title={headline} showHeader={false} maxWidth="max-w-[620px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" returnFocusRef={returnFocusRef} onClose={onClose}>
       <header className="shrink-0 border-b border-[#d3e4fe] bg-white px-5 py-5 sm:px-6">
         <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#0058bc]">Post Details</p><h2 className="mt-2 break-words text-xl font-extrabold outline-none sm:text-2xl">{headline}</h2>{version && <div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#e5eeff] px-3 py-1 text-xs font-bold text-[#0058bc]">{formatPlatformLabel(version.platform)}</span><span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[version.status]}`}>{formatAssetTypeLabel(version.status)}</span></div>}</div><button type="button" aria-label="Close Post Details" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#c8d8ef] text-xl text-[#526174] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">×</button></div>
         <div className="mt-4 h-1 w-full rounded-full" aria-hidden="true" style={{ backgroundColor: pillarColor }} />
@@ -60,7 +61,9 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
 
       <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden bg-[#f8faff] p-4 sm:p-6">
         {!version ? <Unavailable title="Post data is unavailable." description="The selected content version could not be found." /> : <div className="grid gap-5">
-          <DetailSection title="Content Preview"><div className="rounded-xl border-l-4 bg-white p-4" style={{ borderLeftColor: pillarColor }}><h3 className="break-words text-lg font-extrabold">{headline}</h3><p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-[#414755]">{version.caption || "No caption"}</p><div className="mt-4 rounded-lg bg-[#eff4ff] p-3"><p className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#657080]">Call to action</p><p className="mt-1 break-words text-sm font-bold">{version.cta || "No CTA"}</p></div><div className="mt-4 flex flex-wrap gap-2">{version.hashtags.length ? version.hashtags.map((tag) => <span key={tag} className="break-all rounded-full bg-[#e5eeff] px-2.5 py-1 text-xs font-bold text-[#0058bc]">#{tag}</span>) : <span className="text-xs font-semibold text-[#8b96a5]">No hashtags</span>}</div><div className="mt-4 border-t border-[#e2e8f0] pt-4">{version.mediaUrl ? <a href={version.mediaUrl} target="_blank" rel="noreferrer" className="block break-all text-sm font-bold text-[#0058bc] underline decoration-blue-200 underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-[#0058bc]">Open media</a> : <p className="text-sm font-semibold text-[#8b96a5]">No media attached</p>}</div>{version.visualBrief && <div className="mt-4"><p className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#657080]">Visual brief</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-6 text-[#414755]">{version.visualBrief}</p></div>}</div></DetailSection>
+          <DetailSection title={generatedPost ? "Generated Post Preview" : "Post Preview"}><GeneratedPostVisualPreview platform={version.platform} assetType={version.assetType} brandName={idea?.brandName} headline={headline} caption={version.caption} cta={version.cta} hashtags={version.hashtags} visualBrief={version.visualBrief} status={version.status} publishTime={version.publishTime} />{version.mediaUrl && <a href={version.mediaUrl} target="_blank" rel="noreferrer" className="mt-4 block break-all text-sm font-bold text-[#0058bc] underline decoration-blue-200 underline-offset-4 outline-none focus-visible:ring-2 focus-visible:ring-[#0058bc]">Open attached media</a>}</DetailSection>
+
+          <DetailSection title="Post Content"><dl className="grid gap-4"><DetailItem label="Hook" value={headline} /><DetailItem label="Caption / Body" value={version.caption || "No caption"} /><DetailItem label="CTA" value={version.cta || "No CTA"} /><DetailItem label="Hashtags" value={version.hashtags.length ? version.hashtags.map((tag) => tag.startsWith("#") ? tag : `#${tag}`).join(" ") : "No hashtags"} /><DetailItem label="Assets" value={version.assetId || version.mediaUrl || "No asset attached"} /><DetailItem label="Source Idea" value={idea ? `${idea.title} (${idea.id})` : "Source idea unavailable"} /><DetailItem label="Workflow Relationship" value={generatedPost ? "Idea Draft → Generated Ideas → Generated Content → Calendar Post" : "Idea Draft → Calendar Post"} /></dl></DetailSection>
 
           <DetailSection title="Strategy">{idea ? <dl className="grid gap-4"><DetailItem label="Content Title" value={idea.title} /><DetailItem label="Core Topic" value={idea.coreTopic} /><div><dt className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#657080]">Content Pillar</dt><dd className="mt-1.5 flex items-center gap-2 text-sm font-bold"><span className="h-3 w-3 rounded-full" aria-hidden="true" style={{ backgroundColor: pillarColor }} />{pillarName}</dd></div><DetailItem label="Objective" value={formatAssetTypeLabel(idea.objective)} /><DetailItem label="Target Audience" value={idea.targetAudience} /><DetailItem label="Main Message" value={idea.mainMessage} /><DetailItem label="Creation Source" value={generatedPost ? "Generated from Planning Brief" : manualPost ? "Manual Post" : formatAssetTypeLabel(idea.creationSource)} /><DetailItem label="Linked Campaign" value={idea.campaignName || idea.campaignId || "Not linked"} /></dl> : <Unavailable title="Content idea data is unavailable." description="Version details remain available, but its strategy relationship is missing." />}</DetailSection>
 
@@ -71,7 +74,7 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
           <DetailSection title="Metadata" muted><dl className="grid gap-4 sm:grid-cols-2"><DetailItem label="Created At" value={formatTimestamp(version.createdAt)} /><DetailItem label="Updated At" value={formatTimestamp(version.updatedAt)} /></dl></DetailSection>
         </div>}
       </div>
-      <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[#d3e4fe] bg-white px-5 py-4 sm:px-6">{version && !readOnlyScheduledPost && <><button type="button" onClick={() => onDelete(version.id)} className="mr-auto rounded-lg px-3 py-2.5 text-sm font-bold text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Delete</button><button type="button" onClick={() => onDuplicate(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Duplicate</button><button type="button" onClick={() => onReschedule(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reschedule</button><button type="button" onClick={() => onEdit(version.id)} className="rounded-lg bg-[#0058bc] px-4 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Edit Post</button></>}<button type="button" onClick={onClose} className="rounded-lg px-3 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Close</button></footer>
+      <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[#d3e4fe] bg-white px-5 py-4 sm:px-6">{version && actions?.canDelete && <button type="button" onClick={() => onDelete(version.id)} className="mr-auto rounded-lg px-3 py-2.5 text-sm font-bold text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Delete</button>}{version && actions?.canDuplicate && <button type="button" onClick={() => onDuplicate(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Duplicate as Draft</button>}{version && actions?.canReschedule && <button type="button" onClick={() => onReschedule(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reschedule</button>}<button type="button" onClick={onClose} className="rounded-lg px-3 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Close</button></footer>
   </ResponsiveOverlayShell>;
 }
 
