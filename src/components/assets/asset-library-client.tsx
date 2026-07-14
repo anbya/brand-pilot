@@ -1,0 +1,104 @@
+"use client";
+
+import Image from "next/image";
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react";
+import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
+import { dashboardMockData } from "@/lib/dashboard/mock-data";
+import { getAssetLibraryPermissions } from "@/lib/assets/permissions";
+import { kindFromMime, mockPreviewDataUrl, readAssetLibrary, subscribeToAssetLibrary, writeAssetLibrary } from "@/lib/assets/store";
+import type { AssetKind, WorkspaceAsset } from "@/lib/assets/types";
+
+const kinds: Array<{ value: AssetKind | "all"; label: string }> = [
+  { value: "all", label: "All file types" }, { value: "image", label: "Photos & Images" },
+  { value: "video", label: "Videos" }, { value: "logo", label: "Logos" },
+  { value: "document", label: "Visual Documents" }, { value: "generated", label: "AI Generated" },
+];
+const acceptedTypes = "image/png,image/jpeg,image/webp,image/svg+xml,video/mp4,video/webm,application/pdf";
+const maximumSize = 10 * 1024 * 1024;
+const permissions = getAssetLibraryPermissions(dashboardMockData.user.role);
+
+export function AssetLibraryClient() {
+  const [assets, setAssets] = useState<WorkspaceAsset[]>([]);
+  const [hydrated, setHydrated] = useState(false);
+  const [query, setQuery] = useState("");
+  const [kind, setKind] = useState<AssetKind | "all">("all");
+  const [brandId, setBrandId] = useState("all");
+  const [uploadOpen, setUploadOpen] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [toast, setToast] = useState("");
+
+  useEffect(() => { const unsubscribe = subscribeToAssetLibrary(setAssets); const timer = window.setTimeout(() => { setAssets(readAssetLibrary(window.localStorage)); setHydrated(true); }, 0); return () => { window.clearTimeout(timer); unsubscribe(); }; }, []);
+  useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 3000); return () => window.clearTimeout(timer); }, [toast]);
+
+  const visible = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    return assets.filter((asset) => (kind === "all" || asset.kind === kind) && (brandId === "all" || asset.brandIds.includes(brandId)) && (!normalized || [asset.name, asset.fileName, asset.description, ...asset.tags].some((value) => value.toLocaleLowerCase().includes(normalized))));
+  }, [assets, brandId, kind, query]);
+  const selected = assets.find((asset) => asset.id === selectedId);
+  const pendingDelete = assets.find((asset) => asset.id === deleteId);
+
+  function persist(next: WorkspaceAsset[], message: string) { setAssets(next); writeAssetLibrary(window.localStorage, next); setToast(message); }
+  function saveNew(asset: WorkspaceAsset) { persist([asset, ...assets], "Asset added to the workspace library."); setUploadOpen(false); }
+  function saveAsset(asset: WorkspaceAsset) { persist(assets.map((item) => item.id === asset.id ? asset : item), "Asset metadata updated."); setSelectedId(null); }
+  function deleteAsset() { if (!pendingDelete) return; persist(assets.filter((asset) => asset.id !== pendingDelete.id), "Asset removed from the library."); setDeleteId(null); setSelectedId(null); }
+
+  const stats = [
+    ["Total Assets", assets.length], ["Linked to Brands", assets.filter((asset) => asset.brandIds.length).length],
+    ["In Campaigns", assets.filter((asset) => asset.campaignIds.length).length], ["Generated Outputs", assets.filter((asset) => asset.source === "ai-generation" || asset.source === "logo-render").length],
+  ];
+
+  return <main className="min-h-screen bg-[#f8f9ff] px-4 py-6 text-[#0b1c30] sm:px-6 lg:px-10 lg:py-8">
+    <div className="mx-auto max-w-[1440px]">
+      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#0058bc]">Workspace Assets</p><h1 className="mt-2 text-3xl font-black tracking-[-.03em] sm:text-4xl">Asset Library</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#657080]">The single source for uploaded files, generated visuals, logo renders, and every asset relationship.</p></div>{permissions.canUpload ? <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white hover:bg-[#004493]">Upload Asset</button> : null}</header>
+
+      <section aria-label="Asset library summary" className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">{stats.map(([label, value]) => <article key={label} className="rounded-xl border border-[#d3e4fe] bg-white p-4 shadow-sm"><p className="text-2xl font-black">{value}</p><p className="mt-1 text-xs font-bold text-[#657080]">{label}</p></article>)}</section>
+
+      <section aria-label="Asset filters" className="mt-6 grid gap-3 rounded-xl border border-[#d3e4fe] bg-white p-4 sm:grid-cols-2 xl:grid-cols-[1fr_220px_220px_auto]"><label><span className="sr-only">Search assets</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, filename, description, or tag" className={fieldClass} /></label><label><span className="sr-only">Filter file type</span><select value={kind} onChange={(event) => setKind(event.target.value as AssetKind | "all")} className={fieldClass}>{kinds.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label><span className="sr-only">Filter brand</span><select value={brandId} onChange={(event) => setBrandId(event.target.value)} className={fieldClass}><option value="all">All brands</option>{dashboardMockData.brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label><button type="button" onClick={() => { setQuery(""); setKind("all"); setBrandId("all"); }} className="min-h-11 rounded-lg border border-[#c5d2e5] px-4 text-sm font-bold text-[#414755] hover:bg-[#eff4ff]">Clear Filters</button></section>
+
+      {!hydrated ? <div role="status" className="mt-6 animate-pulse rounded-xl border bg-white p-10 text-sm font-bold text-[#657080]">Loading Asset Library…</div> : visible.length ? <section aria-label="Workspace asset files" className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">{visible.map((asset) => <AssetCard key={asset.id} asset={asset} onOpen={() => setSelectedId(asset.id)} />)}</section> : <section className="mt-6 rounded-xl border-2 border-dashed border-[#c5d2e5] bg-white px-5 py-16 text-center"><h2 className="text-lg font-extrabold">No assets match this view</h2><p className="mt-2 text-sm text-[#657080]">Clear the filters or upload a file to the central library.</p></section>}
+    </div>
+
+    {uploadOpen ? <UploadAssetDialog onClose={() => setUploadOpen(false)} onSave={saveNew} /> : null}
+    {selected ? <AssetDetailsDialog asset={selected} onClose={() => setSelectedId(null)} onDelete={permissions.canDelete ? () => setDeleteId(selected.id) : undefined} onSave={permissions.canEdit ? saveAsset : undefined} /> : null}
+    {pendingDelete ? <ResponsiveOverlayShell role="alertdialog" title="Delete asset?" description={`${pendingDelete.name} will be removed from this mock workspace library.`} footer={<><button type="button" onClick={() => setDeleteId(null)} className={secondaryButton}>Cancel</button><button type="button" onClick={deleteAsset} className={dangerButton}>Delete Asset</button></>} maxWidth="max-w-md" onClose={() => setDeleteId(null)}><p className="rounded-lg bg-amber-50 p-4 text-sm leading-6 text-amber-900">This asset has {pendingDelete.usage.length} recorded usage reference{pendingDelete.usage.length === 1 ? "" : "s"}. Existing prototype references may become unavailable.</p></ResponsiveOverlayShell> : null}
+    {toast ? <div role="status" className="fixed bottom-4 right-4 z-[120] max-w-sm rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800 shadow-lg">{toast}</div> : null}
+  </main>;
+}
+
+function AssetCard({ asset, onOpen }: { asset: WorkspaceAsset; onOpen: () => void }) {
+  return <article className="min-w-0 overflow-hidden rounded-xl border border-[#d3e4fe] bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"><AssetPreview asset={asset} /><div className="p-4"><div className="flex items-start justify-between gap-3"><div className="min-w-0"><h2 className="truncate text-sm font-extrabold">{asset.name}</h2><p className="mt-1 truncate text-xs text-[#657080]">{asset.fileName}</p></div><SourceBadge source={asset.source} /></div><div className="mt-3 flex flex-wrap gap-1.5"><span className="rounded-full bg-[#e5eeff] px-2 py-1 text-[10px] font-extrabold uppercase text-[#0058bc]">{kindLabel(asset.kind)}</span>{asset.brandIds.length ? <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-700">{asset.brandIds.length} brand</span> : null}{asset.campaignIds.length ? <span className="rounded-full bg-violet-50 px-2 py-1 text-[10px] font-bold text-violet-700">{asset.campaignIds.length} campaign</span> : null}</div><div className="mt-4 flex items-center justify-between gap-3"><p className="text-xs font-semibold text-[#657080]">{formatBytes(asset.sizeBytes)} · {asset.usage.length} uses</p><button type="button" onClick={onOpen} className="min-h-10 rounded-lg border border-[#0058bc] px-3 text-xs font-bold text-[#0058bc] hover:bg-[#eff4ff]">View Details</button></div></div></article>;
+}
+
+function UploadAssetDialog({ onClose, onSave }: { onClose: () => void; onSave: (asset: WorkspaceAsset) => void }) {
+  const [file, setFile] = useState<File | null>(null); const [name, setName] = useState(""); const [kind, setKind] = useState<AssetKind>("image"); const [description, setDescription] = useState(""); const [tags, setTags] = useState(""); const [brandIds, setBrandIds] = useState<string[]>([]); const [campaignIds, setCampaignIds] = useState<string[]>([]); const [error, setError] = useState("");
+  function chooseFile(event: ChangeEvent<HTMLInputElement>) { const next = event.target.files?.[0]; if (!next) return; if (next.size > maximumSize) { setError("Files must be 10 MB or smaller."); event.target.value = ""; return; } setFile(next); setName(displayName(next.name)); setKind(kindFromMime(next.type)); setError(""); }
+  function submit(event: FormEvent) { event.preventDefault(); if (!file || !name.trim()) return setError("Choose a file and enter its asset name."); const now = new Date().toISOString(); const previewUrl = mockPreviewDataUrl(name.trim(), kind); onSave({ id: `asset-${Date.now()}`, name: name.trim(), fileName: file.name, mimeType: file.type || "application/octet-stream", kind, source: "upload", previewUrl, description: description.trim(), tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 10), sizeBytes: file.size, createdAt: now, updatedAt: now, brandIds, campaignIds, usage: [...brandIds.map((id) => ({ type: "brand" as const, entityId: id, label: dashboardMockData.brands.find((brand) => brand.id === id)?.name ?? id })), ...campaignIds.map((id) => ({ type: "campaign" as const, entityId: id, label: dashboardMockData.campaigns.find((campaign) => campaign.id === id)?.name ?? id }))] }); }
+  const footer = <><button type="button" onClick={onClose} className={secondaryButton}>Cancel</button><button form="upload-asset-form" type="submit" className={primaryButton}>Add to Asset Library</button></>;
+  return <ResponsiveOverlayShell title="Upload Asset" description="Files are stored as centralized mock records. No cloud upload occurs." footer={footer} maxWidth="max-w-[760px]" onClose={onClose}><form id="upload-asset-form" onSubmit={submit} className="grid gap-5"><label className={labelClass}>File<input type="file" accept={acceptedTypes} onChange={chooseFile} className="block w-full rounded-lg border border-[#c5d2e5] bg-white text-sm font-medium normal-case tracking-normal file:mr-3 file:border-0 file:border-r file:border-[#c5d2e5] file:bg-[#eff4ff] file:px-4 file:py-3 file:font-bold file:text-[#0058bc]" /><span className="normal-case tracking-normal text-[#717786]">PNG, JPG, WebP, SVG, MP4, WebM, or PDF. Maximum 10 MB.</span></label><div className="grid gap-4 sm:grid-cols-2"><Field label="Asset Name"><input value={name} onChange={(event) => setName(event.target.value)} className={fieldClass} /></Field><Field label="File Type"><select value={kind} onChange={(event) => setKind(event.target.value as AssetKind)} className={fieldClass}>{kinds.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div><Field label="Description"><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} className={textareaClass} /></Field><Field label="Tags"><input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="comma, separated, tags" className={fieldClass} /></Field><RelationPicker title="Link to brands" options={dashboardMockData.brands} selected={brandIds} onChange={setBrandIds} /><RelationPicker title="Link to campaigns" options={dashboardMockData.campaigns} selected={campaignIds} onChange={setCampaignIds} />{error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p> : null}</form></ResponsiveOverlayShell>;
+}
+
+function AssetDetailsDialog({ asset, onClose, onDelete, onSave }: { asset: WorkspaceAsset; onClose: () => void; onDelete?: () => void; onSave?: (asset: WorkspaceAsset) => void }) {
+  const [draft, setDraft] = useState(asset); const editable = Boolean(onSave);
+  const downloadUrl = asset.previewUrl || mockPreviewDataUrl(asset.name, asset.kind);
+  const footer = <><div className="flex gap-2 min-[480px]:mr-auto"><a href={downloadUrl} download={asset.fileName} className="inline-flex min-h-11 flex-1 items-center justify-center rounded-lg border border-[#0058bc] bg-white px-5 text-sm font-bold text-[#0058bc] hover:bg-[#eff4ff] min-[480px]:flex-none">Download</a>{onDelete ? <button type="button" onClick={onDelete} className={`${dangerButton} flex-1 min-[480px]:flex-none`}>Delete</button> : null}</div><button type="button" onClick={onClose} className={secondaryButton}>Close</button>{onSave ? <button type="button" onClick={() => onSave(withRelationshipUsage({ ...draft, updatedAt: new Date().toISOString() }))} className={primaryButton}>Save Metadata</button> : null}</>;
+  return <ResponsiveOverlayShell title={asset.name} description={`${kindLabel(asset.kind)} · ${asset.fileName}`} footer={footer} maxWidth="max-w-[900px]" onClose={onClose}><div className="grid gap-6 md:grid-cols-[280px_1fr]"><div><AssetPreview asset={asset} large /><dl className="mt-4 grid gap-2 text-xs"><Meta label="Source" value={sourceLabel(asset.source)} /><Meta label="MIME Type" value={asset.mimeType} /><Meta label="File Size" value={formatBytes(asset.sizeBytes)} /><Meta label="Created" value={formatDate(asset.createdAt)} /></dl></div><div className="grid content-start gap-5"><Field label="Asset Name"><input readOnly={!editable} value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} className={fieldClass} /></Field><Field label="Description"><textarea readOnly={!editable} rows={3} value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} className={textareaClass} /></Field><Field label="Tags"><input readOnly={!editable} value={draft.tags.join(", ")} onChange={(event) => setDraft({ ...draft, tags: event.target.value.split(",").map((tag) => tag.trim()).filter(Boolean) })} className={fieldClass} /></Field>{editable ? <><RelationPicker title="Linked brands" options={dashboardMockData.brands} selected={draft.brandIds} onChange={(brandIds) => setDraft({ ...draft, brandIds })} /><RelationPicker title="Linked campaigns" options={dashboardMockData.campaigns} selected={draft.campaignIds} onChange={(campaignIds) => setDraft({ ...draft, campaignIds })} /></> : null}<section><h3 className="text-xs font-extrabold uppercase tracking-[.12em] text-[#657080]">Usage References</h3>{asset.usage.length ? <ul className="mt-2 grid gap-2">{asset.usage.map((usage) => <li key={`${usage.type}-${usage.entityId}`} className="rounded-lg border border-[#d3e4fe] bg-[#f8faff] p-3 text-sm"><b>{usage.label}</b><span className="ml-2 text-xs text-[#657080]">{usage.type}</span></li>)}</ul> : <p className="mt-2 text-sm text-[#657080]">This asset has no recorded usage yet.</p>}</section></div></div></ResponsiveOverlayShell>;
+}
+
+function AssetPreview({ asset, large = false }: { asset: WorkspaceAsset; large?: boolean }) { return <div className={`relative overflow-hidden bg-[#eff4ff] ${large ? "aspect-square rounded-xl" : "aspect-[16/10]"}`}>{asset.previewUrl ? <Image src={asset.previewUrl} alt={asset.name} fill unoptimized className={asset.kind === "logo" || asset.kind === "document" ? "object-contain p-6" : "object-cover"} sizes={large ? "280px" : "(max-width: 640px) 100vw, 360px"} /> : <div className="flex h-full items-center justify-center p-6 text-center text-sm font-extrabold text-[#0058bc]">{kindLabel(asset.kind)}<br />{asset.fileName}</div>}</div>; }
+function RelationPicker({ title, options, selected, onChange }: { title: string; options: Array<{ id: string; name: string }>; selected: string[]; onChange: (ids: string[]) => void }) { return <fieldset><legend className="text-xs font-extrabold uppercase tracking-[.12em] text-[#657080]">{title}</legend><div className="mt-2 flex flex-wrap gap-2">{options.map((option) => <label key={option.id} className={`cursor-pointer rounded-lg border px-3 py-2 text-sm font-bold ${selected.includes(option.id) ? "border-[#0058bc] bg-[#eff4ff] text-[#0058bc]" : "border-[#c5d2e5]"}`}><input type="checkbox" className="sr-only" checked={selected.includes(option.id)} onChange={() => onChange(selected.includes(option.id) ? selected.filter((id) => id !== option.id) : [...selected, option.id])} />{option.name}</label>)}</div></fieldset>; }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label className={labelClass}>{label}{children}</label>; }
+function Meta({ label, value }: { label: string; value: string }) { return <div className="flex justify-between gap-3 rounded-lg bg-[#f8faff] px-3 py-2"><dt className="font-bold text-[#657080]">{label}</dt><dd className="break-all text-right font-semibold">{value}</dd></div>; }
+function SourceBadge({ source }: { source: WorkspaceAsset["source"] }) { return <span className="shrink-0 rounded-full bg-[#f1f5f9] px-2 py-1 text-[9px] font-extrabold uppercase text-[#526174]">{sourceLabel(source)}</span>; }
+function kindLabel(value: AssetKind) { return kinds.find((item) => item.value === value)?.label ?? value; }
+function sourceLabel(value: WorkspaceAsset["source"]) { return value.split("-").map((part) => part[0].toUpperCase() + part.slice(1)).join(" "); }
+function formatBytes(value: number) { if (value < 1024) return `${value} B`; if (value < 1048576) return `${Math.round(value / 1024)} KB`; return `${(value / 1048576).toFixed(1)} MB`; }
+function formatDate(value: string) { return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value)); }
+function displayName(value: string) { return value.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
+function withRelationshipUsage(asset: WorkspaceAsset): WorkspaceAsset { const preserved = asset.usage.filter((item) => item.type !== "brand" && item.type !== "campaign"); return { ...asset, usage: [...preserved, ...asset.brandIds.map((id) => ({ type: "brand" as const, entityId: id, label: dashboardMockData.brands.find((brand) => brand.id === id)?.name ?? id })), ...asset.campaignIds.map((id) => ({ type: "campaign" as const, entityId: id, label: dashboardMockData.campaigns.find((campaign) => campaign.id === id)?.name ?? id }))] }; }
+const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm text-[#0b1c30] outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100 read-only:bg-[#f8faff]";
+const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100 read-only:bg-[#f8faff]";
+const labelClass = "grid gap-2 text-xs font-extrabold uppercase tracking-[.12em] text-[#657080]";
+const primaryButton = "min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white hover:bg-[#004493]";
+const secondaryButton = "min-h-11 rounded-lg border border-[#c5d2e5] bg-white px-5 text-sm font-bold text-[#414755] hover:bg-[#eff4ff]";
+const dangerButton = "min-h-11 rounded-lg border border-rose-300 bg-white px-5 text-sm font-bold text-rose-700 hover:bg-rose-50";

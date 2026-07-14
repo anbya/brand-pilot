@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
+import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { campaigns as seedCampaigns, type Campaign } from "@/lib/mock-data";
 
 type IconName = "add" | "analytics" | "assets" | "brands" | "calendar" | "campaign" | "check" | "chevronDown" | "close" | "dashboard" | "layers" | "movie" | "post" | "search" | "settings" | "spark";
@@ -47,15 +48,6 @@ export default function CampaignsPage() {
     if (!storageReady) return;
     window.localStorage.setItem(campaignStorageKey, JSON.stringify(campaigns));
   }, [campaigns, storageReady]);
-
-  useEffect(() => {
-    if (!modalOpen) return;
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    const close = (event: KeyboardEvent) => event.key === "Escape" && setModalOpen(false);
-    window.addEventListener("keydown", close);
-    return () => { document.body.style.overflow = previous; window.removeEventListener("keydown", close); };
-  }, [modalOpen]);
 
   const campaignRows = campaigns.filter((campaign) => {
     const matchesQuery = campaign.name.toLowerCase().includes(query.toLowerCase());
@@ -122,19 +114,17 @@ export default function CampaignsPage() {
         </section>
       </section>
 
-      {modalOpen && <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-[#071b33]/55 p-3 backdrop-blur-[2px] sm:p-6" role="presentation" onMouseDown={(e) => e.target === e.currentTarget && setModalOpen(false)}><section role="dialog" aria-modal="true" aria-labelledby="campaign-modal-title" className="my-auto w-full max-w-[980px] rounded-xl border border-[#d3e4fe] bg-white shadow-2xl">
-        <form onSubmit={submit}>
-          <div className="flex items-start justify-between border-b border-[#e5edf8] px-6 py-5 sm:px-8"><div><p className="text-[11px] font-extrabold uppercase tracking-[.18em] text-[#717786]">New Campaign</p><h2 id="campaign-modal-title" className="mt-2 text-2xl font-black">Create Campaign Data</h2></div><div className="flex items-center gap-3"><span className={`rounded-full px-4 py-2 text-[10px] font-extrabold uppercase tracking-[.18em] ${saved ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-[#0869e8]"}`}>{saved ? "Saved" : "Ready"}</span><button aria-label="Close campaign modal" onClick={() => setModalOpen(false)} className="rounded-lg p-2 text-[#657080] hover:bg-[#eff4ff]" type="button"><Icon name="close" /></button></div></div>
-          <div className="grid gap-6 px-6 py-6 sm:px-8">
+      {modalOpen && <ResponsiveOverlayShell title="Create Campaign Data" eyebrow="New Campaign" headerAside={<span className={`hidden rounded-full px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.18em] min-[420px]:inline-flex ${saved ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-[#0869e8]"}`}>{saved ? "Saved" : "Ready"}</span>} maxWidth="max-w-[980px]" footer={<button form="create-campaign-form" type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#0869e8] px-6 text-sm font-bold text-white hover:bg-[#0058bc]"><Icon name="check" />Create Campaign</button>} closeLabel="Close campaign modal" onClose={() => setModalOpen(false)}>
+        <form id="create-campaign-form" onSubmit={submit}>
+          <div className="grid gap-6">
             <FieldLabel label="Primary Objective"><input autoFocus value={form.primaryObjective} onChange={(e) => update("primaryObjective", e.target.value)} className="h-14 rounded-lg border border-[#bdd7ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel>
             <ChoiceGroup label="Target Platforms">{platforms.map((item) => <Choice key={item.label} active={form.targetPlatforms.includes(item.label)} onClick={() => toggle("targetPlatforms", item.label)} className="h-14 justify-start px-5"><Icon name={item.icon} />{item.label}</Choice>)}</ChoiceGroup>
             <ChoiceGroup label="Tone of Voice" compact>{tones.map((tone) => <Choice key={tone} active={form.toneOfVoice.includes(tone)} onClick={() => toggle("toneOfVoice", tone)} className="h-12 px-4">{tone}</Choice>)}</ChoiceGroup>
             <div className="grid gap-4 sm:grid-cols-2"><FieldLabel label="Campaign Start Date"><input type="date" value={form.startDate} onChange={(e) => update("startDate", e.target.value)} className="h-14 rounded-lg border border-[#cfe0ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel><FieldLabel label="Campaign End Date"><input type="date" value={form.endDate} onChange={(e) => update("endDate", e.target.value)} className="h-14 rounded-lg border border-[#cfe0ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel></div>
             {error && <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p>}
           </div>
-          <div className="flex flex-col-reverse gap-3 border-t border-[#e5edf8] px-6 py-5 sm:flex-row sm:px-8"><button type="submit" className="inline-flex h-14 items-center justify-center gap-2 rounded-lg bg-[#0869e8] px-6 text-sm font-bold text-white hover:bg-[#0058bc]"><Icon name="check" />Create Campaign</button></div>
         </form>
-      </section></div>}
+      </ResponsiveOverlayShell>}
 
     </main>
   );

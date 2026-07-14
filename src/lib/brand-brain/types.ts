@@ -87,8 +87,8 @@ export type BrandBrainState = {
   brand: BrandInformation;
   voice: BrandVoice;
   toneDial: ToneDial;
-  logo: BrandLogo | null;
-  assets: BrandAsset[];
+  logoAssetId: string | null;
+  coreAssetIds: string[];
   recommendation: BrandRecommendation;
   analysis: BrandAnalysis;
   insights: BrandInsights;

@@ -1,17 +1,18 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { BrandVoiceMockModal } from "@/components/brand-brain/brand-voice-mock-modal";
-import { BrandAssetMockModal } from "@/components/brand-brain/brand-asset-mock-modal";
-import { BrandLogoMockModal, readableLogoType } from "@/components/brand-brain/brand-logo-mock-modal";
+import { AssetPickerDialog } from "@/components/assets/asset-picker-dialog";
 import { ToneDialMockModal } from "@/components/brand-brain/tone-dial-mock-modal";
-import { ManageAssetsMockDrawer } from "@/components/brand-brain/manage-assets-mock-drawer";
 import { AnalyzeBrandMockModal } from "@/components/brand-brain/analyze-brand-mock-modal";
 import { BrandInsightsMockDrawer } from "@/components/brand-brain/brand-insights-mock-drawer";
 import { brandBrainReducer } from "@/lib/brand-brain/reducer";
 import type { BrandAnalysis, BrandBrainState, BrandRecommendation } from "@/lib/brand-brain/types";
-import type { BrandAsset } from "@/lib/brand-brain/types";
+import { assetLibraryMockData } from "@/lib/assets/mock-data";
+import { readAssetLibrary, subscribeToAssetLibrary, syncBrandAssetReferences } from "@/lib/assets/store";
+import type { WorkspaceAsset } from "@/lib/assets/types";
 
 type IconName =
   | "add"
@@ -36,6 +37,7 @@ type IconName =
 
 const headerProfileImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuD0caw30WtyUGSUyxpyOs2SGUK9WGKRo2RlKSgaAsv2NUD9hD0Kvc5oZd0WssRZ0-N2mKrGtArN10nMVusbyGXHwFRZjjI2NrKVqzxsz1fAlBTDq3Cqjib4E06nbJqfvVpl_IpDLuue1rASaOhvTCRTEnhgkT0XQA4db5J7aoQvgcMUiUbCSkyiI4WcowUgnxmBONblLjzkAsElucfKlhSIq9cHmwO-3ySjrkZ3JxOdIICjKnOV8ohr";
+const brandAssetReferencesKey = "brand-pilot-brand-asset-references-v1";
 
 export function BrandBrainClient({ initialData }: { initialData: BrandBrainState }) {
   const [state, dispatch] = useReducer(brandBrainReducer, initialData);
@@ -43,36 +45,31 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
   const [isToneDialModalOpen, setIsToneDialModalOpen] = useState(false);
   const [isBrandLogoModalOpen, setIsBrandLogoModalOpen] = useState(false);
   const [isBrandAssetModalOpen, setIsBrandAssetModalOpen] = useState(false);
-  const [isManageAssetsDrawerOpen, setIsManageAssetsDrawerOpen] = useState(false);
+  const [libraryAssets, setLibraryAssets] = useState<WorkspaceAsset[]>(assetLibraryMockData);
   const [isAnalyzeBrandModalOpen, setIsAnalyzeBrandModalOpen] = useState(false);
   const [isAnalysisRunning, setIsAnalysisRunning] = useState(false);
   const [analysisHighlight, setAnalysisHighlight] = useState(false);
   const [isBrandInsightsDrawerOpen, setIsBrandInsightsDrawerOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const committedLogoBlobUrlRef = useRef(state.logo?.previewUrl.startsWith("blob:") ? state.logo.previewUrl : null);
-  const committedAssetBlobUrlsRef = useRef(new Set(state.assets.filter((asset) => asset.imageUrl.startsWith("blob:")).map((asset) => asset.imageUrl)));
   const recommendationRef = useRef<HTMLElement>(null);
   const toneDials = [
     { left: "Casual", right: "Formal", value: state.toneDial.casualFormal },
     { left: "Playful", right: "Serious", value: state.toneDial.playfulSerious },
     { left: "Concise", right: "Detailed", value: state.toneDial.conciseDetailed },
   ];
-  const coreAssets = state.assets.filter((asset) => asset.isCoreAsset).slice(0, 3);
+  const logoAsset = libraryAssets.find((asset) => asset.id === state.logoAssetId) ?? null;
+  const coreAssets = state.coreAssetIds.flatMap((id) => { const asset = libraryAssets.find((item) => item.id === id); return asset ? [asset] : []; }).slice(0, 3);
 
   const closeBrandVoiceModal = useCallback(() => setIsBrandVoiceModalOpen(false), []);
   const closeToneDialModal = useCallback(() => setIsToneDialModalOpen(false), []);
   const closeBrandLogoModal = useCallback(() => setIsBrandLogoModalOpen(false), []);
   const closeBrandAssetModal = useCallback(() => setIsBrandAssetModalOpen(false), []);
-  const closeManageAssetsDrawer = useCallback(() => setIsManageAssetsDrawerOpen(false), []);
   const closeAnalyzeBrandModal = useCallback(() => setIsAnalyzeBrandModalOpen(false), []);
   const changeAnalysisRunning = useCallback((running: boolean) => setIsAnalysisRunning(running), []);
   const closeBrandInsightsDrawer = useCallback(() => setIsBrandInsightsDrawerOpen(false), []);
 
-  useEffect(() => () => {
-    const committedBlobUrl = committedLogoBlobUrlRef.current;
-    if (committedBlobUrl) URL.revokeObjectURL(committedBlobUrl);
-    committedAssetBlobUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
-  }, []);
+  useEffect(() => { const unsubscribe = subscribeToAssetLibrary(setLibraryAssets); const timer = window.setTimeout(() => setLibraryAssets(readAssetLibrary(window.localStorage)), 0); return () => { window.clearTimeout(timer); unsubscribe(); }; }, []);
+  useEffect(() => { const timer = window.setTimeout(() => { try { const stored = JSON.parse(window.localStorage.getItem(brandAssetReferencesKey) ?? "null") as { logoAssetId?: string | null; coreAssetIds?: string[] } | null; if (stored) { dispatch({ type: "SELECT_BRAND_LOGO", payload: { assetId: stored.logoAssetId ?? null } }); dispatch({ type: "SET_CORE_ASSETS", payload: { assetIds: stored.coreAssetIds ?? [] } }); } } catch { window.localStorage.removeItem(brandAssetReferencesKey); } }, 0); return () => window.clearTimeout(timer); }, []);
 
   useEffect(() => {
     if (!successMessage) return;
@@ -92,55 +89,25 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
     setSuccessMessage("Tone Dial updated successfully.");
   }
 
-  function saveBrandLogo(logo: NonNullable<BrandBrainState["logo"]>) {
-    const previousBlobUrl = committedLogoBlobUrlRef.current;
-    if (previousBlobUrl && previousBlobUrl !== logo.previewUrl) URL.revokeObjectURL(previousBlobUrl);
-    committedLogoBlobUrlRef.current = logo.previewUrl.startsWith("blob:") ? logo.previewUrl : null;
-    dispatch({ type: "UPDATE_BRAND_LOGO", payload: logo });
+  function selectBrandLogo(ids: string[]) {
+    const assetId = ids[0] ?? null;
+    dispatch({ type: "SELECT_BRAND_LOGO", payload: { assetId } });
+    window.localStorage.setItem(brandAssetReferencesKey, JSON.stringify({ logoAssetId: assetId, coreAssetIds: state.coreAssetIds }));
+    syncBrandAssetReferences(window.localStorage, state.brand.id, assetId, state.coreAssetIds);
     setIsBrandLogoModalOpen(false);
-    setSuccessMessage("Brand Logo updated successfully.");
+    setSuccessMessage("Brand Logo selected from Asset Library.");
   }
 
-  function saveBrandAsset(asset: BrandAsset, replaceCoreAssetId: string | null) {
-    if (replaceCoreAssetId) dispatch({ type: "REMOVE_CORE_ASSET", payload: { id: replaceCoreAssetId } });
-    dispatch({ type: "ADD_ASSET", payload: asset });
-    if (asset.imageUrl.startsWith("blob:")) committedAssetBlobUrlsRef.current.add(asset.imageUrl);
+  function selectCoreAssets(ids: string[]) {
+    dispatch({ type: "SET_CORE_ASSETS", payload: { assetIds: ids } });
+    window.localStorage.setItem(brandAssetReferencesKey, JSON.stringify({ logoAssetId: state.logoAssetId, coreAssetIds: ids }));
+    syncBrandAssetReferences(window.localStorage, state.brand.id, state.logoAssetId, ids);
     setIsBrandAssetModalOpen(false);
-    setSuccessMessage("Brand Asset added successfully.");
-  }
-
-  function setCoreAsset(id: string) {
-    dispatch({ type: "SET_CORE_ASSET", payload: { id } });
-    setSuccessMessage("Asset added to Core Brand Assets.");
-  }
-
-  function removeCoreAsset(id: string) {
-    dispatch({ type: "REMOVE_CORE_ASSET", payload: { id } });
-    setSuccessMessage("Asset removed from Core Brand Assets.");
-  }
-
-  function replaceCoreAsset(oldId: string, newId: string) {
-    dispatch({ type: "REMOVE_CORE_ASSET", payload: { id: oldId } });
-    dispatch({ type: "SET_CORE_ASSET", payload: { id: newId } });
-    setSuccessMessage("Core Brand Asset replaced successfully.");
-  }
-
-  function updateBrandAsset(asset: BrandAsset) {
-    dispatch({ type: "UPDATE_ASSET", payload: { id: asset.id, changes: asset } });
-    setSuccessMessage("Brand Asset updated successfully.");
-  }
-
-  function deleteBrandAsset(asset: BrandAsset) {
-    dispatch({ type: "DELETE_ASSET", payload: { id: asset.id } });
-    if (asset.imageUrl.startsWith("blob:") && committedAssetBlobUrlsRef.current.has(asset.imageUrl)) {
-      URL.revokeObjectURL(asset.imageUrl);
-      committedAssetBlobUrlsRef.current.delete(asset.imageUrl);
-    }
-    setSuccessMessage("Brand Asset deleted successfully.");
+    setSuccessMessage("Core Brand Assets selected from Asset Library.");
   }
 
   const completeBrandAnalysis = useCallback((analysis: BrandAnalysis, sourceCount: number) => {
-    const coreAssetCount = state.assets.filter((asset) => asset.isCoreAsset).length;
+    const coreAssetCount = state.coreAssetIds.length;
     const detailRecommendation = state.toneDial.conciseDetailed < 50
       ? "Keep captions concise while maintaining reliable product information."
       : state.toneDial.conciseDetailed <= 65
@@ -154,7 +121,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
       items: [
         friendly ? "Continue using an approachable and knowledgeable voice." : "Keep the brand voice consistent across every channel.",
         detailRecommendation,
-        `${state.logo ? "Your visual identity is established." : "Add a primary logo to establish visual identity."} ${sourceCount > 1 ? "Multiple sources improve brand understanding." : "Add more brand sources for a deeper analysis."}`,
+        `${state.logoAssetId ? "Your visual identity is established." : "Select a primary logo from Asset Library to establish visual identity."} ${sourceCount > 1 ? "Multiple sources improve brand understanding." : "Add more brand sources for a deeper analysis."}`,
       ],
       highlightedVoice: state.voice.primaryPersonality,
       highlightedTone: state.voice.communicationStyle,
@@ -164,7 +131,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
     dispatch({ type: "UPDATE_RECOMMENDATION", payload: recommendation });
     setSuccessMessage("Brand analysis completed successfully.");
     return recommendation.description;
-  }, [state.assets, state.logo, state.recommendation, state.toneDial.conciseDetailed, state.voice.communicationStyle, state.voice.primaryPersonality]);
+  }, [state.coreAssetIds.length, state.logoAssetId, state.recommendation, state.toneDial.conciseDetailed, state.voice.communicationStyle, state.voice.primaryPersonality]);
 
   const viewUpdatedRecommendation = useCallback(() => {
     setIsAnalyzeBrandModalOpen(false);
@@ -180,7 +147,6 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
     setIsToneDialModalOpen(false);
     setIsBrandLogoModalOpen(false);
     setIsBrandAssetModalOpen(false);
-    setIsManageAssetsDrawerOpen(false);
     setIsAnalyzeBrandModalOpen(false);
     setIsBrandInsightsDrawerOpen(true);
   }
@@ -252,22 +218,22 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
           </BrainCard>
 
           <BrainCard className="col-span-12 xl:col-span-4">
-            <CardHeader icon="logo" title="Brand Logo" actionIcon="upload" actionLabel="Change" onAction={() => setIsBrandLogoModalOpen(true)} />
+            <CardHeader icon="logo" title="Brand Logo" actionIcon="assets" actionLabel="Select" onAction={() => setIsBrandLogoModalOpen(true)} />
             <div className="mt-5 flex min-h-[260px] flex-col items-center justify-center rounded-lg border-2 border-dashed border-[#c1c6d7] bg-white p-8 text-center transition hover:bg-[#eff4ff]">
-              {state.logo ? (
+              {logoAsset ? (
                 <>
                   <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
                     <Image
-                      src={state.logo.previewUrl}
+                      src={logoAsset.previewUrl}
                       width={72}
                       height={72}
-                      unoptimized={state.logo.previewUrl.startsWith("blob:")}
-                      alt={state.logo.alt}
+                      unoptimized
+                      alt={logoAsset.name}
                       className="h-16 w-16 object-contain"
                     />
                   </div>
-                  <p className="mt-4 text-sm font-bold text-[#0b1c30]">{readableLogoType(state.logo.logoType)} ({state.logo.fileType})</p>
-                  <p className="mt-1 text-xs font-semibold text-[#717786]">{state.logo.fileName}</p>
+                  <p className="mt-4 text-sm font-bold text-[#0b1c30]">{logoAsset.name}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#717786]">{logoAsset.fileName}</p>
                 </>
               ) : (
                 <p className="text-sm font-bold text-[#657080]">No brand logo selected</p>
@@ -301,24 +267,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
                 <IconBubble icon="assets" />
                 <h2 className="text-xl font-bold text-[#0b1c30]">Core Brand Assets</h2>
               </div>
-              <div className="flex flex-wrap gap-2">
-                <button
-                  onClick={() => setIsManageAssetsDrawerOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#e5eeff] px-3 py-2 text-sm font-bold text-[#414755] transition hover:bg-[#dce9ff]"
-                  type="button"
-                >
-                  <Icon name="assets" className="h-4 w-4" />
-                  Manage All
-                </button>
-                <button
-                  onClick={() => setIsBrandAssetModalOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-lg bg-[#0058bc] px-3 py-2 text-sm font-bold text-white transition hover:bg-[#004493]"
-                  type="button"
-                >
-                  <Icon name="add" className="h-4 w-4" />
-                  Upload
-                </button>
-              </div>
+
             </div>
             <div className="mt-6 grid grid-cols-2 gap-4 md:grid-cols-4">
               {coreAssets.map((asset) => (
@@ -326,7 +275,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
                   key={asset.id}
                   className="group relative aspect-square overflow-hidden rounded-lg border border-[#d3e4fe]"
                 >
-                  <Image src={asset.imageUrl} alt={asset.name} fill unoptimized={asset.imageUrl.startsWith("blob:")} className="object-cover" sizes="(max-width: 768px) 50vw, 180px" />
+                  <Image src={asset.previewUrl} alt={asset.name} fill unoptimized className={asset.kind === "logo" ? "object-contain p-3" : "object-cover"} sizes="(max-width: 768px) 50vw, 180px" />
                   <div className="absolute inset-0 flex items-center justify-center gap-3 bg-black/40 opacity-0 transition group-hover:opacity-100">
                     <button className="rounded-full bg-white/15 p-2 text-white backdrop-blur" type="button">
                       <Icon name="view" className="h-5 w-5" />
@@ -344,7 +293,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
               >
                 <span className="flex h-full flex-col items-center justify-center gap-2 text-sm font-bold">
                   <Icon name="add" className="h-8 w-8" />
-                  Add New
+                  Choose Asset
                 </span>
               </button>
             </div>
@@ -386,24 +335,11 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
       ) : null}
 
       {isBrandLogoModalOpen ? (
-        <BrandLogoMockModal isOpen currentLogo={state.logo} onClose={closeBrandLogoModal} onSave={saveBrandLogo} />
+        <AssetPickerDialog assets={libraryAssets} mode="logo" selectedIds={state.logoAssetId ? [state.logoAssetId] : []} maximum={1} onClose={closeBrandLogoModal} onSave={selectBrandLogo} />
       ) : null}
 
       {isBrandAssetModalOpen ? (
-        <BrandAssetMockModal isOpen currentAssets={state.assets} onClose={closeBrandAssetModal} onSave={saveBrandAsset} />
-      ) : null}
-
-      {isManageAssetsDrawerOpen ? (
-        <ManageAssetsMockDrawer
-          isOpen
-          assets={state.assets}
-          onClose={closeManageAssetsDrawer}
-          onSetCore={setCoreAsset}
-          onRemoveCore={removeCoreAsset}
-          onReplaceCore={replaceCoreAsset}
-          onUpdateAsset={updateBrandAsset}
-          onDeleteAsset={deleteBrandAsset}
-        />
+        <AssetPickerDialog assets={libraryAssets} mode="core" selectedIds={state.coreAssetIds} maximum={3} onClose={closeBrandAssetModal} onSave={selectCoreAssets} />
       ) : null}
 
       {isAnalyzeBrandModalOpen ? (
@@ -418,7 +354,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
       ) : null}
 
       {isBrandInsightsDrawerOpen ? (
-        <BrandInsightsMockDrawer isOpen state={state} onClose={closeBrandInsightsDrawer} />
+        <BrandInsightsMockDrawer isOpen state={state} libraryAssets={libraryAssets} onClose={closeBrandInsightsDrawer} />
       ) : null}
     </main>
   );

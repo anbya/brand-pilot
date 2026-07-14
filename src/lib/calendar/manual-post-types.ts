@@ -10,6 +10,8 @@ export type ManualPostVersionInput = {
   caption: string;
   cta: string;
   hashtags: string[];
+  assetId?: string;
+  /** Legacy display-only field for older mock records. New records use assetId. */
   mediaUrl?: string;
   visualBrief?: string;
   publishDate: string;

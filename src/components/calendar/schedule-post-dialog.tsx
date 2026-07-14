@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, useState } from "react";
-import { normalizeHashtags, validateOptionalUrl } from "@/lib/calendar/form-utils";
+import { useRef, useState } from "react";
+import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
+import { normalizeHashtags } from "@/lib/calendar/form-utils";
+import { assetLibraryMockData } from "@/lib/assets/mock-data";
 import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
 import { isValidManualPostDate, isValidManualPostTime } from "@/lib/calendar/manual-post-validation";
 import { formatAssetTypeLabel, formatPlatformLabel, platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
@@ -19,30 +21,17 @@ const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3
 const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
 
 function createVersion(platform: SocialPlatform, defaultDate: string): VersionDraft {
-  return { platform, assetType: platformAssetTypes[platform][0], headline: "", caption: "", cta: "", hashtags: "", mediaUrl: "", visualBrief: "", publishDate: defaultDate, publishTime: "09:00", timezone: "Asia/Jakarta", createdBy: "Wanda" };
+  return { platform, assetType: platformAssetTypes[platform][0], headline: "", caption: "", cta: "", hashtags: "", assetId: "", visualBrief: "", publishDate: defaultDate, publishTime: "09:00", timezone: "Asia/Jakarta", createdBy: "Wanda" };
 }
 function createInitialVersions(initialPayload: SchedulePostPayload | undefined, defaultDate: string): Partial<Record<SocialPlatform, VersionDraft>> { if (!initialPayload) return { instagram: createVersion("instagram", defaultDate) }; return Object.fromEntries(initialPayload.versions.map((version) => [version.platform, { ...version, hashtags: version.hashtags.join(", ") }])) as Partial<Record<SocialPlatform, VersionDraft>>; }
 
 export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", initialPayload, onClose, onSubmit }: SchedulePostDialogProps) {
-  const titleId = useId();
-  const headingRef = useRef<HTMLHeadingElement>(null);
   const dirtyRef = useRef(false);
   const [step, setStep] = useState(0);
   const [strategy, setStrategy] = useState<StrategyDraft>(() => initialPayload?.idea ?? { title: "", coreTopic: "", pillarId: pillars[0]?.id ?? "", objective: "educate", targetAudience: "", mainMessage: "", campaignId: "", campaignName: "", brandId: "brand-default", brandName: "Default Brand" });
   const [versions, setVersions] = useState<Partial<Record<SocialPlatform, VersionDraft>>>(() => createInitialVersions(initialPayload, defaultDate));
   const [activePlatform, setActivePlatform] = useState<SocialPlatform>(() => initialPayload?.versions[0]?.platform ?? "instagram");
   const [errors, setErrors] = useState<Errors>({});
-
-  useEffect(() => {
-    if (!open) return;
-    const trigger = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    headingRef.current?.focus();
-    const closeOnEscape = (event: KeyboardEvent) => { if (event.key === "Escape" && (!dirtyRef.current || window.confirm("Discard unsaved post changes?"))) onClose(); };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => { window.removeEventListener("keydown", closeOnEscape); document.body.style.overflow = previousOverflow; trigger?.focus(); };
-  }, [open, onClose]);
 
   if (!open) return null;
   const selectedPlatforms = platformOptions.map(({ value }) => value).filter((platform) => Boolean(versions[platform]));
@@ -62,16 +51,16 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   function validatePlatforms() { if (selectedPlatforms.length) { setErrors({}); return true; } setErrors({ platforms: "Select at least one platform." }); focusField("platform-instagram"); return false; }
   function validateVersions() {
     const next: Errors = {};
-    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "publishDate", "publishTime", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; if (draft.publishDate && !isValidManualPostDate(draft.publishDate)) next[`${platform}-publishDate`] = "Enter a valid planned date."; if (draft.publishTime && !isValidManualPostTime(draft.publishTime)) next[`${platform}-publishTime`] = "Enter a valid planned time."; if (!validateOptionalUrl(draft.mediaUrl ?? "")) next[`${platform}-mediaUrl`] = "Enter a valid URL including https://."; }
+    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "publishDate", "publishTime", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; if (draft.publishDate && !isValidManualPostDate(draft.publishDate)) next[`${platform}-publishDate`] = "Enter a valid planned date."; if (draft.publishTime && !isValidManualPostTime(draft.publishTime)) next[`${platform}-publishTime`] = "Enter a valid planned time."; }
     setErrors(next); const first = Object.keys(next)[0]; if (first) { const platform = first.split("-")[0] as SocialPlatform; if (selectedPlatforms.includes(platform)) setActivePlatform(platform); focusField(first); } return !first;
   }
   function nextStep() { const valid = step === 0 ? validateStrategy() : step === 1 ? validatePlatforms() : step === 2 ? validateVersions() : true; if (valid) { setErrors({}); setStep((current) => Math.min(current + 1, 3)); } }
   function togglePlatform(platform: SocialPlatform) { dirtyRef.current = true; setVersions((current) => { if (current[platform]) { const next = { ...current }; delete next[platform]; const remaining = platformOptions.map(({ value }) => value).filter((value) => Boolean(next[value])); if (activePlatform === platform && remaining[0]) setActivePlatform(remaining[0]); return next; } setActivePlatform(platform); return { ...current, [platform]: createVersion(platform, defaultDate) }; }); clearError("platforms"); }
-  function submit() { if (!validateStrategy() || !validatePlatforms() || !validateVersions()) return; dirtyRef.current = false; onSubmit({ idea: { ...strategy, campaignId: strategy.campaignId?.trim() || undefined, campaignName: strategy.campaignName?.trim() || undefined, brandId: strategy.brandId?.trim() || undefined, brandName: strategy.brandName?.trim() || undefined }, versions: selectedPlatforms.flatMap((platform) => { const draft = versions[platform]; return draft ? [{ ...draft, mediaUrl: draft.mediaUrl?.trim() || undefined, visualBrief: draft.visualBrief?.trim() || undefined, hashtags: normalizeHashtags(draft.hashtags) }] : []; }) }); }
+  function submit() { if (!validateStrategy() || !validatePlatforms() || !validateVersions()) return; dirtyRef.current = false; onSubmit({ idea: { ...strategy, campaignId: strategy.campaignId?.trim() || undefined, campaignName: strategy.campaignName?.trim() || undefined, brandId: strategy.brandId?.trim() || undefined, brandName: strategy.brandName?.trim() || undefined }, versions: selectedPlatforms.flatMap((platform) => { const draft = versions[platform]; return draft ? [{ ...draft, assetId: draft.assetId?.trim() || undefined, visualBrief: draft.visualBrief?.trim() || undefined, hashtags: normalizeHashtags(draft.hashtags) }] : []; }) }); }
 
-  return <div role="presentation" onMouseDown={(event) => event.target === event.currentTarget && requestClose()} className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#071b33]/60 p-2 backdrop-blur-[2px] sm:p-5">
-    <section role="dialog" aria-modal="true" aria-labelledby={titleId} onMouseDown={(event) => event.stopPropagation()} className="my-auto flex max-h-[96vh] w-full max-w-[900px] flex-col overflow-hidden rounded-xl border border-[#bfd3f2] bg-white shadow-[0_24px_80px_rgba(7,27,51,.28)] sm:max-h-[90vh]">
-      <header className="flex shrink-0 items-start justify-between gap-4 border-b border-[#d3e4fe] px-4 py-4 sm:px-7 sm:py-5"><div><h2 ref={headingRef} tabIndex={-1} id={titleId} className="text-xl font-extrabold outline-none sm:text-2xl">{initialPayload ? "Edit Post Draft" : "Create Post"}</h2><p className="mt-1 text-sm text-[#657080]">The post will be saved as a draft and will not appear on the Calendar until it is approved.</p></div><button type="button" aria-label="Close post draft dialog" onClick={requestClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#c8d8ef] text-xl outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">×</button></header>
+  const footer = <><button type="button" onClick={requestClose} className="rounded-lg px-4 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#0058bc]">Cancel</button><div className="flex w-full flex-wrap gap-2 min-[480px]:w-auto">{step > 0 && <button type="button" onClick={() => { setErrors({}); setStep((current) => current - 1); }} className="min-h-11 flex-1 rounded-lg border border-[#c5d2e5] bg-white px-5 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] min-[480px]:flex-none">Back</button>}{step < 3 ? <button type="button" onClick={nextStep} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Next</button> : <button type="button" onClick={submit} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Save as Draft</button>}</div></>;
+
+  return <ResponsiveOverlayShell open title={initialPayload ? "Edit Post Draft" : "Create Post"} description="The post will be saved as a draft and will not appear on the Calendar until it is approved." footer={footer} maxWidth="max-w-[900px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" closeLabel="Close post draft dialog" onClose={requestClose}>
       <ol aria-label="Create post steps" className="flex shrink-0 overflow-x-auto border-b border-[#d3e4fe] bg-[#f8faff] px-4 py-3 sm:px-7">{steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={`flex min-w-fit items-center text-xs font-bold ${step === index ? "text-[#0058bc]" : index < step ? "text-emerald-700" : "text-[#8b96a5]"}`}><span className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${step === index ? "bg-[#0058bc] text-white" : index < step ? "bg-emerald-100" : "bg-[#e5eeff]"}`}>{index + 1}</span>{label}{index < steps.length - 1 && <span aria-hidden="true" className="mx-3 h-px w-6 bg-[#c5d2e5] sm:w-10" />}</li>)}</ol>
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
         {step === 0 && <StrategyStep strategy={strategy} pillars={pillars} errors={errors} onChange={updateStrategy} />}
@@ -79,9 +68,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
         {step === 2 && <ContentStep platforms={selectedPlatforms} versions={versions} activePlatform={activePlatform} errors={errors} onActivePlatform={setActivePlatform} onChange={updateVersion} />}
         {step === 3 && <ReviewStep strategy={strategy} versions={versions} platforms={selectedPlatforms} pillars={pillars} />}
       </div>
-      <footer className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-[#d3e4fe] bg-[#f8faff] px-4 py-4 sm:px-7"><button type="button" onClick={requestClose} className="rounded-lg px-4 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#0058bc]">Cancel</button><div className="flex flex-wrap gap-2">{step > 0 && <button type="button" onClick={() => { setErrors({}); setStep((current) => current - 1); }} className="rounded-lg border border-[#c5d2e5] bg-white px-5 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Back</button>}{step < 3 ? <button type="button" onClick={nextStep} className="rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">Next</button> : <button type="button" onClick={submit} className="rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">Save as Draft</button>}</div></footer>
-    </section>
-  </div>;
+  </ResponsiveOverlayShell>;
 }
 
 function FieldError({ id, message }: { id: string; message?: string }) { return message ? <p id={`${id}-error`} className="mt-1.5 text-xs font-semibold text-rose-600">{message}</p> : null; }
@@ -115,7 +102,7 @@ function ContentStep({ platforms, versions, activePlatform, errors, onActivePlat
     <div className="sm:col-span-2"><Field id={`${activePlatform}-caption`} label="Caption" error={error("caption")}><textarea id={`${activePlatform}-caption`} value={draft.caption} onChange={(event) => onChange(activePlatform, "caption", event.target.value)} rows={5} aria-invalid={Boolean(error("caption"))} className={textareaClass} /></Field></div>
     <Field id={`${activePlatform}-cta`} label="CTA" error={error("cta")}><input id={`${activePlatform}-cta`} value={draft.cta} onChange={(event) => onChange(activePlatform, "cta", event.target.value)} placeholder="Save this guide" aria-invalid={Boolean(error("cta"))} className={fieldClass} /></Field>
     <Field id={`${activePlatform}-hashtags`} label="Hashtags" optional><input id={`${activePlatform}-hashtags`} value={draft.hashtags} onChange={(event) => onChange(activePlatform, "hashtags", event.target.value)} placeholder="coffee, brewing, homebarista" className={fieldClass} /></Field>
-    <Field id={`${activePlatform}-mediaUrl`} label="Media URL" optional error={error("mediaUrl")}><input id={`${activePlatform}-mediaUrl`} type="url" value={draft.mediaUrl ?? ""} onChange={(event) => onChange(activePlatform, "mediaUrl", event.target.value)} placeholder="https://example.com/media.jpg" aria-invalid={Boolean(error("mediaUrl"))} className={fieldClass} /></Field>
+    <Field id={`${activePlatform}-assetId`} label="Asset Library File" optional><select id={`${activePlatform}-assetId`} value={draft.assetId ?? ""} onChange={(event) => onChange(activePlatform, "assetId", event.target.value)} className={fieldClass}><option value="">No asset selected</option>{assetLibraryMockData.filter((asset) => asset.kind !== "document").map((asset) => <option key={asset.id} value={asset.id}>{asset.name}</option>)}</select></Field>
     <Field id={`${activePlatform}-publishDate`} label="Planned Date" error={error("publishDate")}><input id={`${activePlatform}-publishDate`} type="date" value={draft.publishDate} onChange={(event) => onChange(activePlatform, "publishDate", event.target.value)} aria-invalid={Boolean(error("publishDate"))} className={fieldClass} /></Field>
     <Field id={`${activePlatform}-publishTime`} label="Planned Time" error={error("publishTime")}><input id={`${activePlatform}-publishTime`} type="time" value={draft.publishTime} onChange={(event) => onChange(activePlatform, "publishTime", event.target.value)} aria-invalid={Boolean(error("publishTime"))} className={fieldClass} /></Field>
     <Field id={`${activePlatform}-createdBy`} label="Created By" error={error("createdBy")}><input id={`${activePlatform}-createdBy`} value={draft.createdBy} onChange={(event) => onChange(activePlatform, "createdBy", event.target.value)} aria-invalid={Boolean(error("createdBy"))} className={fieldClass} /></Field>

@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useId, useRef, type KeyboardEvent, type RefObject } from "react";
+import type { RefObject } from "react";
 import { parseLocalDate } from "@/lib/calendar/date-utils";
 import { GeneratedPlanStatusBadge } from "@/components/calendar/generated-plan-status-badge";
+import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { formatAssetTypeLabel, formatPlatformLabel } from "@/lib/calendar/platform-options";
 import type { GeneratedDraftPlan, GeneratedDraftPlanItem } from "@/lib/calendar/generated-plan-types";
 import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
@@ -38,36 +39,7 @@ const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "long", day: "nu
 const timestampFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
 export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, generatedItem, planningBrief, returnFocusRef, onClose, onEdit, onDuplicate, onReschedule, onDelete, onViewGeneratedPlan, onViewPlanningBrief }: PostDetailDrawerProps) {
-  const titleId = useId();
-  const panelRef = useRef<HTMLElement>(null);
-  const headingRef = useRef<HTMLHeadingElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const trigger = returnFocusRef?.current;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    headingRef.current?.focus();
-    function closeOnEscape(event: globalThis.KeyboardEvent) { if (event.key === "Escape") onClose(); }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      window.removeEventListener("keydown", closeOnEscape);
-      document.body.style.overflow = previousOverflow;
-      if (trigger?.isConnected) trigger.focus();
-    };
-  }, [open, onClose, returnFocusRef]);
-
   if (!open) return null;
-
-  function trapFocus(event: KeyboardEvent<HTMLElement>) {
-    if (event.key !== "Tab") return;
-    const focusable = panelRef.current?.querySelectorAll<HTMLElement>('button:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])');
-    if (!focusable?.length) return event.preventDefault();
-    const first = focusable.item(0);
-    const last = focusable.item(focusable.length - 1);
-    if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
-    else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
-  }
 
   const headline = version?.headline.trim() || idea?.title || "Post details";
   const pillarName = pillar?.name ?? "Unknown pillar";
@@ -80,10 +52,9 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
   const approvedManualPost = Boolean(version?.status === "scheduled" && manualPost && idea?.approvedAt);
   const readOnlyScheduledPost = generatedPost || approvedManualPost;
 
-  return <div role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()} className="fixed inset-0 z-[85] flex justify-end bg-[#071b33]/55 backdrop-blur-[1px] motion-safe:transition-colors">
-    <aside ref={panelRef} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={trapFocus} onMouseDown={(event) => event.stopPropagation()} className="flex h-full w-full flex-col overflow-hidden bg-white text-[#0b1c30] shadow-[-24px_0_70px_rgba(7,27,51,.22)] outline-none sm:w-[72vw] sm:max-w-[520px] sm:rounded-l-2xl">
+  return <ResponsiveOverlayShell open variant="drawer" title={headline} showHeader={false} maxWidth="max-w-[520px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" returnFocusRef={returnFocusRef} onClose={onClose}>
       <header className="shrink-0 border-b border-[#d3e4fe] bg-white px-5 py-5 sm:px-6">
-        <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#0058bc]">Post Details</p><h2 ref={headingRef} id={titleId} tabIndex={-1} className="mt-2 break-words text-xl font-extrabold outline-none sm:text-2xl">{headline}</h2>{version && <div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#e5eeff] px-3 py-1 text-xs font-bold text-[#0058bc]">{formatPlatformLabel(version.platform)}</span><span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[version.status]}`}>{formatAssetTypeLabel(version.status)}</span></div>}</div><button type="button" aria-label="Close Post Details" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#c8d8ef] text-xl text-[#526174] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">×</button></div>
+        <div className="flex items-start justify-between gap-4"><div className="min-w-0"><p className="text-xs font-extrabold uppercase tracking-[.12em] text-[#0058bc]">Post Details</p><h2 className="mt-2 break-words text-xl font-extrabold outline-none sm:text-2xl">{headline}</h2>{version && <div className="mt-3 flex flex-wrap items-center gap-2"><span className="rounded-full bg-[#e5eeff] px-3 py-1 text-xs font-bold text-[#0058bc]">{formatPlatformLabel(version.platform)}</span><span className={`rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[version.status]}`}>{formatAssetTypeLabel(version.status)}</span></div>}</div><button type="button" aria-label="Close Post Details" onClick={onClose} className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#c8d8ef] text-xl text-[#526174] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">×</button></div>
         <div className="mt-4 h-1 w-full rounded-full" aria-hidden="true" style={{ backgroundColor: pillarColor }} />
       </header>
 
@@ -101,8 +72,7 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
         </div>}
       </div>
       <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[#d3e4fe] bg-white px-5 py-4 sm:px-6">{version && !readOnlyScheduledPost && <><button type="button" onClick={() => onDelete(version.id)} className="mr-auto rounded-lg px-3 py-2.5 text-sm font-bold text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Delete</button><button type="button" onClick={() => onDuplicate(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Duplicate</button><button type="button" onClick={() => onReschedule(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reschedule</button><button type="button" onClick={() => onEdit(version.id)} className="rounded-lg bg-[#0058bc] px-4 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Edit Post</button></>}<button type="button" onClick={onClose} className="rounded-lg px-3 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Close</button></footer>
-    </aside>
-  </div>;
+  </ResponsiveOverlayShell>;
 }
 
 function DetailSection({ title, children, muted = false }: { title: string; children: React.ReactNode; muted?: boolean }) { return <section className={`rounded-xl border border-[#d3e4fe] p-4 sm:p-5 ${muted ? "bg-[#f1f5f9]" : "bg-white"}`}><h3 className="mb-4 text-sm font-extrabold text-[#0058bc]">{title}</h3>{children}</section>; }
