@@ -260,23 +260,39 @@ export const teamMembers = [
 
 export const pricingPlans = [
   {
-    name: "Free",
-    price: "Rp0",
-    features: ["1 brand", "Basic workspace", "Starter images", "30 credits/month"],
+    name: "Starter",
+    price: "US$199/mo",
+    description:
+      "1 brand, 30-day planning, limited renders, and 1 campaign pack.",
+    features: [
+      "1 brand",
+      "30-day planning",
+      "Limited renders",
+      "1 campaign pack",
+    ],
   },
   {
-    name: "Premium",
-    price: "Rp199K",
-    features: ["3 brands", "Unlimited 30-day plan", "Carousel and reels", "500 credits/month"],
+    name: "Growth",
+    price: "US$999/mo",
+    description:
+      "1 brand, 6-month planning, more render credits, and 2-3 campaign packs.",
+    features: [
+      "1 brand",
+      "6-month planning",
+      "More render credits",
+      "2-3 campaign packs",
+    ],
   },
   {
-    name: "Pro",
-    price: "Rp599K",
-    features: ["10 brands", "Team access", "All asset types", "SOC media workflow"],
-  },
-  {
-    name: "Enterprise",
-    price: "Custom",
-    features: ["Unlimited brands", "Approval flow", "Dedicated support", "Custom integration"],
+    name: "Custom",
+    price: "US$1,999+/mo",
+    description:
+      "Multi-brand support, 1-year planning, unlimited renders, and unlimited campaigns.",
+    features: [
+      "Multi-brand workspace",
+      "1-year planning",
+      "Unlimited renders",
+      "Unlimited campaigns",
+    ],
   },
 ];
