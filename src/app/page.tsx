@@ -366,10 +366,10 @@ function PricingSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="max-w-3xl">
           <p className="text-sm font-extrabold uppercase tracking-[0.24em] text-blue-600">
-            Business Model
+            Pricing Plan
           </p>
           <h2 className="mt-4 text-4xl font-bold leading-tight text-slate-950 sm:text-5xl">
-            Freemium planning,<br />paid rendering.
+            Campaign planning,<br />paid rendering.
           </h2>
         </div>
 
