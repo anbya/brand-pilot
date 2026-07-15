@@ -285,7 +285,7 @@ export const pricingPlans = [
   },
   {
     name: "Custom",
-    price: "US$1,999+/mo",
+    price: "US$1,999-24,000+/mo",
     description:
       "Multi-brand support, 1-year planning, unlimited renders, and unlimited campaigns.",
     features: [
