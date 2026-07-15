@@ -235,6 +235,8 @@ Setelah Generated Ideas di-approve, seluruh hasil Generated Content bersifat
 read-only. Perbaikan konten harus dilakukan sebelum approval Generated Ideas.
 Content List tidak menyediakan action `Edit Post`; perubahan yang diizinkan
 hanya `publishDate` dan `publishTime` selama item masih berstatus Unscheduled.
+Aturan Generated Ideas pada bagian ini digantikan oleh CCA-612; Generated
+Content dan Calendar Post tetap read-only.
 
 #### CCA-608 Content Calendar Prototype Persistence
 
@@ -287,10 +289,91 @@ tidak memiliki mutation generik untuk content fields; reducer hanya menerima
 menolak mutation tersebut bila status bukan `scheduled`. Published Post tidak
 dapat di-reschedule.
 
-Policy `canEditContent` menjadi guard terpusat dan hanya mengizinkan entity
-`content_work_item` pada stage `idea_draft`. Store workflow juga menggunakan
-guard ini sebelum menyimpan perubahan draft agar URL atau handler lama tidak
-dapat mengubah Generated Ideas, Generated Content, Scheduled, atau Published.
+Policy `canEditContent` menjadi guard terpusat. Sesuai CCA-612, entity
+`content_work_item` dapat diubah hanya pada stage `idea_draft` atau
+`generated_ideas`; Generated Content, Scheduled, dan Published tetap ditolak.
+Form sumber Idea Draft hanya dapat menimpa stage `idea_draft`, sedangkan
+Generated Ideas menggunakan mutation khusus yang memvalidasi stage-nya.
+
+#### CCA-611 Scheduled Publishing Lifecycle
+
+```text
+Unscheduled -> Scheduled -> Publishing -> Published | Failed
+```
+
+Waktu schedule tidak mengubah status secara otomatis. Scheduled Post tetap
+`Scheduled` walaupun waktunya sudah lewat sampai publishing process benar-benar
+dimulai. `Published` hanya dapat dicapai dari `Publishing` setelah outcome
+berhasil; outcome gagal menghasilkan `Failed`.
+
+Prototype menyediakan simulasi eksplisit tanpa browser timer dan tanpa platform
+API. Action `Demo: Start Publishing` hanya tersedia setelah schedule due. State
+`Publishing` kemudian menyediakan outcome manual `Demo: Mark Published` atau
+`Demo: Mark Failed`. Setiap transisi divalidasi kembali oleh pure lifecycle
+functions di reducer dan menyimpan lifecycle timestamps pada Calendar Post.
+
+`PublishingLifecycleRepository` menjadi boundary untuk implementasi backend
+scheduler berikutnya. Backend dapat mengganti sumber command lifecycle tanpa
+mengubah visual Calendar, persisted state shape, atau aturan read-only CCA-610.
+
+#### CCA-612 Simplified Content Workflow
+
+```text
+AI Plan Content / Create Content
+    -> Save Idea Draft
+    -> Generate Ideas automatically
+    -> Content List
+    -> Preview / Edit Generated Ideas
+    -> Approve Ideas
+    -> Generate Content
+    -> Unscheduled Content
+    -> Schedule
+    -> Calendar Grid
+    -> Existing publishing lifecycle
+```
+
+Penyimpanan dari AI Plan Content atau Create Content mencatat Idea Draft lalu
+langsung menghasilkan Generated Ideas secara deterministik dan mengembalikan
+pengguna ke Content List. Generated Ideas dapat dilihat dan diedit melalui
+mutation khusus sebelum approval. Flow reject dan approval Idea Draft terpisah
+tidak digunakan lagi pada flow utama.
+
+Approval Generated Ideas sekaligus menghasilkan Generated Content dengan status
+`Unscheduled`. Generated Content tetap read-only, dapat dijadwalkan, lalu
+mengikuti lifecycle CCA-611. Tidak ada Calendar Post yang dibuat sebelum aksi
+Schedule dijalankan.
+
+CCA-613 menggantikan tujuan navigasi setelah save khusus source `ai_plan`:
+Generated Ideas dibuka pada dedicated page. Source `create_post` tetap kembali
+ke Content List sesuai flow CCA-612.
+
+#### CCA-613 Editable Generated Ideas Page
+
+```text
+AI Plan Content
+    -> Save Draft & Generate Ideas
+    -> Generated Ideas Page
+    -> Preview / Edit Ideas
+    -> Approve Ideas
+    -> Generate Content
+    -> Unscheduled Content
+    -> Schedule Date and Time
+    -> Calendar Grid
+    -> Publishing Lifecycle
+```
+
+Hasil AI Plan Content dibuka pada dedicated Generated Ideas Page, bukan modal.
+Halaman menggunakan tabel AI Draft Content Plan yang menampilkan planned date
+and time, title, pillar, platform/format, objective, conflict, dan action edit.
+Edit dilakukan per idea pada halaman yang sama dan disimpan melalui typed
+workflow store. Tahap ini tidak menyediakan action scheduling, add/remove,
+selection, atau regenerasi.
+
+Approval berlaku untuk seluruh Generated Ideas dan langsung menjalankan
+Generated Content flow existing. Hasilnya berstatus `Unscheduled`, lalu user
+dikembalikan ke Content List untuk melihat visual preview dan mengatur jadwal.
+Generated Content, scheduling, Calendar Grid, serta publishing lifecycle tidak
+diubah oleh CCA-613.
 
 #### CCA-604 Dedicated Content Input Pages
 
@@ -303,8 +386,8 @@ Input Content Calendar tidak menggunakan modal. Navigasi input menggunakan:
 ```
 
 `AI Plan Content` membuka `/calendar/ai-plan/new` dan `Create Post` membuka
-`/calendar/content/new`. Kedua halaman menyimpan hasil sebagai `Idea Draft`
-dan melanjutkan state machine CCA-606 tanpa melewati tahap approval.
+`/calendar/content/new`. Kedua halaman menyimpan Idea Draft, langsung membuat
+Generated Ideas, lalu melanjutkan state machine CCA-612 dari Content List.
 
 ------------------------------------------------------------------------
 

@@ -25,9 +25,8 @@ export default function NewAiPlanPage() {
   }, []);
 
   function save(request: AiPlanRequest) {
-    saveAiPlanWorkflow(window.localStorage, request, existing);
-    window.sessionStorage.setItem("content-list-message", existing ? "AI Plan Idea Draft updated." : "AI Plan saved to Content List as an Idea Draft.");
-    router.push("/calendar/content");
+    const saved = saveAiPlanWorkflow(window.localStorage, request, existing);
+    router.push(`/calendar/ai-plan/${encodeURIComponent(saved.id)}/ideas`);
   }
 
   if (!ready) return <main className="min-h-screen bg-[#f8f9ff] p-8"><p role="status" className="mx-auto max-w-[960px] text-sm font-bold text-[#657080]">Loading AI Plan form…</p></main>;

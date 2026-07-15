@@ -25,10 +25,11 @@ import { activeManualPostPermissions } from "@/lib/calendar/manual-post-permissi
 import { readContentWorkflow } from "@/lib/calendar/content-workflow-store";
 import type { ContentWorkflowItem } from "@/lib/calendar/content-workflow-types";
 import { createLocalCalendarStateRepository } from "@/lib/calendar/calendar-state-repository";
-import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
+import { getCalendarPostActions, getPublishingSimulationActions } from "@/lib/calendar/content-mutation-policy";
 import { calendarReducer } from "@/lib/calendar/reducer";
 import { getCalendarEvents, getFilteredVersions, getIdeaById, getPillarById, getVersionById } from "@/lib/calendar/selectors";
 import type { CalendarState, ContentVersion } from "@/lib/calendar/types";
+import type { PublishOutcome } from "@/lib/calendar/publishing-lifecycle";
 import { clearPrototypeData } from "@/lib/prototype-data-repository";
 
 const today = "2026-07-11";
@@ -171,6 +172,20 @@ export function CalendarClient() {
     closePostAction(false);
   }
 
+  function handleStartPublishing(versionId: string) {
+    const version = getVersionById(state, versionId);
+    if (!version) return;
+    const startedAt = new Date().toISOString();
+    if (!getPublishingSimulationActions(version, startedAt).canStart) return;
+    dispatch({ type: "START_PUBLISHING", payload: { versionId, startedAt } });
+  }
+
+  function handleCompletePublishing(versionId: string, outcome: PublishOutcome) {
+    const version = getVersionById(state, versionId);
+    if (!version || !getPublishingSimulationActions(version, new Date().toISOString()).canComplete) return;
+    dispatch({ type: "COMPLETE_PUBLISHING", payload: { versionId, outcome, completedAt: new Date().toISOString() } });
+  }
+
   function closeAiResult() { const versionId = returnToPostVersionId; setAiPlanResultOpen(false); setAiPlanMessage(""); setFocusedGeneratedItemId(undefined); setGeneratedPlanReadOnly(false); setReturnToPostVersionId(undefined); if (versionId) dispatch({ type: "OPEN_POST_DETAIL", payload: versionId }); }
 
   function viewGeneratedPlan(planId: string, itemId: string, versionId: string) {
@@ -220,7 +235,7 @@ export function CalendarClient() {
         {state.view === "month" ? <MonthGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} onMoreClick={setAgendaDate} /> : <WeekGrid currentDate={state.currentDate} events={calendarEvents} highlightedVersionIds={newlyAddedVersionIds} today={today} onEventClick={openEvent} />}
     </CalendarWorkspaceShell>
     <DayAgendaPopover date={agendaDate} events={agendaEvents} onEventClick={openEvent} onClose={() => setAgendaDate(undefined)} />
-    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} generatedPlan={selectedGeneratedPlan} generatedItem={selectedGeneratedItem} planningBrief={selectedPlanningBrief} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} onViewGeneratedPlan={viewGeneratedPlan} onViewPlanningBrief={viewPlanningBrief} />
+    <PostDetailDrawer open={state.postDetailDrawerOpen} version={selectedVersion} idea={selectedIdea} pillar={selectedPillar} generatedPlan={selectedGeneratedPlan} generatedItem={selectedGeneratedItem} planningBrief={selectedPlanningBrief} returnFocusRef={drawerTriggerRef} onClose={() => dispatch({ type: "CLOSE_POST_DETAIL" })} onDuplicate={handleDuplicatePost} onReschedule={(id) => openPostAction("reschedule", id)} onDelete={(id) => openPostAction("delete", id)} onStartPublishing={handleStartPublishing} onCompletePublishing={handleCompletePublishing} onViewGeneratedPlan={viewGeneratedPlan} onViewPlanningBrief={viewPlanningBrief} />
     {activePostAction === "reschedule" && <ReschedulePostDialog open idea={actionIdea} version={actionVersion} onClose={() => closePostAction()} onSubmit={handleReschedulePost} />}
     {activePostAction === "delete" && <DeletePostDialog open idea={actionIdea} version={actionVersion} siblingVersionCount={siblingVersions.length} onClose={() => closePostAction()} onConfirm={handleDeletePost} />}
     {aiPlanResultOpen && <AiPlanResultDialog open plan={activeGeneratedPlan} items={pendingAiPlanResult} canApprove={false} message={aiPlanMessage || "Legacy generated plans are read-only. Use Content List for the CCA-606 workflow."} focusedItemId={focusedGeneratedItemId} onClose={closeAiResult} onToggleItem={() => undefined} onSelectAll={() => undefined} onClearSelection={() => undefined} onApproveSelected={() => undefined} />}

@@ -6,10 +6,11 @@ import { GeneratedPlanStatusBadge } from "@/components/calendar/generated-plan-s
 import { GeneratedPostVisualPreview } from "@/components/calendar/generated-post-visual-preview";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { formatAssetTypeLabel, formatPlatformLabel } from "@/lib/calendar/platform-options";
-import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
+import { getCalendarPostActions, getPublishingSimulationActions } from "@/lib/calendar/content-mutation-policy";
 import type { GeneratedDraftPlan, GeneratedDraftPlanItem } from "@/lib/calendar/generated-plan-types";
 import type { PlanningBrief } from "@/lib/calendar/planning-brief-types";
 import type { ContentIdea, ContentPillar, ContentVersion } from "@/lib/calendar/types";
+import type { PublishOutcome } from "@/lib/calendar/publishing-lifecycle";
 
 type PostDetailDrawerProps = {
   open: boolean;
@@ -24,6 +25,8 @@ type PostDetailDrawerProps = {
   onDuplicate: (versionId: string) => void;
   onReschedule: (versionId: string) => void;
   onDelete: (versionId: string) => void;
+  onStartPublishing: (versionId: string) => void;
+  onCompletePublishing: (versionId: string, outcome: PublishOutcome) => void;
   onViewGeneratedPlan: (planId: string, itemId: string, versionId: string) => void;
   onViewPlanningBrief: (briefId: string, versionId: string) => void;
 };
@@ -32,6 +35,7 @@ const statusStyles = {
   draft: "bg-slate-100 text-slate-700",
   ready: "bg-emerald-100 text-emerald-800",
   scheduled: "bg-blue-100 text-blue-800",
+  publishing: "bg-amber-100 text-amber-800",
   published: "bg-violet-100 text-violet-800",
   failed: "bg-rose-100 text-rose-800",
 } as const;
@@ -39,7 +43,7 @@ const statusStyles = {
 const dateFormatter = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric" });
 const timestampFormatter = new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short" });
 
-export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, generatedItem, planningBrief, returnFocusRef, onClose, onDuplicate, onReschedule, onDelete, onViewGeneratedPlan, onViewPlanningBrief }: PostDetailDrawerProps) {
+export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, generatedItem, planningBrief, returnFocusRef, onClose, onDuplicate, onReschedule, onDelete, onStartPublishing, onCompletePublishing, onViewGeneratedPlan, onViewPlanningBrief }: PostDetailDrawerProps) {
   if (!open) return null;
 
   const headline = version?.headline.trim() || idea?.title || "Post details";
@@ -52,6 +56,7 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
   const manualPost = idea?.creationSource === "manual" && !generatedPost;
   const approvedManualPost = Boolean(version?.status === "scheduled" && manualPost && idea?.approvedAt);
   const actions = version ? getCalendarPostActions(version.status) : undefined;
+  const publishingActions = version ? getPublishingSimulationActions(version, new Date().toISOString()) : undefined;
 
   return <ResponsiveOverlayShell open variant="drawer" title={headline} showHeader={false} maxWidth="max-w-[620px]" bodyScrollable={false} bodyClassName="flex flex-col p-0" returnFocusRef={returnFocusRef} onClose={onClose}>
       <header className="shrink-0 border-b border-[#d3e4fe] bg-white px-5 py-5 sm:px-6">
@@ -71,15 +76,18 @@ export function PostDetailDrawer({ open, version, idea, pillar, generatedPlan, g
           {manualPost && idea && <DetailSection title="Source"><dl className="grid gap-4 sm:grid-cols-2"><DetailItem label="Source Type" value="Manual Post" /><DetailItem label="Campaign" value={idea.campaignName || idea.campaignId || "Not linked"} /><DetailItem label="Brand" value={idea.brandName || "Not specified"} /><DetailItem label="Owner" value={idea.ownerName || version.createdBy} />{approvedManualPost && <><DetailItem label="Approved" value={idea.approvedAt ? formatTimestamp(idea.approvedAt) : "Unavailable"} /><DetailItem label="Approved By" value={idea.approvedBy || "Unavailable"} /></>}</dl></DetailSection>}
           <DetailSection title="Platform & Format"><dl className="grid gap-4 sm:grid-cols-2"><DetailItem label="Platform" value={formatPlatformLabel(version.platform)} /><DetailItem label="Content Type" value={formatAssetTypeLabel(version.assetType)} /><DetailItem label="Created By" value={version.createdBy} /></dl></DetailSection>
           <DetailSection title="Schedule"><dl className="grid gap-4 sm:grid-cols-2"><DetailItem label="Publish Date" value={formatDateOnly(version.publishDate)} /><DetailItem label="Publish Time" value={version.publishTime} /><DetailItem label="Timezone" value={version.timezone} /><div><dt className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#657080]">Status</dt><dd className="mt-1.5"><span className={`inline-flex rounded-full px-3 py-1 text-xs font-extrabold ${statusStyles[version.status]}`}>{formatAssetTypeLabel(version.status)}</span></dd></div></dl></DetailSection>
+          <PublishingLifecycleStatus version={version} canStart={Boolean(publishingActions?.canStart)} />
+          {(version.publishingStartedAt || version.publishedAt || version.publishFailedAt) && <DetailSection title="Publishing Lifecycle" muted><dl className="grid gap-4 sm:grid-cols-2">{version.publishingStartedAt && <DetailItem label="Publishing Started" value={formatTimestamp(version.publishingStartedAt)} />}{version.publishedAt && <DetailItem label="Published At" value={formatTimestamp(version.publishedAt)} />}{version.publishFailedAt && <DetailItem label="Failed At" value={formatTimestamp(version.publishFailedAt)} />}{version.publishFailureReason && <DetailItem label="Failure Reason" value={version.publishFailureReason} />}</dl></DetailSection>}
           <DetailSection title="Metadata" muted><dl className="grid gap-4 sm:grid-cols-2"><DetailItem label="Created At" value={formatTimestamp(version.createdAt)} /><DetailItem label="Updated At" value={formatTimestamp(version.updatedAt)} /></dl></DetailSection>
         </div>}
       </div>
-      <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[#d3e4fe] bg-white px-5 py-4 sm:px-6">{version && actions?.canDelete && <button type="button" onClick={() => onDelete(version.id)} className="mr-auto rounded-lg px-3 py-2.5 text-sm font-bold text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Delete</button>}{version && actions?.canDuplicate && <button type="button" onClick={() => onDuplicate(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Duplicate as Draft</button>}{version && actions?.canReschedule && <button type="button" onClick={() => onReschedule(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reschedule</button>}<button type="button" onClick={onClose} className="rounded-lg px-3 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Close</button></footer>
+      <footer className="flex shrink-0 flex-wrap justify-end gap-2 border-t border-[#d3e4fe] bg-white px-5 py-4 sm:px-6">{version && actions?.canDelete && <button type="button" onClick={() => onDelete(version.id)} className="mr-auto rounded-lg px-3 py-2.5 text-sm font-bold text-rose-600 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Delete</button>}{version && actions?.canDuplicate && <button type="button" onClick={() => onDuplicate(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Duplicate as Draft</button>}{version && actions?.canReschedule && <button type="button" onClick={() => onReschedule(version.id)} className="rounded-lg border border-[#c5d2e5] px-3 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Reschedule</button>}{version && publishingActions?.canStart && <button type="button" onClick={() => onStartPublishing(version.id)} className="rounded-lg bg-amber-600 px-4 py-2.5 text-sm font-bold text-white outline-none hover:bg-amber-700 focus-visible:ring-2 focus-visible:ring-amber-600">Demo: Start Publishing</button>}{version && publishingActions?.canComplete && <><button type="button" onClick={() => onCompletePublishing(version.id, "failed")} className="rounded-lg border border-rose-300 px-3 py-2.5 text-sm font-bold text-rose-700 outline-none hover:bg-rose-50 focus-visible:ring-2 focus-visible:ring-rose-600">Demo: Mark Failed</button><button type="button" onClick={() => onCompletePublishing(version.id, "published")} className="rounded-lg bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white outline-none hover:bg-emerald-800 focus-visible:ring-2 focus-visible:ring-emerald-700">Demo: Mark Published</button></>}<button type="button" onClick={onClose} className="rounded-lg px-3 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Close</button></footer>
   </ResponsiveOverlayShell>;
 }
 
 function DetailSection({ title, children, muted = false }: { title: string; children: React.ReactNode; muted?: boolean }) { return <section className={`rounded-xl border border-[#d3e4fe] p-4 sm:p-5 ${muted ? "bg-[#f1f5f9]" : "bg-white"}`}><h3 className="mb-4 text-sm font-extrabold text-[#0058bc]">{title}</h3>{children}</section>; }
 function DetailItem({ label, value }: { label: string; value: string }) { return <div className="min-w-0"><dt className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#657080]">{label}</dt><dd className="mt-1.5 whitespace-pre-wrap break-words text-sm font-semibold text-[#0b1c30]">{value || "—"}</dd></div>; }
 function Unavailable({ title, description }: { title: string; description: string }) { return <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-5"><p className="font-extrabold text-amber-900">{title}</p><p className="mt-1 text-sm leading-6 text-amber-800">{description}</p></div>; }
+function PublishingLifecycleStatus({ version, canStart }: { version: ContentVersion; canStart: boolean }) { if (version.status === "scheduled") return <div role="note" className={`rounded-xl border p-4 text-sm leading-6 ${canStart ? "border-amber-200 bg-amber-50 text-amber-900" : "border-blue-200 bg-blue-50 text-blue-900"}`}><p className="font-extrabold">Demo publishing simulation</p><p className="mt-1">{canStart ? "The scheduled time has been reached. Start Publishing explicitly to simulate a backend scheduler handoff." : "This post remains Scheduled. Demo publishing becomes available only after its scheduled date and time."}</p></div>; if (version.status === "publishing") return <div role="note" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900"><p className="font-extrabold">Publishing simulation in progress</p><p className="mt-1">Choose a demo outcome explicitly. No browser timer or platform request is running.</p></div>; return null; }
 function formatDateOnly(value: string): string { try { return dateFormatter.format(parseLocalDate(value)); } catch { return value || "Unavailable"; } }
 function formatTimestamp(value: string): string { const date = new Date(value); return Number.isNaN(date.getTime()) ? value : timestampFormatter.format(date); }

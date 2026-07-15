@@ -8,5 +8,12 @@ export type AiPlanDraftItem = {
   targetAudience: string; mainMessage: string; isPromotional: boolean; platform: SocialPlatform; assetType: string;
   headline: string; caption: string; cta: string; hashtags: string[]; visualBrief: string;
   publishDate: string; publishTime: string; timezone: string; conflicts: AiPlanConflict[];
+  source?: "ai_plan" | "manual_create_content";
+  sourceDraftId?: string;
+  brandId?: string;
+  brandName?: string;
+  campaignId?: string;
+  campaignName?: string;
+  createdBy?: string;
 };
 export type AiPlanGenerationResult = { request: AiPlanRequest; items: AiPlanDraftItem[]; generatedAt: string };

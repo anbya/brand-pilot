@@ -26,7 +26,7 @@ export function GeneratedPostVisualPreview({ platform, assetType, brandName = "B
   const video = /video|reel|short|tutorial|demo|behind the scenes/i.test(assetType);
   const carousel = /carousel/i.test(assetType);
   const normalizedStatus = formatAssetTypeLabel(status);
-  const scheduled = status === "scheduled" || status === "published";
+  const statusTone = status === "published" ? "bg-emerald-50 text-emerald-700" : status === "publishing" ? "bg-amber-50 text-amber-700" : status === "failed" ? "bg-rose-50 text-rose-700" : status === "scheduled" ? "bg-blue-50 text-blue-700" : "bg-violet-50 text-violet-700";
 
   return <article aria-label={`${formatPlatformLabel(platform)} ${formatAssetTypeLabel(assetType)} generated post preview`} className="overflow-hidden rounded-xl border border-[#c9d9ef] bg-white shadow-[0_12px_30px_rgba(18,52,91,.12)]">
     <header className="flex items-center justify-between border-b border-[#e5edf8] px-4 py-3">
@@ -40,7 +40,7 @@ export function GeneratedPostVisualPreview({ platform, assetType, brandName = "B
     <div className={`relative flex ${style.aspect} min-h-[230px] flex-col justify-between overflow-hidden bg-gradient-to-br ${style.canvas} p-6 sm:p-8 ${platform === "tiktok" ? "text-white" : "text-[#0b1c30]"}`}>
       <div className="flex items-start justify-between gap-2">
         <span className={`w-fit rounded-full bg-white/95 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.14em] ${style.accent}`}>{formatAssetTypeLabel(assetType)}</span>
-        <span className={`rounded-full px-3 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] ${scheduled ? "bg-emerald-50 text-emerald-700" : "bg-violet-50 text-violet-700"}`}>{normalizedStatus}</span>
+        <span className={`rounded-full px-3 py-1 text-[9px] font-extrabold uppercase tracking-[.12em] ${statusTone}`}>{normalizedStatus}</span>
       </div>
       {video && <span aria-hidden="true" className={`absolute left-1/2 top-1/2 flex h-16 w-16 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white/95 shadow-xl ${style.accent}`}><PlayIcon /></span>}
       <div className="relative z-10 max-w-[92%]">
@@ -55,7 +55,7 @@ export function GeneratedPostVisualPreview({ platform, assetType, brandName = "B
       <div aria-hidden="true" className="mb-3 flex items-center gap-4 text-[#26384d]"><HeartIcon /><CommentIcon /><ShareIcon /></div>
       <p className="whitespace-pre-wrap break-words text-xs leading-5 text-[#414755]"><b className="mr-1 text-[#0b1c30]">{contentHandle(brandName)}</b>{caption || "No caption generated."}</p>
       {hashtags.length > 0 && <p className="mt-2 break-words text-xs font-semibold leading-5 text-[#0058bc]">{hashtags.map(formatHashtag).join(" ")}</p>}
-      <p className={`mt-3 text-[10px] font-extrabold uppercase tracking-[.14em] ${scheduled ? "text-emerald-700" : "text-violet-700"}`}>{normalizedStatus}</p>
+      <p className={`mt-3 w-fit rounded-full px-2 py-1 text-[10px] font-extrabold uppercase tracking-[.14em] ${statusTone}`}>{normalizedStatus}</p>
     </div>
   </article>;
 }

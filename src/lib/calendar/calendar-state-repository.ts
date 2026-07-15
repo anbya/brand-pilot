@@ -100,7 +100,7 @@ function normalizeFilters(value: unknown, pillars: ContentPillar[], versions: Co
   const filters = isRecord(value) ? value : {};
   const pillarIds = new Set(pillars.map((pillar) => pillar.id));
   const creators = new Set(versions.map((version) => version.createdBy));
-  const statuses = new Set(["draft", "ready", "scheduled", "published", "failed"]);
+  const statuses = new Set(["draft", "ready", "scheduled", "publishing", "published", "failed"]);
   return {
     platform: filters.platform === "all" || isSocialPlatform(filters.platform) ? filters.platform : "all",
     pillarId: filters.pillarId === "all" || (typeof filters.pillarId === "string" && pillarIds.has(filters.pillarId)) ? filters.pillarId : "all",
@@ -141,7 +141,11 @@ function isContentVersion(value: unknown): value is ContentVersion {
     && isDateString(value.publishDate)
     && typeof value.publishTime === "string"
     && isNonEmptyString(value.timezone)
-    && ["draft", "ready", "scheduled", "published", "failed"].includes(String(value.status))
+    && ["draft", "ready", "scheduled", "publishing", "published", "failed"].includes(String(value.status))
+    && isOptionalString(value.publishingStartedAt)
+    && isOptionalString(value.publishedAt)
+    && isOptionalString(value.publishFailedAt)
+    && isOptionalString(value.publishFailureReason)
     && isNonEmptyString(value.createdBy)
     && isNonEmptyString(value.createdAt)
     && isNonEmptyString(value.updatedAt);
@@ -153,6 +157,10 @@ function isDateString(value: unknown): value is string {
 
 function isNonEmptyString(value: unknown): value is string {
   return typeof value === "string" && value.length > 0;
+}
+
+function isOptionalString(value: unknown): value is string | undefined {
+  return value === undefined || typeof value === "string";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

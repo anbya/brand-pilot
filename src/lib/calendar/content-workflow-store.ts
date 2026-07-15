@@ -8,6 +8,7 @@ import { generateDeterministicContentMock } from "@/lib/calendar/generated-conte
 import { canEditContent } from "@/lib/calendar/content-mutation-policy";
 import type { ContentWorkflowFilters, ContentWorkflowItem, ContentWorkflowStage, GeneratedContentMock } from "@/lib/calendar/content-workflow-types";
 import { isSocialPlatform, normalizeSocialPlatforms } from "@/lib/platforms";
+import { transitionManualGeneratedIdeas } from "@/lib/calendar/manual-generated-ideas-lifecycle";
 
 export const contentWorkflowStorageKey = "brand-pilot:content-workflow:v1";
 
@@ -33,9 +34,9 @@ export function writeContentWorkflow(storage: Pick<Storage, "setItem">, items: C
 }
 
 export function saveAiPlanWorkflow(storage: WriteStorage, request: AiPlanRequest, existing?: ContentWorkflowItem) {
-  if (existing && !canEditContent({ entityType: "content_work_item", stage: existing.stage })) return existing;
+  if (existing && existing.stage !== "idea_draft") return existing;
   const now = new Date().toISOString();
-  const item: ContentWorkflowItem = {
+  const draft: ContentWorkflowItem = {
     id: existing?.id ?? `content-ai-${Date.now()}`,
     title: request.title,
     source: "ai_plan",
@@ -49,15 +50,16 @@ export function saveAiPlanWorkflow(storage: WriteStorage, request: AiPlanRequest
     ideas: [],
     drafts: [],
     createdAt: existing?.createdAt ?? now,
+    draftSavedAt: now,
     updatedAt: now,
   };
-  return persist(storage, item);
+  return persist(storage, generateIdeasFromSavedDraft(draft, now));
 }
 
 export function saveManualWorkflow(storage: WriteStorage, input: ManualPostInput, existing?: ContentWorkflowItem) {
-  if (existing && !canEditContent({ entityType: "content_work_item", stage: existing.stage })) return existing;
+  if (existing && existing.stage !== "idea_draft") return existing;
   const now = new Date().toISOString();
-  const item: ContentWorkflowItem = {
+  const draft: ContentWorkflowItem = {
     id: existing?.id ?? `content-manual-${Date.now()}`,
     title: input.idea.title,
     source: "create_post",
@@ -66,36 +68,60 @@ export function saveManualWorkflow(storage: WriteStorage, input: ManualPostInput
     brandName: input.idea.brandName,
     campaignId: input.idea.campaignId,
     campaignName: input.idea.campaignName,
-    ownerName: existing?.ownerName ?? "Wanda",
+    ownerName: input.versions[0]?.createdBy || existing?.ownerName || "Not specified",
     manualInput: input,
     ideas: [],
     drafts: [],
     createdAt: existing?.createdAt ?? now,
+    draftSavedAt: now,
     updatedAt: now,
   };
-  return persist(storage, item);
+  return persist(storage, generateIdeasFromSavedDraft(draft, now));
 }
 
-export function approveDraft(storage: WriteStorage, item: ContentWorkflowItem, actor: string) {
+export function updateManualGeneratedIdeasFromInput(storage: WriteStorage, item: ContentWorkflowItem, input: ManualPostInput) {
+  if (item.source !== "create_post" || item.stage !== "generated_ideas") return item;
+  const now = new Date().toISOString();
+  const updated: ContentWorkflowItem = { ...item, title: input.idea.title, brandId: input.idea.brandId, brandName: input.idea.brandName, campaignId: input.idea.campaignId, campaignName: input.idea.campaignName, ownerName: input.versions[0]?.createdBy || item.ownerName, manualInput: input, updatedAt: now };
+  return persist(storage, generateIdeasFromSavedDraft(updated, now));
+}
+
+export function generateIdeasFromDraft(storage: WriteStorage, item: ContentWorkflowItem) {
   if (item.stage !== "idea_draft") return item;
   const now = new Date().toISOString();
-  const ideas = item.source === "ai_plan" && item.aiRequest
-    ? generateMockAiPlan(item.aiRequest, initialCalendarState.pillars, initialCalendarState.versions)
-    : manualIdeas(item);
-  return persist(storage, { ...item, stage: "generated_ideas", ideas, drafts: [], approvedAt: now, approvedBy: actor, approvalNote: undefined, updatedAt: now });
+  return persist(storage, generateIdeasFromSavedDraft(item, now));
+}
+
+export function updateGeneratedIdeas(storage: WriteStorage, item: ContentWorkflowItem, ideas: AiPlanDraftItem[]) {
+  if (!canEditContent({ entityType: "content_work_item", stage: item.stage }) || item.stage !== "generated_ideas" || !ideas.length) return item;
+  const now = new Date().toISOString();
+  const normalized = ideas.map((idea) => ({ ...idea, selected: false }));
+  return persist(storage, { ...item, ideas: normalized, updatedAt: now });
 }
 
 export function approveGeneratedIdeas(storage: WriteStorage, item: ContentWorkflowItem, actor: string) {
-  if (item.stage !== "generated_ideas") return item;
+  if (item.stage !== "generated_ideas" || !item.ideas.length) return item;
   const now = new Date().toISOString();
-  const drafts = item.ideas.map((idea, index) => generateDeterministicContentMock(idea, index, now));
-  return persist(storage, { ...item, stage: "unscheduled", drafts, approvedAt: now, approvedBy: actor, approvalNote: undefined, updatedAt: now });
-}
-
-export function rejectGeneratedIdeas(storage: WriteStorage, item: ContentWorkflowItem, actor: string, note?: string) {
-  if (item.stage !== "generated_ideas") return item;
-  const now = new Date().toISOString();
-  return persist(storage, { ...item, stage: "idea_draft", ideas: [], drafts: [], approvalNote: note?.trim() || `Generated ideas rejected by ${actor}.`, updatedAt: now });
+  if (item.drafts.length) return item;
+  if (item.source !== "create_post") {
+    const drafts = item.ideas.map((idea, index) => generateDeterministicContentMock(idea, index, now));
+    return persist(storage, { ...item, stage: "unscheduled", drafts, approvedAt: now, approvedBy: actor, approvalNote: undefined, updatedAt: now });
+  }
+  const currentLifecycle = item.generationLifecycle ?? "generated_ideas";
+  const approved = currentLifecycle === "generation_failed" ? undefined : transitionManualGeneratedIdeas(currentLifecycle, "approved");
+  if (approved && !approved.ok) return item;
+  const approvedItem = approved?.ok ? persist(storage, { ...item, generationLifecycle: approved.status, approvedAt: now, approvedBy: actor, updatedAt: now }) : item;
+  const generating = transitionManualGeneratedIdeas(approved?.ok ? approved.status : currentLifecycle, "generating_content");
+  if (!generating.ok) return approvedItem;
+  const generatingItem = persist(storage, { ...approvedItem, generationLifecycle: generating.status, approvedAt: approvedItem.approvedAt ?? now, approvedBy: approvedItem.approvedBy ?? actor, updatedAt: now });
+  try {
+    const drafts = generatingItem.ideas.map((idea, index) => ({ ...generateDeterministicContentMock(idea, index, now), sourceRelationship: { sourceType: "manual_generated_idea" as const, sourceDraftId: item.id, sourcePlanId: item.id, sourceIdeaId: idea.id, brandId: item.brandId, campaignId: item.campaignId, platform: idea.platform, format: idea.assetType } }));
+    const completed = transitionManualGeneratedIdeas(generating.status, "content_generated");
+    return completed.ok ? persist(storage, { ...generatingItem, stage: "unscheduled", generationLifecycle: completed.status, drafts, generatedContentIds: drafts.map((draft) => draft.id), approvalNote: undefined, updatedAt: now }) : generatingItem;
+  } catch {
+    const failed = transitionManualGeneratedIdeas(generating.status, "generation_failed");
+    return failed.ok ? persist(storage, { ...generatingItem, generationLifecycle: failed.status, updatedAt: now }) : generatingItem;
+  }
 }
 
 export function scheduleWorkflow(storage: WriteStorage, item: ContentWorkflowItem) {
@@ -128,7 +154,7 @@ function manualIdeas(item: ContentWorkflowItem): AiPlanDraftItem[] {
   return item.manualInput.versions.map((version, index) => ({
     id: `idea-${item.id}-${index}`,
     selected: false,
-    title: item.manualInput!.idea.title,
+    title: version.headline.trim() || item.manualInput!.idea.title,
     coreTopic: item.manualInput!.idea.coreTopic,
     pillarId: item.manualInput!.idea.pillarId,
     objective: item.manualInput!.idea.objective,
@@ -146,7 +172,21 @@ function manualIdeas(item: ContentWorkflowItem): AiPlanDraftItem[] {
     publishTime: version.publishTime,
     timezone: version.timezone,
     conflicts: [],
+    source: "manual_create_content",
+    sourceDraftId: item.id,
+    brandId: item.manualInput!.idea.brandId,
+    brandName: item.manualInput!.idea.brandName,
+    campaignId: item.manualInput!.idea.campaignId,
+    campaignName: item.manualInput!.idea.campaignName,
+    createdBy: version.createdBy,
   }));
+}
+
+function generateIdeasFromSavedDraft(item: ContentWorkflowItem, generatedAt: string): ContentWorkflowItem {
+  const ideas = item.source === "ai_plan" && item.aiRequest
+    ? generateMockAiPlan(item.aiRequest, initialCalendarState.pillars, initialCalendarState.versions)
+    : manualIdeas(item);
+  return { ...item, stage: "generated_ideas", generationLifecycle: item.source === "create_post" ? "generated_ideas" : item.generationLifecycle, ideas, drafts: [], ideasGeneratedAt: generatedAt, approvalNote: undefined, updatedAt: generatedAt };
 }
 
 type LegacyWorkflowStage = "draft" | "pending_approval" | "changes_requested" | "content_idea" | "content_draft" | "ready" | "draft_pending_approval" | "draft_changes_requested" | "draft_approved" | "generated_ideas_pending_approval" | "generated_ideas_changes_requested" | "generated_ideas_approved";
@@ -159,10 +199,15 @@ function migrateWorkflowItem(value: unknown): ContentWorkflowItem | undefined {
   const stage = migrateStage(originalStage);
   const resetSchedule = originalStage === "content_draft" || originalStage === "ready";
   const drafts = item.drafts.map((draft) => normalizeGeneratedContent(resetSchedule ? { ...draft, publishDate: "", publishTime: "", conflicts: [] } : draft, stage, item.updatedAt!));
-  const ideas = item.ideas.map(normalizeIdeaPlatform);
   const aiRequest = item.aiRequest ? { ...item.aiRequest, platforms: normalizeSocialPlatforms(item.aiRequest.platforms, ["instagram"]) } : undefined;
   const manualInput = item.manualInput ? { ...item.manualInput, versions: item.manualInput.versions.map((version) => normalizeVersionPlatform(version)) } : undefined;
-  return { ...item, stage, ideas, drafts, aiRequest, manualInput } as ContentWorkflowItem;
+  const normalizedIdeas = item.ideas.map(normalizeIdeaPlatform);
+  const ideas = item.source === "create_post" && manualInput
+    ? normalizedIdeas.map((idea) => normalizeManualGeneratedIdea(idea, item.id!, item.ownerName, manualInput))
+    : normalizedIdeas;
+  const generationLifecycle = item.source === "create_post" ? normalizeManualLifecycle(item.generationLifecycle, stage) : item.generationLifecycle;
+  const generatedContentIds = item.generatedContentIds ?? (item.source === "create_post" && drafts.length ? drafts.map((draft) => draft.id) : undefined);
+  return { ...item, stage, generationLifecycle, ideas, drafts, generatedContentIds, aiRequest, manualInput } as ContentWorkflowItem;
 }
 
 function normalizeGeneratedContent(draft: AiPlanDraftItem | GeneratedContentMock, stage: ContentWorkflowStage, fallbackGeneratedAt: string): GeneratedContentMock {
@@ -186,6 +231,39 @@ function normalizeIdeaPlatform(idea: AiPlanDraftItem): AiPlanDraftItem {
 function normalizeVersionPlatform(version: ManualPostInput["versions"][number]): ManualPostInput["versions"][number] {
   const platform = isSocialPlatform(version.platform) ? version.platform : "instagram";
   return { ...version, platform, assetType: isSocialPlatform(version.platform) ? version.assetType : platformAssetTypes[platform][0] };
+}
+
+function normalizeManualGeneratedIdea(idea: AiPlanDraftItem, sourceDraftId: string, ownerName: string | undefined, input: ManualPostInput): AiPlanDraftItem {
+  const version = input.versions.find((candidate) => candidate.platform === idea.platform);
+  return {
+    ...idea,
+    title: version?.headline.trim() || idea.title || input.idea.title,
+    coreTopic: input.idea.coreTopic,
+    pillarId: input.idea.pillarId,
+    objective: input.idea.objective,
+    targetAudience: input.idea.targetAudience,
+    mainMessage: input.idea.mainMessage,
+    assetType: version?.assetType || idea.assetType,
+    headline: version?.headline || idea.headline,
+    caption: version?.caption || idea.caption,
+    cta: version?.cta || idea.cta,
+    hashtags: version?.hashtags ? [...version.hashtags] : [...idea.hashtags],
+    visualBrief: version?.visualBrief ?? idea.visualBrief,
+    source: "manual_create_content",
+    sourceDraftId,
+    brandId: input.idea.brandId,
+    brandName: input.idea.brandName,
+    campaignId: input.idea.campaignId,
+    campaignName: input.idea.campaignName,
+    createdBy: idea.createdBy?.trim() || version?.createdBy || ownerName || "Not specified",
+  };
+}
+
+function normalizeManualLifecycle(value: ContentWorkflowItem["generationLifecycle"], stage: ContentWorkflowStage): ContentWorkflowItem["generationLifecycle"] {
+  if (value === "draft" || value === "generated_ideas" || value === "approved" || value === "generating_content" || value === "content_generated" || value === "generation_failed") return value;
+  if (stage === "idea_draft") return "draft";
+  if (stage === "generated_ideas") return "generated_ideas";
+  return "content_generated";
 }
 
 function isStage(value: unknown): value is ContentWorkflowStage {

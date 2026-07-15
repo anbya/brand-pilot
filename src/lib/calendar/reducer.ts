@@ -1,5 +1,6 @@
 import { addDays, addMonths } from "@/lib/calendar/date-utils";
 import { getCalendarPostActions } from "@/lib/calendar/content-mutation-policy";
+import { completePrototypePublishing, startPrototypePublishing, type PublishOutcome } from "@/lib/calendar/publishing-lifecycle";
 import type {
   CalendarFilters,
   CalendarState,
@@ -25,6 +26,8 @@ export type CalendarAction =
   | { type: "DELETE_SCHEDULED_IDEA"; payload: string }
   | { type: "ADD_VERSION"; payload: ContentVersion }
   | { type: "RESCHEDULE_VERSION"; payload: Pick<ContentVersion, "id" | "publishDate" | "publishTime" | "timezone" | "updatedAt"> }
+  | { type: "START_PUBLISHING"; payload: { versionId: string; startedAt: string } }
+  | { type: "COMPLETE_PUBLISHING"; payload: { versionId: string; outcome: PublishOutcome; completedAt: string } }
   | { type: "DELETE_SCHEDULED_VERSION"; payload: string }
   | { type: "DUPLICATE_VERSION"; payload: { sourceVersionId: string; duplicate: ContentVersion } };
 
@@ -88,6 +91,16 @@ export function calendarReducer(state: CalendarState, action: CalendarAction): C
         versions: state.versions.map((version) => version.id === action.payload.id && version.status === "scheduled"
           ? { ...version, publishDate: action.payload.publishDate, publishTime: action.payload.publishTime, timezone: action.payload.timezone, updatedAt: action.payload.updatedAt }
           : version),
+      };
+    case "START_PUBLISHING":
+      return {
+        ...state,
+        versions: state.versions.map((version) => version.id === action.payload.versionId ? startPrototypePublishing(version, action.payload.startedAt) : version),
+      };
+    case "COMPLETE_PUBLISHING":
+      return {
+        ...state,
+        versions: state.versions.map((version) => version.id === action.payload.versionId ? completePrototypePublishing(version, action.payload.outcome, action.payload.completedAt) : version),
       };
     case "DELETE_SCHEDULED_VERSION": {
       const version = state.versions.find((item) => item.id === action.payload);

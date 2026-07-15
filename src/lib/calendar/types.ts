@@ -13,7 +13,7 @@ export type ContentCreationSource =
   | "repurposed"
   | "brand-asset";
 
-export type ContentStatus = "draft" | "ready" | "scheduled" | "published" | "failed";
+export type ContentStatus = "draft" | "ready" | "scheduled" | "publishing" | "published" | "failed";
 
 export type ContentPillar = {
   id: string;
@@ -68,6 +68,10 @@ export type ContentVersion = {
   publishTime: string;
   timezone: string;
   status: ContentStatus;
+  publishingStartedAt?: string;
+  publishedAt?: string;
+  publishFailedAt?: string;
+  publishFailureReason?: string;
   createdBy: string;
   planningBriefId?: string;
   generatedPlanId?: string;

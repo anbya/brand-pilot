@@ -7,7 +7,9 @@ import { CalendarWorkspaceShell } from "@/components/calendar/calendar-workspace
 import { GeneratedPostVisualPreview } from "@/components/calendar/generated-post-visual-preview";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
 import { canEditContent } from "@/lib/calendar/content-mutation-policy";
-import { approveDraft, approveGeneratedIdeas, filterContentWorkflow, readContentWorkflow, rejectGeneratedIdeas, scheduleWorkflow, updateWorkflowSchedule } from "@/lib/calendar/content-workflow-store";
+import { approveGeneratedIdeas, filterContentWorkflow, generateIdeasFromDraft, readContentWorkflow, scheduleWorkflow, updateGeneratedIdeas, updateWorkflowSchedule } from "@/lib/calendar/content-workflow-store";
+import { platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
+import type { AiPlanDraftItem } from "@/lib/calendar/ai-plan-result-types";
 import type { ContentWorkflowFilters, ContentWorkflowItem, ContentWorkflowStage } from "@/lib/calendar/content-workflow-types";
 
 const initialFilters: ContentWorkflowFilters = { query: "", source: "all", stage: "all" };
@@ -53,7 +55,7 @@ export function ContentList() {
     <CalendarWorkspaceShell header={<CalendarWorkspaceHeader variant="content-list" canCreate />}>
       <section aria-labelledby="content-list-heading">
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div><h2 id="content-list-heading" className="text-3xl font-extrabold">Content List</h2><p className="mt-2 text-sm text-[#657080]">Approve drafts, review generated ideas, and schedule generated content from one list.</p></div>
+          <div><h2 id="content-list-heading" className="text-3xl font-extrabold">Content List</h2><p className="mt-2 text-sm text-[#657080]">Preview and edit Generated Ideas, approve them to generate content, then schedule the result.</p></div>
           <p className="text-sm font-bold text-[#0058bc]">{items.length} content item{items.length === 1 ? "" : "s"}</p>
         </div>
         <div className="mt-6 grid gap-3 rounded-xl border border-[#d3e4fe] bg-white p-4 md:grid-cols-[minmax(220px,1fr)_190px_210px_auto]">
@@ -78,7 +80,9 @@ function ContentTable({ items, onPreview }: { items: ContentWorkflowItem[]; onPr
       <div className="text-sm"><p className="font-bold">{item.brandName || "No brand"}</p><p className="mt-1 truncate text-xs text-[#657080]">{item.campaignName || "No campaign"}</p></div>
       <StageBadge stage={item.stage} />
       <time className="text-sm text-[#657080]">{formatDate(item.updatedAt)}</time>
-      <button type="button" onClick={() => onPreview(item.id)} className="min-h-10 rounded-lg border border-[#0058bc] px-4 text-sm font-bold text-[#0058bc] hover:bg-[#eff4ff] lg:justify-self-end">{item.stage === "unscheduled" || item.stage === "scheduled" ? "View Post" : "Preview"}</button>
+      {item.stage === "generated_ideas"
+        ? <Link href={item.source === "ai_plan" ? `/calendar/ai-plan/${encodeURIComponent(item.id)}/ideas` : `/calendar/create-content/${encodeURIComponent(item.id)}/ideas`} className="inline-flex min-h-10 items-center justify-center rounded-lg border border-[#0058bc] px-4 text-sm font-bold text-[#0058bc] hover:bg-[#eff4ff] lg:justify-self-end">View Ideas</Link>
+        : <button type="button" onClick={() => onPreview(item.id)} className="min-h-10 rounded-lg border border-[#0058bc] px-4 text-sm font-bold text-[#0058bc] hover:bg-[#eff4ff] lg:justify-self-end">{item.stage === "unscheduled" || item.stage === "scheduled" ? "View Post" : "Preview"}</button>}
     </article>)}</div>
   </div>;
 }
@@ -90,7 +94,10 @@ function ContentPreview({ item, onClose, onChange, act, actAndClose }: { item: C
   const schedulingRecord = item.drafts.find((record) => record.id === schedulingRecordId) ?? item.drafts[0];
   const [scheduling, setScheduling] = useState(false);
   const [scheduleDraft, setScheduleDraft] = useState(() => scheduleValues(schedulingRecord));
+  const [editingIdeas, setEditingIdeas] = useState(false);
+  const [ideaDrafts, setIdeaDrafts] = useState<AiPlanDraftItem[]>(() => item.ideas.map((idea) => ({ ...idea, hashtags: [...idea.hashtags], conflicts: [...idea.conflicts] })));
   const scheduleComplete = item.drafts.length > 0 && item.drafts.every((record) => record.publishDate && record.publishTime);
+  const ideasComplete = ideaDrafts.length > 0 && ideaDrafts.every((idea) => idea.title.trim() && idea.headline.trim() && idea.caption.trim());
 
   function chooseRecord(recordId: string) {
     const record = item.drafts.find((candidate) => candidate.id === recordId);
@@ -105,27 +112,31 @@ function ContentPreview({ item, onClose, onChange, act, actAndClose }: { item: C
     onChange(next); setScheduling(false);
   }
 
-  function rejectIdeas() {
-    const note = window.prompt("Optional: describe why these generated ideas were rejected:");
-    if (note === null) return;
-    actAndClose((storage, current) => rejectGeneratedIdeas(storage, current, "Sarah Jenkins", note));
+  function saveIdeas() {
+    if (!ideasComplete) return;
+    const next = updateGeneratedIdeas(window.localStorage, item, ideaDrafts);
+    onChange(next);
+    setIdeaDrafts(next.ideas.map((idea) => ({ ...idea, hashtags: [...idea.hashtags], conflicts: [...idea.conflicts] })));
+    setEditingIdeas(false);
   }
 
   const footer = <>
     <button type="button" onClick={onClose} className="min-h-11 rounded-lg border border-[#c5d2e5] px-5 text-sm font-bold">Close</button>
-    {canEditContent({ entityType: "content_work_item", stage: item.stage }) && <Link href={`${item.source === "ai_plan" ? "/calendar/ai-plan/new" : "/calendar/content/new"}?edit=${encodeURIComponent(item.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">Edit Draft</Link>}
+    {item.stage === "idea_draft" && <Link href={`${item.source === "ai_plan" ? "/calendar/ai-plan/new" : "/calendar/content/new"}?edit=${encodeURIComponent(item.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">Edit Draft</Link>}
     {item.stage === "unscheduled" && <button type="button" onClick={() => setScheduling((value) => !value)} className="min-h-11 rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">{scheduling ? "Cancel Scheduling" : "Schedule Date and Time"}</button>}
     {scheduling && <button type="button" onClick={saveSchedule} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Save Schedule</button>}
-    {item.stage === "idea_draft" && <button type="button" onClick={() => actAndClose((storage, current) => approveDraft(storage, current, "Sarah Jenkins"))} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Approve Draft</button>}
-    {item.stage === "generated_ideas" && <button type="button" onClick={rejectIdeas} className="min-h-11 rounded-lg border border-rose-300 px-5 text-sm font-bold text-rose-700">Reject</button>}
-    {item.stage === "generated_ideas" && <button type="button" onClick={() => actAndClose((storage, current) => approveGeneratedIdeas(storage, current, "Sarah Jenkins"))} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Approve</button>}
+    {item.stage === "idea_draft" && <button type="button" onClick={() => actAndClose((storage, current) => generateIdeasFromDraft(storage, current))} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Generate Ideas</button>}
+    {item.stage === "generated_ideas" && !editingIdeas && canEditContent({ entityType: "content_work_item", stage: item.stage }) && <button type="button" onClick={() => setEditingIdeas(true)} className="min-h-11 rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">Edit Generated Ideas</button>}
+    {item.stage === "generated_ideas" && editingIdeas && <button type="button" onClick={() => { setIdeaDrafts(item.ideas.map((idea) => ({ ...idea, hashtags: [...idea.hashtags], conflicts: [...idea.conflicts] }))); setEditingIdeas(false); }} className="min-h-11 rounded-lg border border-[#c5d2e5] px-5 text-sm font-bold">Cancel Editing</button>}
+    {item.stage === "generated_ideas" && editingIdeas && <button type="button" disabled={!ideasComplete} onClick={saveIdeas} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white disabled:bg-[#a1a9b5]">Save Ideas</button>}
+    {item.stage === "generated_ideas" && !editingIdeas && <button type="button" onClick={() => actAndClose((storage, current) => approveGeneratedIdeas(storage, current, "Sarah Jenkins"))} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Approve Ideas &amp; Generate Content</button>}
     {item.stage === "unscheduled" && scheduleComplete && !scheduling && <button type="button" onClick={() => act(scheduleWorkflow)} className="min-h-11 rounded-lg bg-emerald-700 px-5 text-sm font-bold text-white">Add to Calendar Grid</button>}
   </>;
 
   return <ResponsiveOverlayShell variant={isPostDetails ? "drawer" : "dialog"} eyebrow={isPostDetails ? "Content Details" : undefined} title={isPostDetails ? item.stage === "scheduled" ? "Scheduled Content" : "Generated Content" : item.title} description={`${sourceLabel(item)} · ${stageLabel(item.stage)}`} maxWidth={isPostDetails ? "max-w-[620px]" : "max-w-[900px]"} onClose={onClose} footer={footer}>
     {item.approvalNote && <div role="note" className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm"><b>Previous generated ideas rejected:</b> {item.approvalNote}</div>}
     {!isPostDetails && <dl className="grid gap-3 sm:grid-cols-2"><Info label="Brand" value={item.brandName || "Not linked"} /><Info label="Campaign" value={item.campaignName || "Not linked"} /><Info label="Owner" value={item.ownerName} /><Info label="Stage" value={stageLabel(item.stage)} /></dl>}
-    {scheduling && schedulingRecord ? <ScheduleEditor records={item.drafts} record={schedulingRecord} draft={scheduleDraft} onChoose={chooseRecord} onDraftChange={setScheduleDraft} /> : isPostDetails && item.drafts.length ? <PostDetailsView item={item} /> : records.length ? <div className="mt-6 grid gap-4">{records.map((record) => <ContentRecord key={record.id} record={record} />)}</div> : <DraftSourcePreview item={item} />}
+    {editingIdeas ? <GeneratedIdeasEditor ideas={ideaDrafts} onChange={setIdeaDrafts} /> : scheduling && schedulingRecord ? <ScheduleEditor records={item.drafts} record={schedulingRecord} draft={scheduleDraft} onChoose={chooseRecord} onDraftChange={setScheduleDraft} /> : isPostDetails && item.drafts.length ? <PostDetailsView item={item} /> : records.length ? <div className="mt-6 grid gap-4">{records.map((record) => <ContentRecord key={record.id} record={record} />)}</div> : <DraftSourcePreview item={item} />}
   </ResponsiveOverlayShell>;
 }
 
@@ -133,6 +144,28 @@ type ScheduleValues = ReturnType<typeof scheduleValues>;
 
 function scheduleValues(record?: ContentWorkflowItem["drafts"][number]) {
   return { publishDate: record?.publishDate ?? "", publishTime: record?.publishTime ?? "" };
+}
+
+function GeneratedIdeasEditor({ ideas, onChange }: { ideas: AiPlanDraftItem[]; onChange: React.Dispatch<React.SetStateAction<AiPlanDraftItem[]>> }) {
+  function update(index: number, values: Partial<AiPlanDraftItem>) {
+    onChange((current) => current.map((idea, ideaIndex) => ideaIndex === index ? { ...idea, ...values } : idea));
+  }
+
+  return <div className="mt-6 grid gap-5">{ideas.map((idea, index) => <section key={idea.id} className="rounded-xl border border-[#d3e4fe] bg-[#f8faff] p-4 sm:p-5">
+    <div className="mb-4 flex items-center justify-between gap-3"><h3 className="font-extrabold">Generated Idea {index + 1}</h3><span className="rounded-full bg-white px-3 py-1 text-xs font-bold text-[#0058bc]">Editable before approval</span></div>
+    <div className="grid gap-4 sm:grid-cols-2">
+      <EditField label="Title"><input value={idea.title} onChange={(event) => update(index, { title: event.target.value })} className={fieldClass} /></EditField>
+      <EditField label="Core Topic"><input value={idea.coreTopic} onChange={(event) => update(index, { coreTopic: event.target.value })} className={fieldClass} /></EditField>
+      <EditField label="Platform"><select value={idea.platform} onChange={(event) => { const platform = event.target.value as AiPlanDraftItem["platform"]; update(index, { platform, assetType: platformAssetTypes[platform][0] }); }} className={fieldClass}>{platformOptions.map((platform) => <option key={platform.value} value={platform.value}>{platform.label}</option>)}</select></EditField>
+      <EditField label="Content Type"><select value={idea.assetType} onChange={(event) => update(index, { assetType: event.target.value })} className={fieldClass}>{platformAssetTypes[idea.platform].map((assetType) => <option key={assetType} value={assetType}>{formatContentLabel(assetType)}</option>)}</select></EditField>
+      <EditField label="Headline"><input value={idea.headline} onChange={(event) => update(index, { headline: event.target.value })} className={fieldClass} /></EditField>
+      <EditField label="CTA"><input value={idea.cta} onChange={(event) => update(index, { cta: event.target.value })} className={fieldClass} /></EditField>
+      <div className="sm:col-span-2"><EditField label="Main Message"><textarea rows={3} value={idea.mainMessage} onChange={(event) => update(index, { mainMessage: event.target.value })} className={`${fieldClass} py-3`} /></EditField></div>
+      <div className="sm:col-span-2"><EditField label="Caption / Body"><textarea rows={5} value={idea.caption} onChange={(event) => update(index, { caption: event.target.value })} className={`${fieldClass} py-3`} /></EditField></div>
+      <div className="sm:col-span-2"><EditField label="Hashtags"><input value={idea.hashtags.join(" ")} onChange={(event) => update(index, { hashtags: event.target.value.split(/[\s,]+/).map((tag) => tag.replace(/^#/, "").trim()).filter(Boolean) })} placeholder="digitalmarketing brandstrategy" className={fieldClass} /></EditField></div>
+      <div className="sm:col-span-2"><EditField label="Visual Brief"><textarea rows={3} value={idea.visualBrief} onChange={(event) => update(index, { visualBrief: event.target.value })} className={`${fieldClass} py-3`} /></EditField></div>
+    </div>
+  </section>)}</div>;
 }
 
 function ScheduleEditor({ records, record, draft, onChoose, onDraftChange }: { records: ContentWorkflowItem["drafts"]; record: ContentWorkflowItem["drafts"][number]; draft: ScheduleValues; onChoose: (id: string) => void; onDraftChange: React.Dispatch<React.SetStateAction<ScheduleValues>> }) {
@@ -173,4 +206,4 @@ function formatDate(value: string) { return new Intl.DateTimeFormat("en", { mont
 function formatPublishDate(value: string) { const [year, month, day] = value.split("-").map(Number); return new Intl.DateTimeFormat("en", { weekday: "short", month: "long", day: "numeric", year: "numeric" }).format(new Date(year, month - 1, day)); }
 function formatContentLabel(value: string) { return value.replace(/[-_]/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function Loading() { return <div role="status" className="mt-6 animate-pulse rounded-xl border bg-white p-6"><span className="sr-only">Loading content list</span><div className="h-6 w-48 rounded bg-slate-200" /><div className="mt-4 h-24 rounded bg-slate-100" /></div>; }
-function Empty({ hasItems }: { hasItems: boolean }) { return <section className="mt-6 rounded-xl border border-dashed border-[#c5d2e5] bg-white p-10 text-center"><h3 className="text-lg font-extrabold">{hasItems ? "No content matches these filters" : "No content work yet"}</h3><p className="mt-2 text-sm text-[#657080]">{hasItems ? "Try resetting the filters." : "Save an AI Plan or Create Post draft to start the staged workflow."}</p>{!hasItems && <div className="mt-5 flex flex-wrap justify-center gap-3"><Link href="/calendar/ai-plan/new" className="inline-flex min-h-11 items-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">AI Plan Content</Link><Link href="/calendar/content/new" className="inline-flex min-h-11 items-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Create Post</Link></div>}</section>; }
+function Empty({ hasItems }: { hasItems: boolean }) { return <section className="mt-6 rounded-xl border border-dashed border-[#c5d2e5] bg-white p-10 text-center"><h3 className="text-lg font-extrabold">{hasItems ? "No content matches these filters" : "No content work yet"}</h3><p className="mt-2 text-sm text-[#657080]">{hasItems ? "Try resetting the filters." : "Save an Idea Draft to automatically create Generated Ideas."}</p>{!hasItems && <div className="mt-5 flex flex-wrap justify-center gap-3"><Link href="/calendar/ai-plan/new" className="inline-flex min-h-11 items-center rounded-lg border border-[#0058bc] px-5 text-sm font-bold text-[#0058bc]">AI Plan Content</Link><Link href="/calendar/content/new" className="inline-flex min-h-11 items-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Create Post</Link></div>}</section>; }

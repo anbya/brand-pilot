@@ -46,7 +46,7 @@ export function getFilteredVersions(state: CalendarState): ContentVersion[] {
   return state.versions.filter((version) => {
     const idea = getIdeaById(state, version.contentIdeaId);
     return (
-      (version.status === "scheduled" || version.status === "published") &&
+      (version.status === "scheduled" || version.status === "publishing" || version.status === "published" || version.status === "failed") &&
       (state.filters.platform === "all" || version.platform === state.filters.platform) &&
       (state.filters.pillarId === "all" || idea?.pillarId === state.filters.pillarId) &&
       (state.filters.status === "all" || version.status === state.filters.status) &&
