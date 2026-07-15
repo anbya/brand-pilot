@@ -83,7 +83,7 @@ function LandingNav() {
           href="/onboarding/account"
           className="inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-700"
         >
-          Get Started Free
+          Sign up
         </Link>
       </div>
     </header>
@@ -109,12 +109,12 @@ function HeroSection() {
             for modern marketing teams to scale growth without complexity.
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-            <Link
+            {/* <Link
               href="/onboarding/account"
               className="inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 sm:w-auto"
             >
               Get Started Free
-            </Link>
+            </Link> */}
             <Link
               href="/dashboard"
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 sm:w-auto"
