@@ -136,19 +136,19 @@ export function ResponsiveOverlayShell({
       tabIndex={-1}
       onKeyDown={trapFocus}
       onMouseDown={(event) => event.stopPropagation()}
-      className={`flex min-w-0 flex-col overflow-hidden border-[#bfd3f2] bg-white text-[#0b1c30] shadow-[0_24px_80px_rgba(7,27,51,.28)] outline-none ${panelLayout} ${panelClassName}`}
+      className={`flex min-w-0 flex-col overflow-hidden border-[var(--bp-border)] bg-white text-[var(--bp-text)] shadow-[0_24px_80px_rgba(7,27,51,.22)] outline-none ${panelLayout} ${panelClassName}`}
     >
-      {showHeader ? <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[#d3e4fe] bg-white px-4 py-4 sm:gap-5 sm:px-6">
+      {showHeader ? <header className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--bp-border)] bg-white px-4 py-4 sm:gap-5 sm:px-6">
         <div className="min-w-0 flex-1">
-          {eyebrow ? <p className="mb-1 text-[11px] font-extrabold uppercase tracking-[.16em] text-[#717786]">{eyebrow}</p> : null}
-          <h2 ref={headingRef} tabIndex={-1} id={titleId} className="break-words text-lg font-extrabold tracking-[-.02em] outline-none sm:text-2xl">{title}</h2>
-          {description ? <p id={descriptionId} className="mt-1 break-words text-sm leading-5 text-[#657080] sm:leading-6">{description}</p> : null}
+          {eyebrow ? <p className="bp-eyebrow mb-1">{eyebrow}</p> : null}
+          <h2 ref={headingRef} tabIndex={-1} id={titleId} className="break-words text-xl font-bold leading-7 tracking-[-.02em] outline-none">{title}</h2>
+          {description ? <p id={descriptionId} className="bp-supporting mt-1 break-words">{description}</p> : null}
         </div>
         {headerAside ? <div className="shrink-0">{headerAside}</div> : null}
         {showClose ? <button type="button" aria-label={closeLabel ?? `Close ${typeof title === "string" ? title : "dialog"}`} onClick={onClose} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#c8d8ef] text-xl text-[#526174] outline-none transition hover:bg-[#eff4ff] hover:text-[#0058bc] focus-visible:ring-2 focus-visible:ring-[#0058bc]">×</button> : null}
       </header> : <h2 ref={headingRef} tabIndex={-1} id={titleId} className="sr-only outline-none">{title}</h2>}
       {children !== undefined && children !== null ? <div className={`min-h-0 min-w-0 flex-1 overscroll-contain overflow-x-hidden ${bodyScrollable ? "overflow-y-auto" : "overflow-y-hidden"} ${bodyClassName}`}>{children}</div> : null}
-      {footer ? <footer className={`flex shrink-0 flex-col-reverse gap-2 border-t border-[#d3e4fe] bg-[#f8faff] px-4 py-3 [&>*]:w-full min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:justify-end min-[480px]:gap-3 min-[480px]:px-6 min-[480px]:py-4 min-[480px]:[&>*]:w-auto ${footerClassName}`}>{footer}</footer> : null}
+      {footer ? <footer className={`flex shrink-0 flex-col-reverse gap-2 border-t border-[var(--bp-border)] bg-[var(--bp-surface-muted)] px-4 py-3 [&>*]:w-full min-[480px]:flex-row min-[480px]:flex-wrap min-[480px]:justify-end min-[480px]:gap-3 min-[480px]:px-6 min-[480px]:py-4 min-[480px]:[&>*]:w-auto ${footerClassName}`}>{footer}</footer> : null}
     </section>
   </div>;
 }

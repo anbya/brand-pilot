@@ -25,7 +25,7 @@ export function DashboardClient({ dataSource, permissions, initialDateRangeId, i
   function retryDashboard() { setLoadState({ status: "ready" }); setWidgetStates({ ...readyDashboardWidgetStates }); }
   function retryWidget(key: DashboardWidgetKey) { setWidgetStates((current) => ({ ...current, [key]: { status: "ready" } })); }
 
-  return <div className="mx-auto min-w-0 w-full max-w-[1440px] px-3 py-5 min-[375px]:px-4 sm:px-6 sm:py-6 lg:px-8 lg:py-8 xl:px-10 xl:py-10">
+  return <div className="bp-page-container">
     <DashboardHeader user={dashboard.user} brands={dashboard.brands} dateRanges={dashboard.dateRanges} selectedBrandId={selectedBrandId} selectedDateRangeId={dashboard.selectedDateRange.id} disabled={loadState.status !== "ready"} onBrandChange={setSelectedBrandId} onDateRangeChange={setSelectedDateRangeId} />
     {loadState.status === "loading" ? <DashboardSkeleton metricCount={permissions.canViewCredits ? 4 : 3} /> : loadState.status === "error" ? <DashboardGlobalError message={loadState.message} onRetry={permissions.canRetryDashboardState ? retryDashboard : undefined} /> : dashboard.isWorkspaceEmpty ? <DashboardWorkspaceEmpty canCreateCampaign={permissions.canCreateCampaign} canViewCampaigns={permissions.canViewCampaigns} /> : <>
       {widgetStates.attention.status === "loading" ? <DashboardAttentionSkeleton /> : widgetStates.attention.status === "error" ? <DashboardWidgetError className="mt-6" title="Needs Attention unavailable" message={widgetStates.attention.message} onRetry={permissions.canRetryDashboardState ? () => retryWidget("attention") : undefined} /> : <DashboardNeedsAttention items={dashboard.attentionItems} />}

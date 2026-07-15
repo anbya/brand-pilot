@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { FormEvent, useEffect, useState } from "react";
 import { ResponsiveOverlayShell } from "@/components/ui/responsive-overlay-shell";
+import { PageHeader } from "@/components/ui/page-header";
 import { campaigns as seedCampaigns, type Campaign } from "@/lib/mock-data";
 import { normalizeSocialPlatforms, socialPlatformLabels, socialPlatforms, type SocialPlatform } from "@/lib/platforms";
 
@@ -94,14 +95,11 @@ export default function CampaignsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f9ff] text-[#071b33]">
-      <section className="mx-auto min-h-screen w-full max-w-[1440px] px-5 py-7 sm:px-8 lg:px-10 lg:py-10">
-        <div className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-          <div><p className="text-xs font-bold text-[#6b7482]">Campaigns</p><h1 className="mt-3 text-4xl font-black tracking-[-0.035em] sm:text-5xl">Campaign List</h1><p className="mt-3 text-sm text-[#6b7482]">Manage, review, and create your marketing campaigns.</p></div>
-          <button onClick={openModal} className="inline-flex h-12 items-center justify-center gap-2 rounded-lg bg-[#0869e8] px-5 text-sm font-bold text-white shadow-[0_8px_20px_rgba(8,105,232,.18)] transition hover:bg-[#0058bc]" type="button"><Icon name="add" />New Campaign</button>
-        </div>
+    <main className="bp-page">
+      <section className="bp-page-container min-h-screen">
+        <PageHeader eyebrow="Campaigns" title="Campaign List" description="Manage, review, and create your marketing campaigns." actions={<button onClick={openModal} className="bp-button bp-button-primary" type="button"><Icon name="add" />New Campaign</button>} />
 
-        <section className="mt-8 rounded-xl border border-[#dce7f8] bg-white shadow-sm">
+        <section className="mt-6 overflow-hidden rounded-xl border border-[var(--bp-border)] bg-white shadow-[var(--bp-shadow-sm)]">
           <div className="flex flex-col gap-3 border-b border-[#e6edf8] p-5 sm:flex-row sm:items-center sm:justify-between">
             <label className="relative block w-full sm:max-w-sm"><Icon name="search" className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[#77808d]" /><input aria-label="Search campaigns" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search campaigns..." className="h-11 w-full rounded-lg border border-[#d7e2f3] pl-11 pr-4 text-sm outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></label>
             <select aria-label="Filter campaign status" value={status} onChange={(e) => setStatus(e.target.value)} className="h-11 rounded-lg border border-[#d7e2f3] bg-white px-4 text-sm font-semibold outline-none"><option>All status</option><option value="approved">Approved</option><option value="review">In review</option><option value="draft">Draft</option></select>

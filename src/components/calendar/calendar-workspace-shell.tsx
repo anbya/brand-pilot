@@ -2,10 +2,10 @@ import { CalendarSubNavigation } from "@/components/calendar/calendar-sub-naviga
 
 export function CalendarWorkspaceShell({ header, children }: { header: React.ReactNode; children: React.ReactNode }) {
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[#f8f9ff] text-[#0b1c30]">
+    <main className="bp-page">
       <section className="min-h-screen">
         {header}
-        <div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <div className="bp-page-container">
           <CalendarSubNavigation />
           <div className="mt-6">{children}</div>
         </div>

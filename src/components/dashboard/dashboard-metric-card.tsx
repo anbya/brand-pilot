@@ -4,7 +4,7 @@ import { DashboardProgress } from "@/components/dashboard/dashboard-progress";
 import type { DashboardCalculatedCreditUsage, DashboardMetric } from "@/lib/dashboard/types";
 
 type Props = { metric: DashboardMetric; creditUsage?: DashboardCalculatedCreditUsage };
-const cardClass = "flex min-h-[168px] min-w-0 flex-col justify-between rounded-lg border border-[#d3e4fe]/80 bg-white p-5 shadow-sm sm:min-h-[172px] sm:p-6";
+const cardClass = "bp-card flex min-h-[168px] flex-col justify-between sm:min-h-[172px]";
 
 export function DashboardMetricCard({ metric, creditUsage }: Props) {
   const content = <MetricContent metric={metric} creditUsage={creditUsage} />;

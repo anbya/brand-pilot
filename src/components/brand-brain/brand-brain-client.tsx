@@ -157,13 +157,13 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
   }, [analysisHighlight]);
 
   return (
-    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30]">
+    <main className="bp-page">
 
       <section className="min-h-screen">
-        <header className="sticky top-0 z-30 border-b border-[#d3e4fe]/70 bg-white/80 px-4 py-5 backdrop-blur-xl sm:px-6 lg:px-10">
+        <header className="sticky top-0 z-30 border-b border-[var(--bp-border)] bg-white/95 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-[1440px] flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-[#0b1c30]">Brand Brain</h1>
+              <h1 className="text-[28px] font-extrabold leading-9 tracking-[-.025em] sm:text-[32px] sm:leading-10">Brand Brain</h1>
               <p className="mt-1 text-sm text-[#717786]">
                 Manage your AI&apos;s understanding of {state.brand.name}
               </p>
@@ -189,7 +189,7 @@ export function BrandBrainClient({ initialData }: { initialData: BrandBrainState
           </div>
         </header>
 
-        <div className="mx-auto grid max-w-[1440px] grid-cols-12 gap-6 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <div className="bp-page-container grid grid-cols-12 gap-6">
           <BrainCard className="col-span-12 xl:col-span-8">
             <CardHeader icon="voice" title="Brand Voice" actionIcon="edit" actionLabel="Edit" onAction={() => setIsBrandVoiceModalOpen(true)} />
             <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -367,7 +367,7 @@ function BrainCard({
   className?: string;
 }>) {
   return (
-    <section className={`rounded-lg border border-[#d3e4fe]/70 bg-white p-6 shadow-sm transition hover:shadow-md ${className}`}>
+    <section className={`bp-card ${className}`}>
       {children}
     </section>
   );

@@ -19,7 +19,7 @@ export default async function AnalyticsPage({ searchParams }: { searchParams: Pr
   const records = permissions.viewAnalyticsFinancialMetrics ? scenarioRecords : scenarioRecords.map((record) => ({ ...record, spend: 0, attributedRevenue: 0 }));
   const dataSource = { ...analyticsMockData, user: dashboardRoleUsers[role], records };
   const initialFilters = scenarioName === "filter-empty" ? { ...defaultFilters, brandId: "brand-coffee-xyz", platform: "youtube" as const } : defaultFilters;
-  return <main className="min-h-screen min-w-0 overflow-x-hidden bg-[#f8f9ff] text-[#0b1c30]"><AnalyticsClient dataSource={dataSource} permissions={permissions} initialScenario={scenario} initialFilters={initialFilters} /></main>;
+  return <main className="bp-page"><AnalyticsClient dataSource={dataSource} permissions={permissions} initialScenario={scenario} initialFilters={initialFilters} /></main>;
 }
 
 function getScenario(value: string): AnalyticsScenario {

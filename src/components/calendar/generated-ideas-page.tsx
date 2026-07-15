@@ -11,7 +11,7 @@ import type { ContentWorkflowItem } from "@/lib/calendar/content-workflow-types"
 import { dashboardMockData } from "@/lib/dashboard/mock-data";
 import { getPlanningBriefPermissions } from "@/lib/calendar/planning-brief-permissions";
 
-const inputClass = "min-h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
+const inputClass = "bp-field";
 
 export function GeneratedIdeasPage({ workflowId, source = "ai_plan" }: { workflowId: string; source?: ContentWorkflowItem["source"] }) {
   const router = useRouter();
@@ -63,25 +63,28 @@ export function GeneratedIdeasPage({ workflowId, source = "ai_plan" }: { workflo
 
   const conflictCount = item.ideas.reduce((total, idea) => total + idea.conflicts.length, 0);
   return <PageFrame>
-    <header className="flex flex-col gap-4 border-b border-[#d3e4fe] px-5 py-6 sm:px-7 lg:flex-row lg:items-start lg:justify-between">
-      <div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#0058bc]">Generated Ideas</p><h1 className="mt-2 text-3xl font-extrabold">AI Draft Content Plan</h1><p className="mt-2 text-sm text-[#657080]">{item.title}</p><p className="mt-1 text-xs font-semibold text-[#657080]">{item.ideas.length} planned post{item.ideas.length === 1 ? "" : "s"} · {conflictCount} conflict{conflictCount === 1 ? "" : "s"}</p></div>
-      <Link href="/calendar/content" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#c5d2e5] px-4 text-sm font-bold text-[#414755] hover:bg-[#eff4ff]">Back to Content List</Link>
+    <header className="bp-page-header border-b border-[var(--bp-border)] px-5 py-6 sm:px-6">
+      <div className="bp-page-header-copy"><p className="bp-eyebrow">Generated Ideas</p><h1 className="bp-page-title">AI Draft Content Plan</h1><p className="bp-page-description">{item.title}</p><p className="bp-supporting mt-1">{item.ideas.length} planned post{item.ideas.length === 1 ? "" : "s"} · {conflictCount} conflict{conflictCount === 1 ? "" : "s"}</p></div>
+      <div className="bp-page-header-actions"><Link href="/calendar/content" className="bp-button bp-button-secondary">Back to Content List</Link></div>
     </header>
     <div className="p-4 sm:p-6">
-      <dl className="mb-5 grid gap-3 rounded-xl border border-[#d3e4fe] bg-[#f8faff] p-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="bp-card mb-5 grid gap-3 bg-[var(--bp-surface-muted)] text-sm sm:grid-cols-2 lg:grid-cols-4">
         <Meta label="Brand" value={item.brandName || "Not linked"} /><Meta label="Campaign" value={item.campaignName || "Not linked"} /><Meta label="Owner" value={item.ownerName} /><Meta label="Status" value="Editable before approval" />
       </dl>
-      <div className="overflow-x-auto rounded-xl border border-[#d3e4fe]">
-        <table className="w-full min-w-[980px] border-collapse text-left text-sm">
+      <div className="bp-table-wrap hidden overflow-x-auto md:block">
+        <table className="bp-table min-w-[980px]">
           <thead className="bg-[#eff4ff]"><tr className="text-[11px] font-extrabold uppercase tracking-[.08em] text-[#0b1c30]"><th className="px-4 py-3">Date &amp; Time</th><th className="px-4 py-3">Title</th><th className="px-4 py-3">Pillar</th><th className="px-4 py-3">Platform / Format</th><th className="px-4 py-3">Objective</th><th className="px-4 py-3">Conflict</th><th className="px-4 py-3">Actions</th></tr></thead>
           <tbody className="divide-y divide-[#d3e4fe] bg-white">{item.ideas.map((idea) => <IdeaRow key={idea.id} idea={idea} editing={editingId === idea.id} draft={editingId === idea.id ? draft : undefined} onEdit={() => beginEdit(idea)} onDraft={setDraft} onCancel={cancelEdit} onSave={saveIdea} />)}</tbody>
         </table>
       </div>
+      <div className="grid gap-3 md:hidden">
+        {item.ideas.map((idea) => <IdeaCard key={idea.id} idea={idea} editing={editingId === idea.id} draft={editingId === idea.id ? draft : undefined} onEdit={() => beginEdit(idea)} onDraft={setDraft} onCancel={cancelEdit} onSave={saveIdea} />)}
+      </div>
       {!item.ideas.length && <div className="rounded-xl border border-dashed border-[#c5d2e5] p-8 text-center"><h2 className="font-extrabold">No Generated Ideas</h2><p className="mt-2 text-sm text-[#657080]">Return to AI Plan Content and generate the plan again.</p></div>}
     </div>
-    <footer className="sticky bottom-0 flex flex-col gap-3 border-t border-[#d3e4fe] bg-[#f8faff]/95 px-5 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-7">
+    <footer className="bp-sticky-actions">
       <p className="text-sm text-[#657080]">Review and save any edits before approving all ideas. Scheduling starts after content generation.</p>
-      <button type="button" disabled={!item.ideas.length || Boolean(editingId)} onClick={approveIdeas} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white outline-none disabled:cursor-not-allowed disabled:bg-[#a1a9b5] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">Approve Ideas &amp; Generate Content</button>
+      <button type="button" disabled={!item.ideas.length || Boolean(editingId)} onClick={approveIdeas} className="bp-button bp-button-primary disabled:cursor-not-allowed disabled:opacity-50">Approve Ideas &amp; Generate Content</button>
     </footer>
   </PageFrame>;
 }
@@ -104,17 +107,17 @@ function ManualGeneratedIdeas({ item, onApprove }: { item: ContentWorkflowItem; 
   if (item.generationLifecycle === "generation_failed") return <PageFrame><Unavailable title="Content generation failed" description="Your Generated Ideas are saved. Return to edit them or try content generation again." actionHref={`/calendar/content/new?editIdea=${encodeURIComponent(item.id)}`} actionLabel="Back to Edit" /><div className="pb-8 text-center"><button type="button" onClick={onApprove} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">Try Again</button></div></PageFrame>;
 
   return <PageFrame>
-    <header className="flex flex-col gap-4 border-b border-[#d3e4fe] px-5 py-6 sm:px-7 lg:flex-row lg:items-start lg:justify-between">
-      <div><p className="text-xs font-extrabold uppercase tracking-[.14em] text-[#0058bc]">Generated Ideas</p><h1 className="mt-2 text-3xl font-extrabold">Generated Content Ideas</h1><p className="mt-2 text-sm text-[#657080]">{item.manualInput?.idea.coreTopic || item.title}</p><p className="mt-1 text-xs font-semibold text-[#657080]">{item.ideas.length} generated idea{item.ideas.length === 1 ? "" : "s"}</p></div>
-      <Link href="/calendar/content" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#c5d2e5] px-4 text-sm font-bold text-[#414755] hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc]">Back to Content List</Link>
+    <header className="bp-page-header border-b border-[var(--bp-border)] px-5 py-6 sm:px-6">
+      <div className="bp-page-header-copy"><p className="bp-eyebrow">Generated Ideas</p><h1 className="bp-page-title">Generated Content Ideas</h1><p className="bp-page-description">{item.manualInput?.idea.coreTopic || item.title}</p><p className="bp-supporting mt-1">{item.ideas.length} generated idea{item.ideas.length === 1 ? "" : "s"}</p></div>
+      <div className="bp-page-header-actions"><Link href="/calendar/content" className="bp-button bp-button-secondary">Back to Content List</Link></div>
     </header>
     <div className="p-4 sm:p-6">
-      <dl className="mb-5 grid gap-3 rounded-xl border border-[#d3e4fe] bg-[#f8faff] p-4 text-sm sm:grid-cols-2 lg:grid-cols-4"><Meta label="Brand" value={brandName} /><Meta label="Campaign" value={campaignName} /><Meta label="Owner" value={owner} /><Meta label="Status" value={status} /></dl>
+      <dl className="bp-card mb-5 grid gap-3 bg-[var(--bp-surface-muted)] text-sm sm:grid-cols-2 lg:grid-cols-4"><Meta label="Brand" value={brandName} /><Meta label="Campaign" value={campaignName} /><Meta label="Owner" value={owner} /><Meta label="Status" value={status} /></dl>
       <p aria-live="polite" className="mb-3 min-h-5 text-sm font-bold text-emerald-700">{saved ? "Generated idea changes saved." : ""}</p>
       {!valid && item.ideas.length > 0 && <div role="alert" className="mb-4 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm font-semibold text-rose-800">Generated Ideas contain invalid form data. Edit each incomplete idea before approval.</div>}
       {item.ideas.length ? <><div className="hidden overflow-x-auto rounded-xl border border-[#d3e4fe] md:block"><table aria-label="Generated content ideas" className="w-full min-w-[820px] border-collapse text-left text-sm"><caption className="sr-only">Generated content ideas from {item.title}</caption><thead className="bg-[#eff4ff]"><tr className="text-[11px] font-extrabold uppercase tracking-[.08em]"><th className="px-4 py-3">Idea Title</th><th className="px-4 py-3">Platform / Format</th><th className="px-4 py-3">Pillar</th><th className="px-4 py-3">Objective</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">Actions</th></tr></thead><tbody className="divide-y divide-[#d3e4fe]">{item.ideas.map((idea) => <ManualIdeaRow key={idea.id} item={item} idea={idea} editable={editable && permissions.canEdit} highlighted={highlighted === idea.id} />)}</tbody></table></div><div className="grid gap-3 md:hidden">{item.ideas.map((idea) => <ManualIdeaCard key={idea.id} item={item} idea={idea} editable={editable && permissions.canEdit} highlighted={highlighted === idea.id} />)}</div></> : <div className="rounded-xl border border-dashed border-[#c5d2e5] p-8 text-center"><h2 className="font-extrabold">No Generated Ideas</h2><p className="mt-2 text-sm text-[#657080]">Return to Create Content and select at least one platform.</p><Link href={`/calendar/content/new?editIdea=${encodeURIComponent(item.id)}`} className="mt-5 inline-flex min-h-11 items-center rounded-lg bg-[#0058bc] px-5 font-bold text-white">Back to Edit</Link></div>}
     </div>
-    <footer className="sticky bottom-0 flex flex-col gap-3 border-t border-[#d3e4fe] bg-[#f8faff]/95 px-5 py-4 backdrop-blur sm:flex-row sm:items-center sm:justify-between sm:px-7"><p className="text-sm text-[#657080]">Review and save any edits before approving all ideas.<br />Content generation starts after approval.</p>{contentGenerated ? <Link href={`/calendar/content?view=${encodeURIComponent(item.id)}`} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">View Generated Content</Link> : editable && permissions.canApprove && valid ? <button type="button" onClick={onApprove} className="min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">Approve Ideas &amp; Generate Content</button> : null}</footer>
+    <footer className="bp-sticky-actions"><p className="bp-supporting">Review and save any edits before approving all ideas.<br />Content generation starts after approval.</p>{contentGenerated ? <Link href={`/calendar/content?view=${encodeURIComponent(item.id)}`} className="bp-button bp-button-primary">View Generated Content</Link> : editable && permissions.canApprove && valid ? <button type="button" onClick={onApprove} className="bp-button bp-button-primary">Approve Ideas &amp; Generate Content</button> : null}</footer>
   </PageFrame>;
 }
 
@@ -129,6 +132,23 @@ function ManualIdeaCard({ item, idea, editable, highlighted }: { item: ContentWo
 }
 
 function isCompleteManualIdea(idea: AiPlanDraftItem) { return Boolean(idea.title.trim() && idea.coreTopic.trim() && idea.pillarId.trim() && idea.targetAudience.trim() && idea.mainMessage.trim() && idea.assetType.trim() && idea.headline.trim() && idea.caption.trim() && idea.cta.trim() && idea.createdBy?.trim()); }
+
+function IdeaCard({ idea, editing, draft, onEdit, onDraft, onCancel, onSave }: { idea: AiPlanDraftItem; editing: boolean; draft?: AiPlanDraftItem; onEdit: () => void; onDraft: React.Dispatch<React.SetStateAction<AiPlanDraftItem | undefined>>; onCancel: () => void; onSave: () => void }) {
+  const pillar = initialCalendarState.pillars.find((candidate) => candidate.id === idea.pillarId)?.name ?? formatAssetTypeLabel(idea.pillarId);
+  return <article className={`bp-card ${editing ? "border-blue-300 bg-blue-50/40" : ""}`}>
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0"><p className="bp-supporting">{formatDate(idea.publishDate)} · {idea.publishTime || "Time not planned"}</p><h2 className="bp-card-title mt-1 break-words">{idea.title}</h2></div>
+      <button type="button" disabled={editing} onClick={onEdit} className="bp-button bp-button-ghost shrink-0 disabled:opacity-50">{editing ? "Editing" : "Edit"}</button>
+    </div>
+    <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
+      <Meta label="Pillar" value={pillar} />
+      <Meta label="Platform / Format" value={`${formatPlatformLabel(idea.platform)} · ${formatAssetTypeLabel(idea.assetType)}`} />
+      <Meta label="Objective" value={formatAssetTypeLabel(idea.objective)} />
+      <Meta label="Conflict" value={idea.conflicts.length ? `${idea.conflicts.length} issue${idea.conflicts.length === 1 ? "" : "s"}` : "Clear"} />
+    </dl>
+    {editing && draft && <div className="mt-5 border-t border-[var(--bp-border)] pt-5"><IdeaEditor idea={draft} onChange={(values) => onDraft((current) => current ? { ...current, ...values } : current)} /><div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end"><button type="button" onClick={onCancel} className="bp-button bp-button-secondary">Cancel</button><button type="button" disabled={!isComplete(draft)} onClick={onSave} className="bp-button bp-button-primary disabled:opacity-50">Save Idea</button></div></div>}
+  </article>;
+}
 
 function IdeaRow({ idea, editing, draft, onEdit, onDraft, onCancel, onSave }: { idea: AiPlanDraftItem; editing: boolean; draft?: AiPlanDraftItem; onEdit: () => void; onDraft: React.Dispatch<React.SetStateAction<AiPlanDraftItem | undefined>>; onCancel: () => void; onSave: () => void }) {
   const pillar = initialCalendarState.pillars.find((candidate) => candidate.id === idea.pillarId)?.name ?? formatAssetTypeLabel(idea.pillarId);
@@ -162,8 +182,8 @@ function IdeaEditor({ idea, onChange }: { idea: AiPlanDraftItem; onChange: (valu
   </div></div>;
 }
 
-function PageFrame({ children }: { children: React.ReactNode }) { return <main className="min-h-screen bg-[#f3f6fc] px-3 py-5 text-[#0b1c30] sm:px-6 lg:px-10 lg:py-8"><section className="mx-auto max-w-[1180px] overflow-hidden rounded-2xl border border-[#cbdaf0] bg-white shadow-sm">{children}</section></main>; }
-function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label><span className="mb-2 block text-xs font-extrabold uppercase tracking-[.08em] text-[#657080]">{label}</span>{children}</label>; }
+function PageFrame({ children }: { children: React.ReactNode }) { return <main className="bp-page px-4 py-6 pb-24 sm:px-6 lg:px-8"><section className="mx-auto max-w-[1180px] overflow-hidden rounded-xl border border-[var(--bp-border)] bg-white shadow-[var(--bp-shadow-card)]">{children}</section></main>; }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label><span className="bp-label mb-2">{label}</span>{children}</label>; }
 function Meta({ label, value }: { label: string; value: string }) { return <div><dt className="text-[10px] font-extrabold uppercase tracking-[.12em] text-[#8b96a5]">{label}</dt><dd className="mt-1.5 font-bold">{value}</dd></div>; }
 function Loading() { return <div role="status" className="p-8"><p className="font-bold text-[#657080]">Loading Generated Ideas…</p></div>; }
 function Unavailable({ title, description, actionHref = "/calendar/content", actionLabel = "Back to Content List" }: { title: string; description: string; actionHref?: string; actionLabel?: string }) { return <div className="p-8 text-center sm:p-12"><h1 className="text-2xl font-extrabold">{title}</h1><p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-[#657080]">{description}</p><Link href={actionHref} className="mt-6 inline-flex min-h-11 items-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white">{actionLabel}</Link></div>; }

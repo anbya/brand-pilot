@@ -8,6 +8,7 @@ import { assetLibraryMockData } from "@/lib/assets/mock-data";
 import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
 import { formatAssetTypeLabel, formatPlatformLabel, platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
 import type { ContentObjective, ContentPillar, SocialPlatform } from "@/lib/calendar/types";
+import { WizardStepper } from "@/components/ui/wizard-stepper";
 
 export type SchedulePostPayload = ManualPostInput;
 
@@ -17,8 +18,8 @@ type VersionDraft = Omit<SchedulePostPayload["versions"][number], "hashtags"> & 
 type Errors = Record<string, string>;
 
 const steps = ["Strategy", "Platforms", "Idea Draft", "Review"];
-const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
-const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
+const fieldClass = "bp-field";
+const textareaClass = "bp-field";
 
 function createVersion(platform: SocialPlatform, defaultDate: string): VersionDraft {
   void defaultDate;
@@ -62,7 +63,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   const footer = <><button type="button" onClick={requestClose} className="rounded-lg px-4 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#0058bc]">Cancel</button><div className="flex w-full flex-wrap gap-2 min-[480px]:w-auto">{step > 0 && <button type="button" onClick={() => { setErrors({}); setStep((current) => current - 1); }} className="min-h-11 flex-1 rounded-lg border border-[#c5d2e5] bg-white px-5 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] min-[480px]:flex-none">Back</button>}{step < 3 ? <button type="button" onClick={nextStep} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Next</button> : <button type="button" onClick={submit} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Save Draft &amp; Generate Ideas</button>}</div></>;
 
   const content = <>
-    <ol aria-label="Create post steps" className="flex shrink-0 overflow-x-auto border-b border-[#d3e4fe] bg-[#f8faff] px-4 py-3 sm:px-7">{steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={`flex min-w-fit items-center text-xs font-bold ${step === index ? "text-[#0058bc]" : index < step ? "text-emerald-700" : "text-[#8b96a5]"}`}><span className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${step === index ? "bg-[#0058bc] text-white" : index < step ? "bg-emerald-100" : "bg-[#e5eeff]"}`}>{index + 1}</span>{label}{index < steps.length - 1 && <span aria-hidden="true" className="mx-3 h-px w-6 bg-[#c5d2e5] sm:w-10" />}</li>)}</ol>
+    <WizardStepper label="Create post steps" steps={steps} current={step} />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
         {step === 0 && <StrategyStep strategy={strategy} pillars={pillars} errors={errors} onChange={updateStrategy} />}
         {step === 1 && <PlatformStep selected={selectedPlatforms} error={errors.platforms} onToggle={togglePlatform} />}
