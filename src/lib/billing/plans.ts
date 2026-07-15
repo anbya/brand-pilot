@@ -24,6 +24,7 @@ export const pricingPlans = [
 export const pricingPlanById = Object.fromEntries(pricingPlans.map((plan) => [plan.id, plan])) as Record<PricingPlanId, PricingPlan>;
 
 export function formatPlanPrice(plan: PricingPlan): string {
+  if (plan.actionType === "contact_sales") return "-";
   const amount = new Intl.NumberFormat("en-US").format(plan.monthlyPriceCents / 100);
   return `US$${amount}${plan.priceQualifier === "starting_at" ? "+" : ""}/mo`;
 }
