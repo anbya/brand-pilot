@@ -1,4 +1,5 @@
 import type { DashboardUserRole } from "@/lib/dashboard/types";
+import type { PricingPlan, WorkspaceSubscription } from "@/lib/billing/types";
 
 export type AccountSettingsSection = "profile" | "billing" | "subscription";
 
@@ -24,23 +25,5 @@ export interface BillingInformation {
   nextBillingDate: string;
 }
 
-export type SubscriptionStatus = "active" | "trial" | "past_due" | "cancel_scheduled";
-
-export interface SubscriptionInformation {
-  planId: string;
-  planName: string;
-  status: SubscriptionStatus;
-  billingPeriod: "monthly" | "yearly";
-  creditsUsed: number;
-  creditsTotal: number;
-  renewalDate: string;
-  features: string[];
-}
-
-export interface AccountPlan {
-  id: string;
-  name: string;
-  price: string;
-  billingPeriod: "monthly" | "yearly";
-  features: string[];
-}
+export type SubscriptionInformation = WorkspaceSubscription;
+export type AccountPlan = PricingPlan;

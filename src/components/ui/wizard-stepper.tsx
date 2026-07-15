@@ -1,0 +1,3 @@
+export function WizardStepper({ label, steps, current, className = "" }: { label: string; steps: readonly string[]; current: number; className?: string }) {
+  return <ol aria-label={label} className={`bp-stepper ${className}`}>{steps.map((step, index) => { const state = index === current ? "active" : index < current ? "completed" : "upcoming"; return <li key={step} aria-current={state === "active" ? "step" : undefined} data-state={state} className="bp-step"><span className="bp-step-index">{state === "completed" ? <><span aria-hidden="true">✓</span><span className="sr-only">Completed</span></> : index + 1}</span>{step}{index < steps.length - 1 ? <span aria-hidden="true" className="bp-step-connector" /> : null}</li>; })}</ol>;
+}

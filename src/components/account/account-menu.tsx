@@ -5,6 +5,7 @@ import { AccountSettingsDrawer } from "@/components/account/account-settings-dra
 import { DashboardIcon, type DashboardIconName } from "@/components/dashboard/dashboard-icon";
 import { LogoutConfirmationDialog } from "@/components/logout-confirmation-dialog";
 import { accountProfileMock, billingInformationMock, subscriptionInformationMock } from "@/lib/account/mock-data";
+import { pricingPlanById } from "@/lib/billing/plans";
 import { getAccountPermissions } from "@/lib/account/permissions";
 import type { AccountPlan, AccountSettingsSection } from "@/lib/account/types";
 
@@ -63,7 +64,7 @@ export function AccountMenu() {
 
   function openSection(next: AccountSettingsSection) { setOpen(false); setSection(next); }
   function closeDrawer() { setSection(null); window.requestAnimationFrame(() => triggerRef.current?.focus()); }
-  function changePlan(plan: AccountPlan) { setSubscription((current) => ({ ...current, planId: plan.id, planName: plan.name, billingPeriod: plan.billingPeriod, status: "active", features: plan.features })); setToast("Subscription plan updated."); }
+  function changePlan(plan: AccountPlan) { setSubscription((current) => ({ ...current, planId: plan.id, status: "active", assignedCampaignPackLimit: plan.entitlements.defaultCampaignPackLimit, renderCreditLimit: plan.entitlements.renderCreditLimit, canceledAt: undefined })); setToast("Workspace subscription plan updated."); }
 
   const visibleItems = menuItems.filter((item) => item.id === "profile" || item.id === "billing" ? item.id === "profile" || permissions.canViewBilling : permissions.canViewSubscription);
 
@@ -71,12 +72,12 @@ export function AccountMenu() {
     <div ref={rootRef} className="relative min-w-0">
       <button ref={triggerRef} type="button" aria-controls={open ? menuId : undefined} aria-expanded={open} aria-haspopup="menu" aria-label={`Open account menu for ${profile.fullName}`} onClick={() => setOpen((current) => !current)} className={`flex min-h-14 w-full min-w-0 items-center gap-3 rounded-lg p-2 text-left outline-none transition focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-inset ${open ? "bg-[#dce9ff]" : "bg-[#eff4ff] hover:bg-[#e5eeff]"}`}>
         <Avatar initials={profile.initials} />
-        <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-[#0b1c30]">{profile.fullName}</span><span className="block truncate text-xs font-semibold text-[#717786]">{subscription.planName}</span></span>
+        <span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-[#0b1c30]">{profile.fullName}</span><span className="block truncate text-xs font-semibold text-[#717786]">{pricingPlanById[subscription.planId].name}</span></span>
         <DashboardIcon name="chevronDown" className={`h-4 w-4 shrink-0 text-[#657080] transition ${open ? "rotate-180" : ""}`} />
       </button>
 
       {open ? <div id={menuId} role="menu" aria-label="Account menu" onKeyDown={navigate} className="absolute bottom-[calc(100%+.5rem)] left-0 z-[70] max-h-[calc(100dvh-2rem)] w-[min(18rem,calc(100vw-2rem))] overflow-y-auto overflow-x-hidden rounded-xl border border-[#bfd3f2] bg-white p-2 shadow-[0_18px_50px_rgba(7,27,51,.2)] lg:max-h-[calc(100dvh-6rem)] lg:w-72">
-        <div className="flex min-w-0 items-center gap-3 px-3 py-3"><Avatar initials={profile.initials} /><div className="min-w-0"><p className="truncate text-sm font-extrabold text-[#0b1c30]">{profile.fullName}</p><p className="truncate text-xs font-semibold text-[#657080]">{subscription.planName}</p></div></div>
+        <div className="flex min-w-0 items-center gap-3 px-3 py-3"><Avatar initials={profile.initials} /><div className="min-w-0"><p className="truncate text-sm font-extrabold text-[#0b1c30]">{profile.fullName}</p><p className="truncate text-xs font-semibold text-[#657080]">{pricingPlanById[subscription.planId].name}</p></div></div>
         <div className="my-1 h-px bg-[#d3e4fe]" />
         {visibleItems.map((item) => <button key={item.id} type="button" role="menuitem" onClick={() => openSection(item.id)} className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm font-bold text-[#414755] outline-none hover:bg-[#eff4ff] focus-visible:bg-[#e5eeff] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-inset"><DashboardIcon name={item.icon} className="h-[18px] w-[18px] shrink-0 text-[#0058bc]" /><span className="min-w-0 flex-1">{item.label}</span><DashboardIcon name="chevronDown" className="h-4 w-4 shrink-0 -rotate-90 text-[#8a94a3]" /></button>)}
         <div className="my-1 h-px bg-[#d3e4fe]" />
@@ -84,7 +85,7 @@ export function AccountMenu() {
       </div> : null}
     </div>
 
-    {section ? <AccountSettingsDrawer section={section} profile={profile} billing={billing} subscription={subscription} permissions={permissions} onSectionChange={setSection} onUpdateProfile={(next) => { setProfile(next); setToast("Profile updated successfully."); }} onUpdateBilling={(next) => { setBilling(next); setToast("Billing details updated."); }} onChangePlan={changePlan} onCancelSubscription={() => { setSubscription((current) => ({ ...current, status: "cancel_scheduled" })); setToast("Subscription cancellation scheduled."); }} onClose={closeDrawer} /> : null}
+    {section ? <AccountSettingsDrawer section={section} profile={profile} billing={billing} subscription={subscription} permissions={permissions} onSectionChange={setSection} onUpdateProfile={(next) => { setProfile(next); setToast("Profile updated successfully."); }} onUpdateBilling={(next) => { setBilling(next); setToast("Billing details updated."); }} onChangePlan={changePlan} onCancelSubscription={() => { setSubscription((current) => ({ ...current, status: "canceled", canceledAt: new Date().toISOString() })); setToast("Workspace subscription canceled."); }} onClose={closeDrawer} /> : null}
     {logoutOpen ? <LogoutConfirmationDialog onClose={() => { setLogoutOpen(false); window.requestAnimationFrame(() => triggerRef.current?.focus()); }} /> : null}
     {toast ? <div role="status" className="fixed right-4 top-4 z-[120] max-w-sm rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800 shadow-lg">{toast}</div> : null}
   </>;

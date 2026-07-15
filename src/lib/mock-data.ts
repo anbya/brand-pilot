@@ -1,4 +1,5 @@
 import type { SocialPlatform } from "@/lib/platforms";
+import type { CampaignStatus } from "@/lib/campaign-status";
 
 export type AppStatus =
   | "draft"
@@ -11,11 +12,19 @@ export type AppStatus =
 
 export type Campaign = {
   id: string;
+  workspaceId: string;
+  brandId: string;
   name: string;
   goal: "awareness" | "sales" | "promotion" | "education" | "event";
   platforms: SocialPlatform[];
   durationDays: 7 | 14 | 30;
-  status: AppStatus;
+  startDate: string;
+  endDate: string;
+  status: CampaignStatus;
+  campaignPackConsumed: boolean;
+  campaignPackUsageId?: string;
+  publishedAt?: string;
+  publishedBy?: string;
   strategy: string;
   contentPillars: string[];
   postingFrequency: string;
@@ -108,11 +117,19 @@ export const knowledgeBase = [
 export const campaigns: Campaign[] = [
   {
     id: "cmp-1",
+    workspaceId: "workspace-brand-pilot",
+    brandId: "brand-coffee-xyz",
     name: "July Awareness",
     goal: "awareness",
     platforms: ["instagram", "tiktok", "facebook"],
     durationDays: 30,
-    status: "approved",
+    startDate: "2026-07-01",
+    endDate: "2026-07-30",
+    status: "published",
+    campaignPackConsumed: true,
+    campaignPackUsageId: "campaign-pack-cmp-1",
+    publishedAt: "2026-07-01T09:00:00+07:00",
+    publishedBy: "user-sarah-jenkins",
     strategy: "Push brand recall using coffee ritual, store ambiance, and educational reels.",
     contentPillars: ["Education", "Product", "Environment", "Offer"],
     postingFrequency: "5x per week",
@@ -120,11 +137,16 @@ export const campaigns: Campaign[] = [
   },
   {
     id: "cmp-2",
+    workspaceId: "workspace-brand-pilot",
+    brandId: "brand-coffee-xyz",
     name: "Weekend Promo",
     goal: "sales",
     platforms: ["instagram", "facebook"],
     durationDays: 14,
-    status: "review",
+    startDate: "2026-07-01",
+    endDate: "2026-07-14",
+    status: "ready",
+    campaignPackConsumed: false,
     strategy: "Promote bundle menu and drive weekend in-store traffic.",
     contentPillars: ["Offer", "Testimonial", "Menu"],
     postingFrequency: "Daily",

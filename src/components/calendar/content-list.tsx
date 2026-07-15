@@ -13,7 +13,7 @@ import type { AiPlanDraftItem } from "@/lib/calendar/ai-plan-result-types";
 import type { ContentWorkflowFilters, ContentWorkflowItem, ContentWorkflowStage } from "@/lib/calendar/content-workflow-types";
 
 const initialFilters: ContentWorkflowFilters = { query: "", source: "all", stage: "all" };
-const fieldClass = "min-h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
+const fieldClass = "bp-field";
 
 export function ContentList() {
   const [items, setItems] = useState<ContentWorkflowItem[]>([]);

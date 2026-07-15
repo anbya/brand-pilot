@@ -8,6 +8,11 @@ import { assetLibraryMockData } from "@/lib/assets/mock-data";
 import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
 import { formatAssetTypeLabel, formatPlatformLabel, platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
 import type { ContentObjective, ContentPillar, SocialPlatform } from "@/lib/calendar/types";
+import { WizardStepper } from "@/components/ui/wizard-stepper";
+import { isCampaignUsableForContent } from "@/lib/campaign-status";
+import { dashboardMockData } from "@/lib/dashboard/mock-data";
+import { workspaceSubscriptionMock } from "@/lib/billing/mock-data";
+import { validatePlanningRange } from "@/lib/billing/entitlements";
 
 export type SchedulePostPayload = ManualPostInput;
 
@@ -17,8 +22,9 @@ type VersionDraft = Omit<SchedulePostPayload["versions"][number], "hashtags"> & 
 type Errors = Record<string, string>;
 
 const steps = ["Strategy", "Platforms", "Idea Draft", "Review"];
-const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
-const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100";
+const fieldClass = "bp-field";
+const linkedCampaigns = dashboardMockData.campaigns.filter((campaign) => isCampaignUsableForContent(campaign.status));
+const textareaClass = "bp-field";
 
 function createVersion(platform: SocialPlatform, defaultDate: string): VersionDraft {
   void defaultDate;
@@ -52,7 +58,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   function validatePlatforms() { if (selectedPlatforms.length) { setErrors({}); return true; } setErrors({ platforms: "Select at least one platform." }); focusField("platform-instagram"); return false; }
   function validateVersions() {
     const next: Errors = {};
-    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; }
+    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; if (draft.publishDate) { const range = validatePlanningRange({ subscription: workspaceSubscriptionMock, startDate: draft.publishDate, endDate: draft.publishDate, referenceDate: defaultDate }); if (!range.valid) next[`${platform}-publishDate`] = range.message; } }
     setErrors(next); const first = Object.keys(next)[0]; if (first) { const platform = first.split("-")[0] as SocialPlatform; if (selectedPlatforms.includes(platform)) setActivePlatform(platform); focusField(first); } return !first;
   }
   function nextStep() { const valid = step === 0 ? validateStrategy() : step === 1 ? validatePlatforms() : step === 2 ? validateVersions() : true; if (valid) { setErrors({}); setStep((current) => Math.min(current + 1, 3)); } }
@@ -62,7 +68,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   const footer = <><button type="button" onClick={requestClose} className="rounded-lg px-4 py-2.5 text-sm font-bold text-[#657080] outline-none hover:bg-white focus-visible:ring-2 focus-visible:ring-[#0058bc]">Cancel</button><div className="flex w-full flex-wrap gap-2 min-[480px]:w-auto">{step > 0 && <button type="button" onClick={() => { setErrors({}); setStep((current) => current - 1); }} className="min-h-11 flex-1 rounded-lg border border-[#c5d2e5] bg-white px-5 py-2.5 text-sm font-bold outline-none hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] min-[480px]:flex-none">Back</button>}{step < 3 ? <button type="button" onClick={nextStep} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Next</button> : <button type="button" onClick={submit} className="min-h-11 flex-1 rounded-lg bg-[#0058bc] px-5 py-2.5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2 min-[480px]:flex-none">Save Draft &amp; Generate Ideas</button>}</div></>;
 
   const content = <>
-    <ol aria-label="Create post steps" className="flex shrink-0 overflow-x-auto border-b border-[#d3e4fe] bg-[#f8faff] px-4 py-3 sm:px-7">{steps.map((label, index) => <li key={label} aria-current={step === index ? "step" : undefined} className={`flex min-w-fit items-center text-xs font-bold ${step === index ? "text-[#0058bc]" : index < step ? "text-emerald-700" : "text-[#8b96a5]"}`}><span className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${step === index ? "bg-[#0058bc] text-white" : index < step ? "bg-emerald-100" : "bg-[#e5eeff]"}`}>{index + 1}</span>{label}{index < steps.length - 1 && <span aria-hidden="true" className="mx-3 h-px w-6 bg-[#c5d2e5] sm:w-10" />}</li>)}</ol>
+    <WizardStepper label="Create post steps" steps={steps} current={step} />
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-5 sm:px-7 sm:py-6">
         {step === 0 && <StrategyStep strategy={strategy} pillars={pillars} errors={errors} onChange={updateStrategy} />}
         {step === 1 && <PlatformStep selected={selectedPlatforms} error={errors.platforms} onToggle={togglePlatform} />}
@@ -87,7 +93,7 @@ function StrategyStep({ strategy, pillars, errors, onChange }: { strategy: Strat
     <Field id="strategy-brandName" label="Brand Name" optional><input id="strategy-brandName" value={strategy.brandName ?? ""} onChange={(event) => onChange("brandName", event.target.value)} placeholder="Default Brand" className={fieldClass} /></Field>
     <Field id="strategy-brandId" label="Brand ID" optional><input id="strategy-brandId" value={strategy.brandId ?? ""} onChange={(event) => onChange("brandId", event.target.value)} placeholder="brand-default" className={fieldClass} /></Field>
     <Field id="strategy-campaignName" label="Campaign Name" optional><input id="strategy-campaignName" value={strategy.campaignName ?? ""} onChange={(event) => onChange("campaignName", event.target.value)} placeholder="Summer Brew" className={fieldClass} /></Field>
-    <Field id="strategy-campaignId" label="Linked Campaign ID" optional><input id="strategy-campaignId" value={strategy.campaignId ?? ""} onChange={(event) => onChange("campaignId", event.target.value)} placeholder="campaign-summer-brew" className={fieldClass} /></Field>
+    <Field id="strategy-campaignId" label="Linked Campaign" optional><select id="strategy-campaignId" value={strategy.campaignId ?? ""} onChange={(event) => { const campaign = linkedCampaigns.find((candidate) => candidate.id === event.target.value); onChange("campaignId", campaign?.id ?? ""); onChange("campaignName", campaign?.name ?? ""); onChange("brandId", campaign?.brandId ?? "brand-default"); onChange("brandName", campaign?.brandName ?? "Default Brand"); }} className={fieldClass}><option value="">No linked campaign</option>{linkedCampaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select></Field>
     <div className="sm:col-span-2"><Field id="strategy-mainMessage" label="Main Message" error={errors["strategy-mainMessage"]}><textarea id="strategy-mainMessage" value={strategy.mainMessage} onChange={(event) => onChange("mainMessage", event.target.value)} placeholder="Great coffee can be brewed consistently at home." rows={4} aria-invalid={Boolean(errors["strategy-mainMessage"])} className={textareaClass} /></Field></div>
   </div></div>;
 }

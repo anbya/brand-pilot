@@ -1,9 +1,7 @@
 import type { ManualPostStatus } from "@/lib/calendar/manual-post-types";
+import { StatusBadge, type StatusTone } from "@/components/ui/status-badge";
 
-const statusMap: Record<ManualPostStatus, { label: string; className: string }> = {
-  draft: { label: "Draft", className: "bg-slate-100 text-slate-700" },
-  pending_approval: { label: "Pending Approval", className: "bg-amber-50 text-amber-800" },
-  changes_requested: { label: "Changes Requested", className: "bg-rose-50 text-rose-800" },
-  scheduled: { label: "Scheduled", className: "bg-blue-50 text-blue-800" },
+const statusMap: Record<ManualPostStatus, { label: string; tone: StatusTone }> = {
+  draft: { label: "Draft", tone: "neutral" }, pending_approval: { label: "Pending Approval", tone: "warning" }, changes_requested: { label: "Changes Requested", tone: "danger" }, scheduled: { label: "Scheduled", tone: "info" },
 };
-export function PostDraftStatusBadge({ status }: { status: ManualPostStatus }) { const value = statusMap[status]; return <span className={`rounded-full px-3 py-1 text-[10px] font-extrabold uppercase tracking-[.08em] ${value.className}`}>{value.label}</span>; }
+export function PostDraftStatusBadge({ status }: { status: ManualPostStatus }) { const value = statusMap[status]; return <StatusBadge tone={value.tone}>{value.label}</StatusBadge>; }

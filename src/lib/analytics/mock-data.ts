@@ -3,11 +3,11 @@ import { ANALYTICS_REFERENCE_TIME } from "@/lib/analytics/constants";
 import type { AnalyticsCampaign, AnalyticsContentType, AnalyticsDataSource, AnalyticsPerformanceRecord, AnalyticsPlatform } from "@/lib/analytics/types";
 
 export const analyticsCampaigns: AnalyticsCampaign[] = [
-  { id: "campaign-july-promotion", brandId: "brand-coffee-xyz", name: "July Promotion", status: "active" },
-  { id: "campaign-education-series", brandId: "brand-coffee-xyz", name: "Education Series", status: "active" },
-  { id: "campaign-summer-wellness", brandId: "brand-skincare-abc", name: "Summer Wellness", status: "active" },
-  { id: "campaign-healthy-habits", brandId: "brand-klinik-sehat", name: "Healthy Habits", status: "active" },
-  { id: "campaign-weekend-promo", brandId: "brand-coffee-xyz", name: "Weekend Promo", status: "completed" },
+  { id: "campaign-july-promotion", brandId: "brand-coffee-xyz", name: "July Promotion", status: "published" },
+  { id: "campaign-education-series", brandId: "brand-coffee-xyz", name: "Education Series", status: "ready" },
+  { id: "campaign-summer-wellness", brandId: "brand-skincare-abc", name: "Summer Wellness", status: "blueprint" },
+  { id: "campaign-healthy-habits", brandId: "brand-klinik-sehat", name: "Healthy Habits", status: "published" },
+  { id: "campaign-weekend-promo", brandId: "brand-coffee-xyz", name: "Weekend Promo", status: "published" },
 ];
 
 type RecordSeed = [string, string, AnalyticsPlatform, AnalyticsContentType, string, string, number, number, number, number, number, number, number, number, number, number, number, number];

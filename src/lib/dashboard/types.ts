@@ -1,6 +1,8 @@
 import type { SocialPlatform } from "@/lib/platforms";
+import type { CampaignStatus } from "@/lib/campaign-status";
+import type { RenderCreditUsage, WorkspaceSubscription } from "@/lib/billing/types";
 
-export type DashboardCampaignStatus = "draft" | "planning" | "active" | "paused" | "completed";
+export type DashboardCampaignStatus = CampaignStatus;
 export type DashboardUserRole = "admin" | "manager" | "editor" | "viewer";
 export type DashboardPlatform = SocialPlatform;
 export type DashboardAttentionType = "failed_publish" | "overdue" | "approval" | "missing_asset" | "low_credit";
@@ -27,7 +29,9 @@ export interface DashboardCampaignSummary { id: string; brandId: string; brandNa
 export interface DashboardAttentionItem { id: string; brandId?: string; campaignId?: string; scope: "brand" | "workspace"; type: DashboardAttentionType; title: string; description: string; count: number; countLabel: string; occurredAt: string; href?: "/calendar" | "/assets" }
 export interface DashboardActivity { id: string; scope: "brand" | "workspace"; brandId?: string; brandName?: string; campaignId?: string; type: DashboardActivityType; actorName: string; actorInitials: string; action: string; entityName: string; supportingContext?: string; occurredAt: string; href?: DashboardActivityHref }
 export interface DashboardActivityView extends DashboardActivity { relativeTime: string; absoluteTime: string }
-export interface DashboardCalculatedCreditUsage { remaining: number; used: number; usedPercentage: number; total: number }
+export type DashboardCalculatedCreditUsage =
+  | { unlimited: true; remaining: null; used: number; usedPercentage: null; total: null; planName: string }
+  | { unlimited: false; remaining: number; used: number; usedPercentage: number; total: number; planName: string };
 export type DashboardPercentageChange = { state: "percentage"; percentage: number } | { state: "no-baseline"; percentage: null };
 
 export interface DashboardDataSource {
@@ -35,7 +39,8 @@ export interface DashboardDataSource {
   brands: DashboardBrand[];
   dateRanges: DashboardDateRange[];
   metrics: DashboardMetric[];
-  creditUsage: DashboardCreditUsage;
+  workspaceSubscription: WorkspaceSubscription;
+  renderCreditUsages: RenderCreditUsage[];
   referenceTime: string;
   campaigns: DashboardCampaignSummary[];
   attentionItems: DashboardAttentionItem[];

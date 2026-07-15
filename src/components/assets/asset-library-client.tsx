@@ -7,6 +7,7 @@ import { dashboardMockData } from "@/lib/dashboard/mock-data";
 import { getAssetLibraryPermissions } from "@/lib/assets/permissions";
 import { kindFromMime, mockPreviewDataUrl, readAssetLibrary, subscribeToAssetLibrary, writeAssetLibrary } from "@/lib/assets/store";
 import type { AssetKind, WorkspaceAsset } from "@/lib/assets/types";
+import { PageHeader } from "@/components/ui/page-header";
 
 const kinds: Array<{ value: AssetKind | "all"; label: string }> = [
   { value: "all", label: "All file types" }, { value: "image", label: "Photos & Images" },
@@ -48,11 +49,11 @@ export function AssetLibraryClient() {
     ["In Campaigns", assets.filter((asset) => asset.campaignIds.length).length], ["Generated Outputs", assets.filter((asset) => asset.source === "ai-generation" || asset.source === "logo-render").length],
   ];
 
-  return <main className="min-h-screen bg-[#f8f9ff] px-4 py-6 text-[#0b1c30] sm:px-6 lg:px-10 lg:py-8">
-    <div className="mx-auto max-w-[1440px]">
-      <header className="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between"><div><p className="text-xs font-extrabold uppercase tracking-[.16em] text-[#0058bc]">Workspace Assets</p><h1 className="mt-2 text-3xl font-black tracking-[-.03em] sm:text-4xl">Asset Library</h1><p className="mt-2 max-w-2xl text-sm leading-6 text-[#657080]">The single source for uploaded files, generated visuals, logo renders, and every asset relationship.</p></div>{permissions.canUpload ? <button type="button" onClick={() => setUploadOpen(true)} className="inline-flex min-h-12 items-center justify-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white hover:bg-[#004493]">Upload Asset</button> : null}</header>
+  return <main className="bp-page">
+    <div className="bp-page-container">
+      <PageHeader eyebrow="Workspace Assets" title="Asset Library" description="The single source for uploaded files, generated visuals, logo renders, and every asset relationship." actions={permissions.canUpload ? <button type="button" onClick={() => setUploadOpen(true)} className="bp-button bp-button-primary">Upload Asset</button> : null} />
 
-      <section aria-label="Asset library summary" className="mt-7 grid grid-cols-2 gap-3 lg:grid-cols-4">{stats.map(([label, value]) => <article key={label} className="rounded-xl border border-[#d3e4fe] bg-white p-4 shadow-sm"><p className="text-2xl font-black">{value}</p><p className="mt-1 text-xs font-bold text-[#657080]">{label}</p></article>)}</section>
+      <section aria-label="Asset library summary" className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">{stats.map(([label, value]) => <article key={label} className="bp-card"><p className="text-2xl font-extrabold">{value}</p><p className="bp-supporting mt-1">{label}</p></article>)}</section>
 
       <section aria-label="Asset filters" className="mt-6 grid gap-3 rounded-xl border border-[#d3e4fe] bg-white p-4 sm:grid-cols-2 xl:grid-cols-[1fr_220px_220px_auto]"><label><span className="sr-only">Search assets</span><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search name, filename, description, or tag" className={fieldClass} /></label><label><span className="sr-only">Filter file type</span><select value={kind} onChange={(event) => setKind(event.target.value as AssetKind | "all")} className={fieldClass}>{kinds.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</select></label><label><span className="sr-only">Filter brand</span><select value={brandId} onChange={(event) => setBrandId(event.target.value)} className={fieldClass}><option value="all">All brands</option>{dashboardMockData.brands.map((brand) => <option key={brand.id} value={brand.id}>{brand.name}</option>)}</select></label><button type="button" onClick={() => { setQuery(""); setKind("all"); setBrandId("all"); }} className="min-h-11 rounded-lg border border-[#c5d2e5] px-4 text-sm font-bold text-[#414755] hover:bg-[#eff4ff]">Clear Filters</button></section>
 
@@ -96,9 +97,9 @@ function formatBytes(value: number) { if (value < 1024) return `${value} B`; if 
 function formatDate(value: string) { return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value)); }
 function displayName(value: string) { return value.replace(/\.[^.]+$/, "").replace(/[-_]+/g, " ").replace(/\b\w/g, (letter) => letter.toUpperCase()); }
 function withRelationshipUsage(asset: WorkspaceAsset): WorkspaceAsset { const preserved = asset.usage.filter((item) => item.type !== "brand" && item.type !== "campaign"); return { ...asset, usage: [...preserved, ...asset.brandIds.map((id) => ({ type: "brand" as const, entityId: id, label: dashboardMockData.brands.find((brand) => brand.id === id)?.name ?? id })), ...asset.campaignIds.map((id) => ({ type: "campaign" as const, entityId: id, label: dashboardMockData.campaigns.find((campaign) => campaign.id === id)?.name ?? id }))] }; }
-const fieldClass = "h-11 w-full rounded-lg border border-[#c5d2e5] bg-white px-3 text-sm text-[#0b1c30] outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100 read-only:bg-[#f8faff]";
-const textareaClass = "w-full resize-y rounded-lg border border-[#c5d2e5] bg-white p-3 text-sm leading-6 outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100 read-only:bg-[#f8faff]";
-const labelClass = "grid gap-2 text-xs font-extrabold uppercase tracking-[.12em] text-[#657080]";
-const primaryButton = "min-h-11 rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white hover:bg-[#004493]";
-const secondaryButton = "min-h-11 rounded-lg border border-[#c5d2e5] bg-white px-5 text-sm font-bold text-[#414755] hover:bg-[#eff4ff]";
-const dangerButton = "min-h-11 rounded-lg border border-rose-300 bg-white px-5 text-sm font-bold text-rose-700 hover:bg-rose-50";
+const fieldClass = "bp-field read-only:bg-[var(--bp-surface-muted)]";
+const textareaClass = "bp-field read-only:bg-[var(--bp-surface-muted)]";
+const labelClass = "bp-label grid gap-2";
+const primaryButton = "bp-button bp-button-primary";
+const secondaryButton = "bp-button bp-button-secondary";
+const dangerButton = "bp-button bp-button-danger";

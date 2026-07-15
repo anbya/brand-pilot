@@ -24,7 +24,7 @@ type WorkflowDay = Omit<CampaignDay, "assets"> & { assets: WorkflowAsset[] };
 type WorkflowRow = WorkflowAsset & { dayNumber: number; scheduledDate: string };
 type DayGroup = { dayNumber: number; scheduledDate: string; assets: WorkflowRow[] };
 type ViewMode = "list" | "calendar";
-type FilterValue = "ALL" | WorkflowStatus;
+type FilterValue = "ALL" | Extract<WorkflowStatus, "BLUEPRINT" | "READY" | "PUBLISHED">;
 type EditableAssetFields = Pick<WorkflowAsset, "platform" | "assetType" | "publishTime" | "coreTopic" | "caption">;
 const platformAssetTypes: Record<SocialPlatformLabel, string[]> = {
   Instagram: ["Carousel", "Reel", "Story", "Single Image Post", "Poll Story"],
@@ -98,7 +98,7 @@ export function CampaignAssetMap({ initialDays }: { initialDays: CampaignDay[] }
         </div>
         <label className="flex w-fit items-center gap-2 text-sm font-semibold text-[#717786]">Filter:
           <select aria-label="Filter assets by status" value={filter} onChange={(event) => setFilter(event.target.value as FilterValue)} className="rounded-lg border border-[#d3e4fe] bg-white px-3 py-2 text-sm font-bold text-[#0b1c30] outline-none focus:border-[#0058bc] focus:ring-2 focus:ring-blue-100">
-            <option value="ALL">All Stages</option><option value="BLUEPRINT">Blueprint</option><option value="GENERATING">Generating</option><option value="READY">Ready</option><option value="PUBLISHED">Published</option><option value="ARCHIVED">Archived</option>
+            <option value="ALL">All Stages</option><option value="BLUEPRINT">Blueprint</option><option value="READY">Ready</option><option value="PUBLISHED">Published</option>
           </select>
         </label>
       </div>

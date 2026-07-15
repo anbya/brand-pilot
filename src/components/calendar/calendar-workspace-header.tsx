@@ -25,12 +25,12 @@ export type CalendarWorkspaceHeaderProps = CalendarHeaderProps | ListHeaderProps
 
 export function CalendarWorkspaceHeader(props: CalendarWorkspaceHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-[#d3e4fe]/70 bg-[#f8f9ff]/90 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-10">
+    <header className="sticky top-0 z-30 border-b border-[var(--bp-border)] bg-white/95 px-4 py-4 backdrop-blur-md sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-[1440px] flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-5">
           <div>
-            <h1 className="text-xl font-extrabold">Content Calendar</h1>
-            <p className="mt-1 text-sm text-[#657080]">Plan and review every platform version in one place.</p>
+            <h1 className="text-[28px] font-extrabold leading-9 tracking-[-.025em] sm:text-[32px] sm:leading-10">Content Calendar</h1>
+            <p className="mt-1 text-sm leading-[22px] text-[var(--bp-text-secondary)]">Plan and review every platform version in one place.</p>
           </div>
           {props.variant === "calendar" && (
             <div aria-label="Calendar view" className="flex w-full rounded-lg bg-[#e5eeff] p-1 sm:w-fit">
@@ -47,9 +47,9 @@ export function CalendarWorkspaceHeader(props: CalendarWorkspaceHeaderProps) {
             {teamImages.map((src) => <Image key={src} src={src} width={32} height={32} alt="" className="h-8 w-8 rounded-full border-2 border-[#f8f9ff] object-cover" />)}
             <span aria-hidden="true" className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-[#f8f9ff] bg-[#0070eb] text-[10px] font-extrabold text-white">+3</span>
           </div>
-          {props.variant === "calendar" && <button type="button" onClick={props.onResetDemoData} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#c93838] px-4 text-sm font-bold text-[#a52222] outline-none hover:bg-[#fff0f0] focus-visible:ring-2 focus-visible:ring-[#c93838]">Reset Demo Data</button>}
-          {props.variant === "calendar" && props.canCreateAiPlan && <Link href="/calendar/ai-plan/new" className="inline-flex min-h-11 items-center justify-center rounded-lg border border-[#4648d4] px-4 text-sm font-bold text-[#4648d4] outline-none hover:bg-[#e1e0ff] focus-visible:ring-2 focus-visible:ring-[#4648d4]">AI Plan Content</Link>}
-          {props.variant === "calendar" && props.canCreatePost && <Link href="/calendar/content/new" className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0058bc] px-4 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">+ Create Post</Link>}
+          {props.variant === "calendar" && <button type="button" onClick={props.onResetDemoData} className="bp-button bp-button-danger">Reset Demo Data</button>}
+          {props.variant === "calendar" && props.canCreateAiPlan && <Link href="/calendar/ai-plan/new" className="bp-button bp-button-secondary text-[#4648d4]">AI Plan Content</Link>}
+          {props.variant === "calendar" && props.canCreatePost && <Link href="/calendar/content/new" className="bp-button bp-button-primary">+ Create Post</Link>}
           {props.variant === "planning-briefs" && props.canCreate && <PrimaryAction href="/calendar/ai-plan/new">Create Planning Brief</PrimaryAction>}
           {props.variant === "post-drafts" && props.canCreate && <PrimaryAction href="/calendar/content/new">Create Post</PrimaryAction>}
           {props.variant === "content-list" && props.canCreate && <><PrimaryAction href="/calendar/ai-plan/new">AI Plan Content</PrimaryAction><PrimaryAction href="/calendar/content/new">Create Post</PrimaryAction></>}
@@ -60,5 +60,5 @@ export function CalendarWorkspaceHeader(props: CalendarWorkspaceHeaderProps) {
 }
 
 function PrimaryAction({ href, children }: { href: string; children: React.ReactNode }) {
-  return <Link href={href} className="inline-flex min-h-11 items-center justify-center rounded-lg bg-[#0058bc] px-5 text-sm font-bold text-white outline-none hover:bg-[#004493] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2">{children}</Link>;
+  return <Link href={href} className="bp-button bp-button-primary">{children}</Link>;
 }

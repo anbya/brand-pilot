@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ApproveAllBlueprintsButton, CampaignAssetMap, type CampaignDay, type ContentAsset } from "@/components/campaign-asset-map";
+import { CampaignStatusBadge } from "@/components/campaign-status-badge";
+import { normalizeCampaignStatus, type CampaignStatus } from "@/lib/campaign-status";
 import { isSocialPlatform, socialPlatformLabels, socialPlatforms, type SocialPlatformLabel } from "@/lib/platforms";
 
 type IconName =
@@ -23,6 +25,7 @@ type IconName =
   | "spark";
 
 type CampaignBlueprint = {
+  status: CampaignStatus;
   name: string;
   primaryObjective: string;
   targetPlatforms: SocialPlatformLabel[];
@@ -32,6 +35,7 @@ type CampaignBlueprint = {
 };
 
 const defaultCampaign: CampaignBlueprint = {
+  status: "blueprint",
   name: "July Awareness",
   primaryObjective: "Brand Awareness & Engagement",
   targetPlatforms: socialPlatforms.map((platform) => socialPlatformLabels[platform]),
@@ -50,9 +54,9 @@ export default async function CampaignBlueprintPage({
   const durationDays = getDurationDays(campaign.startDate, campaign.endDate);
 
   return (
-    <main className="min-h-screen bg-[#f8f9ff] text-[#0b1c30]">
+    <main className="bp-page">
 
-      <section className="mx-auto min-h-screen w-full max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+      <section className="bp-page-container min-h-screen">
         <header className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div>
             <nav className="flex items-center gap-2 text-xs font-semibold text-[#717786]">
@@ -60,17 +64,15 @@ export default async function CampaignBlueprintPage({
               <Icon name="chevronRight" className="h-4 w-4" />
               <span className="text-[#0b1c30]">{campaign.name}</span>
             </nav>
-            <h1 className="mt-3 text-3xl font-extrabold leading-tight text-[#0b1c30] sm:text-5xl">
-              Campaign Blueprint
-            </h1>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-[#414755] sm:text-base">
+            <div className="mt-3 flex flex-wrap items-center gap-3"><h1 className="bp-page-title mt-0">Campaign Blueprint</h1><CampaignStatusBadge status={campaign.status} /></div>
+            <p className="bp-page-description mt-3">
               AI has generated your {durationDays}-day strategy. Review the asset sequence
               and approve all blueprint assets when they are ready.
             </p>
           </div>
 
           <Link
-            className="inline-flex min-h-11 items-center rounded-lg border border-[#c1c6d7] bg-white px-5 py-3 text-sm font-bold text-[#0b1c30] outline-none transition hover:bg-[#eff4ff] focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2"
+            className="bp-button bp-button-secondary"
             href="/campaigns"
           >
             Back to Campaigns
@@ -78,7 +80,7 @@ export default async function CampaignBlueprintPage({
         </header>
 
         <div className="mt-8 grid grid-cols-12 gap-6">
-          <section className="col-span-12 rounded-lg border border-[#d3e4fe]/70 bg-white p-6 shadow-sm lg:col-span-4">
+          <section className="bp-card col-span-12 lg:col-span-4">
             <div className="mb-6 flex items-center justify-between gap-4">
               <h2 className="text-xl font-bold text-[#0b1c30]">Strategy Specs</h2>
               <span className="rounded-full bg-emerald-50 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.14em] text-emerald-700">
@@ -139,11 +141,11 @@ export default async function CampaignBlueprintPage({
             </div>
           </section>
 
-          <section className="col-span-12 overflow-hidden rounded-lg border border-[#d3e4fe]/70 bg-white shadow-sm lg:col-span-8">
+          <section className="col-span-12 overflow-hidden rounded-xl border border-[var(--bp-border)] bg-white shadow-[var(--bp-shadow-sm)] lg:col-span-8">
             <CampaignAssetMap initialDays={campaignDays} />
           </section>
 
-          <section className="col-span-12 rounded-lg border border-[#d3e4fe]/70 bg-white p-6 shadow-sm sm:p-8">
+          <section className="bp-card col-span-12 sm:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:gap-6">
                 <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full bg-[#e1e0ff] text-[#4648d4]">
@@ -180,6 +182,7 @@ export default async function CampaignBlueprintPage({
 
 function parseCampaign(searchParams: Record<string, string | string[] | undefined>): CampaignBlueprint {
   return {
+    status: normalizeCampaignStatus(getSearchValue(searchParams.status, defaultCampaign.status), { complete: true }),
     name: getSearchValue(searchParams.name, defaultCampaign.name),
     primaryObjective: getSearchValue(searchParams.objective, defaultCampaign.primaryObjective),
     targetPlatforms: normalizePlatformLabels(getSearchList(searchParams.platforms, defaultCampaign.targetPlatforms)),

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { pricingPlans } from "@/lib/mock-data";
+import { formatPlanPrice, pricingPlans } from "@/lib/billing/plans";
 
 const heroImage =
   "https://lh3.googleusercontent.com/aida-public/AB6AXuBJVdpDsfj5vd2FcxTPMC2q2ua4toLMgTVRtn7hlXWaiDroPyWWUqJR88s2VxAJS5HS2N2LIs7iiEbrX2NcNfsCfJqI5-ixhXb8u-EvQkK9Bx1P_pHGOMqXIrt4pXcv0B33q4vAI5zOBnoHpZPDmuHVSk6fJcHJwjzRNkryAN9481paxdbXM2k64Twa7POSmfmYXDQ_405XvY3zspvZ6e2xs4PVf6AKcxmtIPSB7KahZ2b_DhV4BiM0";
@@ -369,34 +369,34 @@ function PricingSection() {
             Business Model
           </p>
           <h2 className="mt-4 text-4xl font-bold leading-tight text-slate-950 sm:text-5xl">
-            Freemium planning, paid rendering.
+            Freemium planning,<br />paid rendering.
           </h2>
         </div>
 
         <div className="mt-12 grid gap-6 xl:grid-cols-3">
-          {pricingPlans.map((plan, index) => (
+          {pricingPlans.map((plan) => (
             <article
-              key={plan.name}
+              key={plan.id}
               className={`rounded-[2rem] border bg-white p-8 shadow-[0_30px_80px_rgba(15,23,42,0.10)] transition hover:-translate-y-1 ${
-                index === 1 ? "border-blue-300 bg-blue-50/40" : "border-slate-200/80"
+                plan.highlighted ? "border-blue-300 bg-blue-50/40" : "border-slate-200/80"
               }`}
             >
               <p className="text-2xl font-bold text-slate-950">{plan.name}</p>
               <p className="mt-5 text-4xl font-bold tracking-tight text-slate-950">
-                {plan.price}
+                {formatPlanPrice(plan)}
               </p>
               <p className="mt-6 max-w-md text-lg leading-9 text-slate-500">
                 {plan.description}
               </p>
               <Link
-                href="/onboarding/account"
+                href="/pricing"
                 className={`mt-8 inline-flex items-center justify-center rounded-full px-5 py-3 text-sm font-semibold transition ${
-                  index === 1
+                  plan.highlighted
                     ? "bg-blue-600 text-white hover:bg-blue-700"
                     : "border border-slate-200 text-slate-700 hover:bg-slate-50"
                 }`}
               >
-                {plan.name === "Custom" ? "Talk to Sales" : "Choose Plan"}
+                {plan.actionLabel}
               </Link>
             </article>
           ))}

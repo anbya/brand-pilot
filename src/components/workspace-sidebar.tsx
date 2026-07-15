@@ -27,19 +27,19 @@ export function WorkspaceSidebar() {
   const pathname = usePathname();
 
   return (
-    <aside className="min-w-0 border-b border-[#d3e4fe] bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col lg:border-b-0 lg:border-r">
+    <aside className="min-w-0 border-b border-[var(--bp-border)] bg-white lg:fixed lg:inset-y-0 lg:left-0 lg:z-40 lg:flex lg:w-64 lg:flex-col lg:border-b-0 lg:border-r">
       <div className="flex min-w-0 items-center px-4 py-4 lg:block lg:p-4">
         <Link
           aria-label="AI Marketing OS dashboard"
           className="flex min-w-0 items-center gap-3 rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-offset-2"
           href="/dashboard"
         >
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0058bc] text-white">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--bp-primary)] text-white shadow-sm">
             <DashboardIcon name="check" className="h-5 w-5" />
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-extrabold text-[#0058bc] min-[375px]:text-base">AI Marketing OS</span>
-            <span className="hidden text-[10px] font-bold uppercase tracking-[0.18em] text-[#717786] min-[375px]:block">Enterprise Suite</span>
+            <span className="block truncate text-sm font-extrabold text-[var(--bp-primary)] min-[375px]:text-base">AI Marketing OS</span>
+            <span className="hidden text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--bp-text-muted)] min-[375px]:block">Enterprise Suite</span>
           </span>
         </Link>
       </div>
@@ -51,7 +51,7 @@ export function WorkspaceSidebar() {
             <Link
               key={item.href}
               aria-current={active ? "page" : undefined}
-              className={`inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg px-4 py-3 text-sm font-bold outline-none transition focus-visible:ring-2 focus-visible:ring-[#0058bc] focus-visible:ring-inset ${active ? "bg-[#0070eb] text-white" : "text-[#414755] hover:bg-[#eff4ff] hover:text-[#0b1c30]"}`}
+              className={`inline-flex min-h-11 shrink-0 items-center gap-3 rounded-lg px-4 py-2.5 text-sm font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-[var(--bp-focus)] focus-visible:ring-inset ${active ? "bg-[var(--bp-primary)] text-white shadow-sm" : "text-[var(--bp-text-secondary)] hover:bg-[var(--bp-surface-accent)] hover:text-[var(--bp-text)]"}`}
               href={item.href}
             >
               <DashboardIcon name={item.icon} className="h-5 w-5" />
@@ -61,7 +61,7 @@ export function WorkspaceSidebar() {
         })}
       </nav>
 
-      <div className="relative border-t border-[#d3e4fe] p-3 lg:p-4">
+      <div className="relative border-t border-[var(--bp-border)] p-3 lg:p-4">
         <AccountMenu />
       </div>
     </aside>

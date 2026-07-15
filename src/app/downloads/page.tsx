@@ -31,7 +31,7 @@ export default function DownloadsPage() {
         <Card>
           <SectionTitle
             title="Download packages"
-            description="Kampanye approved dan status packaging."
+            description="Published campaigns and their packaging status."
           />
           <Table
             headers={["Campaign", "ZIP Asset", "File Type", "Status"]}
@@ -43,7 +43,7 @@ export default function DownloadsPage() {
                 zipAsset?.format ?? "ZIP",
                 <StatusBadge
                   key={`${campaign.id}-status`}
-                  status={campaign.status === "approved" ? "completed" : "queued"}
+                  status={campaign.status === "published" ? "completed" : "queued"}
                 />,
               ];
             })}
