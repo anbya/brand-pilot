@@ -1,5 +1,6 @@
 import type { DashboardUser, DashboardUserRole } from "@/lib/dashboard/types";
 import type { SocialPlatform } from "@/lib/platforms";
+import type { CampaignStatus } from "@/lib/campaign-status";
 
 export type AnalyticsPlatform = SocialPlatform;
 export type AnalyticsContentType = "image" | "video" | "carousel" | "story" | "document";
@@ -18,7 +19,7 @@ export interface AnalyticsFilters {
 }
 
 export interface AnalyticsBrand { id: string; name: string }
-export interface AnalyticsCampaign { id: string; brandId: string; name: string; status: "active" | "completed" | "draft" | "planning" }
+export interface AnalyticsCampaign { id: string; brandId: string; name: string; status: CampaignStatus }
 
 export interface AnalyticsPerformanceRecord {
   id: string;

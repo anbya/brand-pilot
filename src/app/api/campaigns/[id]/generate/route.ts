@@ -7,6 +7,6 @@ export async function POST(
   return Response.json({
     message: "Campaign generation started",
     campaignId: id,
-    status: "generating",
+    operationStatus: "generating",
   });
 }

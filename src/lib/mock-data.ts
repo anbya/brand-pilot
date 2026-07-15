@@ -1,4 +1,5 @@
 import type { SocialPlatform } from "@/lib/platforms";
+import type { CampaignStatus } from "@/lib/campaign-status";
 
 export type AppStatus =
   | "draft"
@@ -15,7 +16,7 @@ export type Campaign = {
   goal: "awareness" | "sales" | "promotion" | "education" | "event";
   platforms: SocialPlatform[];
   durationDays: 7 | 14 | 30;
-  status: AppStatus;
+  status: CampaignStatus;
   strategy: string;
   contentPillars: string[];
   postingFrequency: string;
@@ -112,7 +113,7 @@ export const campaigns: Campaign[] = [
     goal: "awareness",
     platforms: ["instagram", "tiktok", "facebook"],
     durationDays: 30,
-    status: "approved",
+    status: "published",
     strategy: "Push brand recall using coffee ritual, store ambiance, and educational reels.",
     contentPillars: ["Education", "Product", "Environment", "Offer"],
     postingFrequency: "5x per week",
@@ -124,7 +125,7 @@ export const campaigns: Campaign[] = [
     goal: "sales",
     platforms: ["instagram", "facebook"],
     durationDays: 14,
-    status: "review",
+    status: "ready",
     strategy: "Promote bundle menu and drive weekend in-store traffic.",
     contentPillars: ["Offer", "Testimonial", "Menu"],
     postingFrequency: "Daily",

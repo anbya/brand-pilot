@@ -9,6 +9,8 @@ import type { ManualPostInput } from "@/lib/calendar/manual-post-types";
 import { formatAssetTypeLabel, formatPlatformLabel, platformAssetTypes, platformOptions } from "@/lib/calendar/platform-options";
 import type { ContentObjective, ContentPillar, SocialPlatform } from "@/lib/calendar/types";
 import { WizardStepper } from "@/components/ui/wizard-stepper";
+import { isCampaignUsableForContent } from "@/lib/campaign-status";
+import { dashboardMockData } from "@/lib/dashboard/mock-data";
 
 export type SchedulePostPayload = ManualPostInput;
 
@@ -19,6 +21,7 @@ type Errors = Record<string, string>;
 
 const steps = ["Strategy", "Platforms", "Idea Draft", "Review"];
 const fieldClass = "bp-field";
+const linkedCampaigns = dashboardMockData.campaigns.filter((campaign) => isCampaignUsableForContent(campaign.status));
 const textareaClass = "bp-field";
 
 function createVersion(platform: SocialPlatform, defaultDate: string): VersionDraft {
@@ -88,7 +91,7 @@ function StrategyStep({ strategy, pillars, errors, onChange }: { strategy: Strat
     <Field id="strategy-brandName" label="Brand Name" optional><input id="strategy-brandName" value={strategy.brandName ?? ""} onChange={(event) => onChange("brandName", event.target.value)} placeholder="Default Brand" className={fieldClass} /></Field>
     <Field id="strategy-brandId" label="Brand ID" optional><input id="strategy-brandId" value={strategy.brandId ?? ""} onChange={(event) => onChange("brandId", event.target.value)} placeholder="brand-default" className={fieldClass} /></Field>
     <Field id="strategy-campaignName" label="Campaign Name" optional><input id="strategy-campaignName" value={strategy.campaignName ?? ""} onChange={(event) => onChange("campaignName", event.target.value)} placeholder="Summer Brew" className={fieldClass} /></Field>
-    <Field id="strategy-campaignId" label="Linked Campaign ID" optional><input id="strategy-campaignId" value={strategy.campaignId ?? ""} onChange={(event) => onChange("campaignId", event.target.value)} placeholder="campaign-summer-brew" className={fieldClass} /></Field>
+    <Field id="strategy-campaignId" label="Linked Campaign" optional><select id="strategy-campaignId" value={strategy.campaignId ?? ""} onChange={(event) => { const campaign = linkedCampaigns.find((candidate) => candidate.id === event.target.value); onChange("campaignId", campaign?.id ?? ""); onChange("campaignName", campaign?.name ?? ""); onChange("brandId", campaign?.brandId ?? "brand-default"); onChange("brandName", campaign?.brandName ?? "Default Brand"); }} className={fieldClass}><option value="">No linked campaign</option>{linkedCampaigns.map((campaign) => <option key={campaign.id} value={campaign.id}>{campaign.name}</option>)}</select></Field>
     <div className="sm:col-span-2"><Field id="strategy-mainMessage" label="Main Message" error={errors["strategy-mainMessage"]}><textarea id="strategy-mainMessage" value={strategy.mainMessage} onChange={(event) => onChange("mainMessage", event.target.value)} placeholder="Great coffee can be brewed consistently at home." rows={4} aria-invalid={Boolean(errors["strategy-mainMessage"])} className={textareaClass} /></Field></div>
   </div></div>;
 }

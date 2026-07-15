@@ -1,6 +1,7 @@
 import type { SocialPlatform } from "@/lib/platforms";
+import type { CampaignStatus } from "@/lib/campaign-status";
 
-export type DashboardCampaignStatus = "draft" | "planning" | "active" | "paused" | "completed";
+export type DashboardCampaignStatus = CampaignStatus;
 export type DashboardUserRole = "admin" | "manager" | "editor" | "viewer";
 export type DashboardPlatform = SocialPlatform;
 export type DashboardAttentionType = "failed_publish" | "overdue" | "approval" | "missing_asset" | "low_credit";

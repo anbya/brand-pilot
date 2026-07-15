@@ -5,8 +5,8 @@ export async function POST(
   const { id } = await context.params;
 
   return Response.json({
-    message: "Campaign approved",
+    message: "Campaign published",
     campaignId: id,
-    status: "approved",
+    status: "published",
   });
 }

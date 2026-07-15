@@ -24,7 +24,7 @@ function matchesBaseFilters(record: AnalyticsPerformanceRecord, filters: Analyti
 }
 
 export function selectAnalyticsRecords(records: AnalyticsPerformanceRecord[], filters: AnalyticsFilters, campaigns: AnalyticsCampaign[]) {
-  const publishedCampaignIds = new Set(campaigns.filter((campaign) => campaign.status === "active" || campaign.status === "completed").map((campaign) => campaign.id));
+  const publishedCampaignIds = new Set(campaigns.filter((campaign) => campaign.status === "published").map((campaign) => campaign.id));
   return records.filter((record) => publishedCampaignIds.has(record.campaignId) && matchesBaseFilters(record, filters));
 }
 
@@ -40,7 +40,7 @@ export function selectPreviousPeriodRecords(data: AnalyticsDataSource, filters: 
 }
 
 export function selectAvailableBrands(data: AnalyticsDataSource) { return [...data.brands].sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)); }
-export function selectAvailableCampaigns(data: AnalyticsDataSource, brandId: string) { return data.campaigns.filter((campaign) => (campaign.status === "active" || campaign.status === "completed") && (brandId === "all" || campaign.brandId === brandId)).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)); }
+export function selectAvailableCampaigns(data: AnalyticsDataSource, brandId: string) { return data.campaigns.filter((campaign) => campaign.status === "published" && (brandId === "all" || campaign.brandId === brandId)).sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id)); }
 export function selectAvailablePlatforms(data: AnalyticsDataSource, filters: AnalyticsFilters): AnalyticsPlatform[] {
   const records = data.records.filter((record) => (filters.brandId === "all" || record.brandId === filters.brandId) && (filters.campaignId === "all" || record.campaignId === filters.campaignId));
   const present = new Set(records.map((record) => record.platform));

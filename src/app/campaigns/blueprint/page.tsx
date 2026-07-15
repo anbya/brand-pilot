@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { ApproveAllBlueprintsButton, CampaignAssetMap, type CampaignDay, type ContentAsset } from "@/components/campaign-asset-map";
+import { CampaignStatusBadge } from "@/components/campaign-status-badge";
+import { normalizeCampaignStatus, type CampaignStatus } from "@/lib/campaign-status";
 import { isSocialPlatform, socialPlatformLabels, socialPlatforms, type SocialPlatformLabel } from "@/lib/platforms";
 
 type IconName =
@@ -23,6 +25,7 @@ type IconName =
   | "spark";
 
 type CampaignBlueprint = {
+  status: CampaignStatus;
   name: string;
   primaryObjective: string;
   targetPlatforms: SocialPlatformLabel[];
@@ -32,6 +35,7 @@ type CampaignBlueprint = {
 };
 
 const defaultCampaign: CampaignBlueprint = {
+  status: "blueprint",
   name: "July Awareness",
   primaryObjective: "Brand Awareness & Engagement",
   targetPlatforms: socialPlatforms.map((platform) => socialPlatformLabels[platform]),
@@ -60,9 +64,7 @@ export default async function CampaignBlueprintPage({
               <Icon name="chevronRight" className="h-4 w-4" />
               <span className="text-[#0b1c30]">{campaign.name}</span>
             </nav>
-            <h1 className="bp-page-title mt-3">
-              Campaign Blueprint
-            </h1>
+            <div className="mt-3 flex flex-wrap items-center gap-3"><h1 className="bp-page-title mt-0">Campaign Blueprint</h1><CampaignStatusBadge status={campaign.status} /></div>
             <p className="bp-page-description mt-3">
               AI has generated your {durationDays}-day strategy. Review the asset sequence
               and approve all blueprint assets when they are ready.
@@ -180,6 +182,7 @@ export default async function CampaignBlueprintPage({
 
 function parseCampaign(searchParams: Record<string, string | string[] | undefined>): CampaignBlueprint {
   return {
+    status: normalizeCampaignStatus(getSearchValue(searchParams.status, defaultCampaign.status), { complete: true }),
     name: getSearchValue(searchParams.name, defaultCampaign.name),
     primaryObjective: getSearchValue(searchParams.objective, defaultCampaign.primaryObjective),
     targetPlatforms: normalizePlatformLabels(getSearchList(searchParams.platforms, defaultCampaign.targetPlatforms)),

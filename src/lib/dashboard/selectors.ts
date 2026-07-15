@@ -3,7 +3,7 @@ import { canAccessDashboardDestination, canNavigateDashboardAttention, filterDas
 import type { DashboardPermissions } from "@/lib/dashboard/types";
 
 const attentionPriority: Record<DashboardAttentionType, number> = { failed_publish: 0, overdue: 1, approval: 2, missing_asset: 3, low_credit: 4 };
-const campaignStatusPriority: Record<DashboardCampaignSummary["status"], number> = { active: 0, planning: 1, paused: 2, draft: 3, completed: 4 };
+const campaignStatusPriority: Record<DashboardCampaignSummary["status"], number> = { published: 0, ready: 1, blueprint: 2 };
 export const LOW_CREDIT_THRESHOLD_PERCENTAGE = 20;
 const clamp = (value: number, minimum: number, maximum: number) => Math.min(maximum, Math.max(minimum, Number.isFinite(value) ? value : minimum));
 
@@ -87,7 +87,7 @@ export function getPreviousPeriodDateRange(dateRange: DashboardDateRange): Dashb
 
 export function aggregateCampaignMetrics(campaigns: DashboardCampaignSummary[]) {
   return {
-    activeCampaigns: campaigns.filter((campaign) => campaign.status === "active").length,
+    activeCampaigns: campaigns.filter((campaign) => campaign.status === "published").length,
     totalPosts: campaigns.reduce((total, campaign) => total + campaign.totalPosts, 0),
     readyPosts: campaigns.reduce((total, campaign) => total + campaign.readyPosts, 0),
   };
