@@ -1,4 +1,5 @@
 import type { DashboardDataSource, DashboardUser, DashboardUserRole } from "@/lib/dashboard/types";
+import { renderCreditUsageMock, workspaceSubscriptionMock } from "@/lib/billing/mock-data";
 
 export const dashboardRoleUsers: Record<DashboardUserRole, DashboardUser> = {
   admin: { id: "user-sarah-jenkins", name: "Sarah Jenkins", role: "admin", initials: "SJ" },
@@ -23,9 +24,10 @@ export const dashboardMockData: DashboardDataSource = {
     { id: "metric-total-campaigns", label: "Active Campaigns", value: 0, icon: "campaign", tone: "blue", supportingText: "Follows selected filters", comparison: { state: "no-baseline", label: "No previous period data" }, href: "/campaigns" },
     { id: "metric-total-posts", label: "Total Posts", value: 0, icon: "dashboard", tone: "blue", supportingText: "Across matching campaigns", comparison: { state: "no-baseline", label: "No previous period data" }, href: "/calendar" },
     { id: "metric-ready-publish", label: "Ready to Publish", value: 0, icon: "spark", tone: "indigo", supportingText: "Ready across matching campaigns", comparison: { state: "no-baseline", label: "No previous period data" }, href: "/calendar" },
-    { id: "metric-credits-left", label: "Credits Left", value: 158, icon: "bolt", tone: "red", supportingText: "Current workspace balance", comparison: { state: "no-baseline", label: "Current workspace balance" } },
+    { id: "metric-credits-left", label: "Render Credits", value: 0, icon: "bolt", tone: "red", supportingText: "Shared Growth workspace quota", comparison: { state: "no-baseline", label: "Current workspace balance" } },
   ],
-  creditUsage: { id: "credit-usage-july-2026", remainingCredits: 158, totalCredits: 450 },
+  workspaceSubscription: workspaceSubscriptionMock,
+  renderCreditUsages: renderCreditUsageMock,
   referenceTime: "2026-07-11T10:30:00+07:00",
   campaigns: [
     { id: "campaign-july-promotion", brandId: "brand-coffee-xyz", brandName: "Coffee XYZ", name: "July Promotion", startDate: "2026-07-01", endDate: "2026-07-31", status: "published", completedPosts: 16, readyPosts: 3, totalPosts: 20, platforms: ["instagram", "tiktok", "youtube", "facebook"], icon: "spark", color: "bg-blue-600", textColor: "text-blue-700" },
@@ -38,7 +40,7 @@ export const dashboardMockData: DashboardDataSource = {
     { id: "attention-overdue-review", brandId: "brand-skincare-abc", campaignId: "campaign-summer-wellness", scope: "brand", type: "overdue", title: "Posts are overdue", description: "Campaign posts passed their schedule without being completed or published.", count: 2, countLabel: "post", occurredAt: "2026-07-11T09:00:00+07:00", href: "/calendar" },
     { id: "attention-awaiting-approval", brandId: "brand-coffee-xyz", campaignId: "campaign-education-series", scope: "brand", type: "approval", title: "Posts waiting for approval", description: "Content is ready for reviewer or approver feedback.", count: 3, countLabel: "post", occurredAt: "2026-07-10T14:00:00+07:00", href: "/calendar" },
     { id: "attention-missing-assets", brandId: "brand-skincare-abc", campaignId: "campaign-summer-wellness", scope: "brand", type: "missing_asset", title: "Required assets are missing", description: "Scheduled posts still need their required visual or media assets.", count: 2, countLabel: "post", occurredAt: "2026-07-10T11:30:00+07:00", href: "/assets" },
-    { id: "attention-low-credit", scope: "workspace", type: "low_credit", title: "Credits are running low", description: "The current workspace credit balance is below the configured threshold.", count: 158, countLabel: "credit", occurredAt: "2026-07-10T16:30:00+07:00" },
+    { id: "attention-low-credit", scope: "workspace", type: "low_credit", title: "Render credits are running low", description: "The shared workspace render credit balance is below the configured threshold.", count: 158, countLabel: "render credit", occurredAt: "2026-07-10T16:30:00+07:00" },
   ],
   activities: [
     { id: "activity-post-approved", scope: "brand", brandId: "brand-coffee-xyz", brandName: "Coffee XYZ", campaignId: "campaign-july-promotion", type: "post_approved", actorName: "Sarah Jenkins", actorInitials: "SJ", action: "approved", entityName: "Instagram Reel", supportingContext: "July Promotion", occurredAt: "2026-07-11T10:28:00+07:00", href: "/calendar" },

@@ -12,11 +12,19 @@ export type AppStatus =
 
 export type Campaign = {
   id: string;
+  workspaceId: string;
+  brandId: string;
   name: string;
   goal: "awareness" | "sales" | "promotion" | "education" | "event";
   platforms: SocialPlatform[];
   durationDays: 7 | 14 | 30;
+  startDate: string;
+  endDate: string;
   status: CampaignStatus;
+  campaignPackConsumed: boolean;
+  campaignPackUsageId?: string;
+  publishedAt?: string;
+  publishedBy?: string;
   strategy: string;
   contentPillars: string[];
   postingFrequency: string;
@@ -109,11 +117,19 @@ export const knowledgeBase = [
 export const campaigns: Campaign[] = [
   {
     id: "cmp-1",
+    workspaceId: "workspace-brand-pilot",
+    brandId: "brand-coffee-xyz",
     name: "July Awareness",
     goal: "awareness",
     platforms: ["instagram", "tiktok", "facebook"],
     durationDays: 30,
+    startDate: "2026-07-01",
+    endDate: "2026-07-30",
     status: "published",
+    campaignPackConsumed: true,
+    campaignPackUsageId: "campaign-pack-cmp-1",
+    publishedAt: "2026-07-01T09:00:00+07:00",
+    publishedBy: "user-sarah-jenkins",
     strategy: "Push brand recall using coffee ritual, store ambiance, and educational reels.",
     contentPillars: ["Education", "Product", "Environment", "Offer"],
     postingFrequency: "5x per week",
@@ -121,11 +137,16 @@ export const campaigns: Campaign[] = [
   },
   {
     id: "cmp-2",
+    workspaceId: "workspace-brand-pilot",
+    brandId: "brand-coffee-xyz",
     name: "Weekend Promo",
     goal: "sales",
     platforms: ["instagram", "facebook"],
     durationDays: 14,
+    startDate: "2026-07-01",
+    endDate: "2026-07-14",
     status: "ready",
+    campaignPackConsumed: false,
     strategy: "Promote bundle menu and drive weekend in-store traffic.",
     contentPillars: ["Offer", "Testimonial", "Menu"],
     postingFrequency: "Daily",
@@ -257,43 +278,4 @@ export const teamMembers = [
   { name: "Mika", role: "Strategist", status: "online" },
   { name: "Ari", role: "Designer", status: "away" },
   { name: "Nina", role: "Publisher", status: "online" },
-];
-
-export const pricingPlans = [
-  {
-    name: "Starter",
-    price: "US$199/mo",
-    description:
-      "1 brand, 30-day planning, limited renders, and 1 campaign pack.",
-    features: [
-      "1 brand",
-      "30-day planning",
-      "Limited renders",
-      "1 campaign pack",
-    ],
-  },
-  {
-    name: "Growth",
-    price: "US$999/mo",
-    description:
-      "1 brand, 6-month planning, more render credits, and 2-3 campaign packs.",
-    features: [
-      "1 brand",
-      "6-month planning",
-      "More render credits",
-      "2-3 campaign packs",
-    ],
-  },
-  {
-    name: "Custom",
-    price: "US$1,999+/mo",
-    description:
-      "Multi-brand support, 1-year planning, unlimited renders, and unlimited campaigns.",
-    features: [
-      "Multi-brand workspace",
-      "1-year planning",
-      "Unlimited renders",
-      "Unlimited campaigns",
-    ],
-  },
 ];

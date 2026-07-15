@@ -11,6 +11,8 @@ import type { ContentObjective, ContentPillar, SocialPlatform } from "@/lib/cale
 import { WizardStepper } from "@/components/ui/wizard-stepper";
 import { isCampaignUsableForContent } from "@/lib/campaign-status";
 import { dashboardMockData } from "@/lib/dashboard/mock-data";
+import { workspaceSubscriptionMock } from "@/lib/billing/mock-data";
+import { validatePlanningRange } from "@/lib/billing/entitlements";
 
 export type SchedulePostPayload = ManualPostInput;
 
@@ -56,7 +58,7 @@ export function SchedulePostDialog({ open, pillars, defaultDate = "2026-07-01", 
   function validatePlatforms() { if (selectedPlatforms.length) { setErrors({}); return true; } setErrors({ platforms: "Select at least one platform." }); focusField("platform-instagram"); return false; }
   function validateVersions() {
     const next: Errors = {};
-    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; }
+    for (const platform of selectedPlatforms) { const draft = versions[platform]; if (!draft) continue; for (const key of ["assetType", "headline", "caption", "cta", "timezone", "createdBy"] as const) if (!String(draft[key]).trim()) next[`${platform}-${key}`] = `${formatAssetTypeLabel(key)} is required.`; if (draft.publishDate) { const range = validatePlanningRange({ subscription: workspaceSubscriptionMock, startDate: draft.publishDate, endDate: draft.publishDate, referenceDate: defaultDate }); if (!range.valid) next[`${platform}-publishDate`] = range.message; } }
     setErrors(next); const first = Object.keys(next)[0]; if (first) { const platform = first.split("-")[0] as SocialPlatform; if (selectedPlatforms.includes(platform)) setActivePlatform(platform); focusField(first); } return !first;
   }
   function nextStep() { const valid = step === 0 ? validateStrategy() : step === 1 ? validatePlatforms() : step === 2 ? validateVersions() : true; if (valid) { setErrors({}); setStep((current) => Math.min(current + 1, 3)); } }

@@ -8,6 +8,8 @@ import { CampaignStatusBadge } from "@/components/campaign-status-badge";
 import { campaignStatuses, campaignStatusLabels, normalizeCampaignStatus, type CampaignStatus } from "@/lib/campaign-status";
 import { campaigns as seedCampaigns, type Campaign } from "@/lib/mock-data";
 import { normalizeSocialPlatforms, socialPlatformLabels, socialPlatforms, type SocialPlatform } from "@/lib/platforms";
+import { activeWorkspace, workspaceSubscriptionMock } from "@/lib/billing/mock-data";
+import { validatePlanningRange } from "@/lib/billing/entitlements";
 
 type IconName = "add" | "analytics" | "assets" | "brands" | "calendar" | "campaign" | "check" | "chevronDown" | "close" | "dashboard" | "layers" | "movie" | "post" | "search" | "settings" | "spark";
 type CampaignForm = { primaryObjective: string; targetPlatforms: SocialPlatform[]; toneOfVoice: string[]; startDate: string; endDate: string };
@@ -32,7 +34,7 @@ export default function CampaignsPage() {
         const storedCampaigns = window.localStorage.getItem(campaignStorageKey);
         if (storedCampaigns) {
           const parsedCampaigns = JSON.parse(storedCampaigns) as unknown;
-          if (Array.isArray(parsedCampaigns)) setCampaigns((parsedCampaigns as Campaign[]).map((campaign) => ({ ...campaign, status: normalizeCampaignStatus(campaign.status, { complete: isCampaignComplete(campaign) }), platforms: normalizeSocialPlatforms(campaign.platforms, ["instagram"]) })));
+          if (Array.isArray(parsedCampaigns)) setCampaigns((parsedCampaigns as Partial<Campaign>[]).map(normalizeStoredCampaign));
         }
       } catch {
         window.localStorage.removeItem(campaignStorageKey);
@@ -64,6 +66,8 @@ export default function CampaignsPage() {
     if (!form.toneOfVoice.length) return "Pilih minimal satu tone of voice.";
     if (!form.startDate || !form.endDate) return "Tanggal mulai dan selesai wajib diisi.";
     if (form.endDate < form.startDate) return "Tanggal selesai tidak boleh lebih awal dari tanggal mulai.";
+    const range = validatePlanningRange({ subscription: workspaceSubscriptionMock, startDate: form.startDate, endDate: form.endDate, referenceDate: "2026-07-15" });
+    if (!range.valid) return range.message;
     return "";
   }
   function submit(event: FormEvent) {
@@ -79,11 +83,16 @@ export default function CampaignsPage() {
     const objective = form.primaryObjective.trim();
     const newCampaign: Campaign = {
       id: `cmp-${Date.now()}`,
+      workspaceId: activeWorkspace.id,
+      brandId: "brand-coffee-xyz",
       name: objective,
       goal: objectiveToGoal(objective),
       platforms: form.targetPlatforms,
       durationDays: durationFromDates(form.startDate, form.endDate),
+      startDate: form.startDate,
+      endDate: form.endDate,
       status: "blueprint",
+      campaignPackConsumed: false,
       strategy: "Campaign blueprint saved and ready for completion.",
       contentPillars: form.toneOfVoice,
       postingFrequency: "Not configured",
@@ -134,6 +143,20 @@ function Choice({ active, onClick, className, children }: { active: boolean; onC
 function CampaignActions({ campaign }: { campaign: Campaign }) { return <div className="flex justify-end"><Link href={campaignBlueprintHref(campaign)} className="bp-button bp-button-secondary">View Campaign<span className="sr-only"> {campaign.name}</span></Link></div> }
 function objectiveToGoal(objective: string): Campaign["goal"] { const value = objective.toLowerCase(); if (value.includes("sale")) return "sales"; if (value.includes("promo")) return "promotion"; if (value.includes("educat")) return "education"; if (value.includes("event")) return "event"; return "awareness"; }
 function durationFromDates(start: string, end: string): Campaign["durationDays"] { const days = Math.max(1, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 86400000) + 1); return days <= 7 ? 7 : days <= 14 ? 14 : 30; }
-function campaignBlueprintHref(campaign: Campaign) { const start = "2026-07-01"; const endDay = campaign.durationDays === 7 ? "07" : campaign.durationDays === 14 ? "14" : "30"; const params = new URLSearchParams({ name: campaign.name, objective: campaign.goal.charAt(0).toUpperCase() + campaign.goal.slice(1), platforms: campaign.platforms.join(","), tone: "Visionary,Reliable,Professional", start, end: `2026-07-${endDay}`, status: campaign.status }); return `/campaigns/blueprint?${params}`; }
+function campaignBlueprintHref(campaign: Campaign) { const params = new URLSearchParams({ name: campaign.name, objective: campaign.goal.charAt(0).toUpperCase() + campaign.goal.slice(1), platforms: campaign.platforms.join(","), tone: "Visionary,Reliable,Professional", start: campaign.startDate, end: campaign.endDate, status: campaign.status }); return `/campaigns/blueprint?${params}`; }
+function normalizeStoredCampaign(campaign: Partial<Campaign>): Campaign {
+  const fallback = seedCampaigns[0]!;
+  const normalized = { ...fallback, ...campaign, platforms: normalizeSocialPlatforms(campaign.platforms, ["instagram"]) };
+  const status = normalizeCampaignStatus(campaign.status, { complete: isCampaignComplete(normalized) });
+  return {
+    ...normalized,
+    workspaceId: campaign.workspaceId ?? activeWorkspace.id,
+    brandId: campaign.brandId ?? "brand-coffee-xyz",
+    startDate: campaign.startDate ?? "2026-07-01",
+    endDate: campaign.endDate ?? "2026-07-30",
+    status,
+    campaignPackConsumed: campaign.campaignPackConsumed ?? status === "published",
+  };
+}
 function isCampaignComplete(campaign: Campaign) { return Boolean(campaign.name?.trim() && campaign.goal && campaign.platforms?.length && campaign.durationDays && campaign.strategy?.trim()); }
 function Icon({ name, className = "h-5 w-5" }: { name: IconName; className?: string }) { const paths: Record<IconName, React.ReactNode> = { add:<path d="M12 5v14M5 12h14"/>, analytics:<path d="M4 19V5M9 19V9M14 19v-6M19 19V7"/>, assets:<path d="M3 7h7l2 2h9v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z"/>, brands:<path d="M4 5h7v7H4zM13 5h7v7h-7zM4 14h7v5H4zM13 14h7v5h-7z"/>, calendar:<path d="M7 3v4M17 3v4M4 9h16M5 5h14v15H4V6a1 1 0 0 1 1-1Z"/>, campaign:<path d="M4 13V7l10-3v14L4 15v-2Zm10-3h3a3 3 0 0 1 0 6h-3M7 15l2 5"/>, check:<path d="m5 12 4 4L19 6"/>, chevronDown:<path d="m6 9 6 6 6-6"/>, close:<path d="M6 6l12 12M18 6 6 18"/>, dashboard:<path d="M4 4h7v7H4zM13 4h7v4h-7zM13 10h7v10h-7zM4 13h7v7H4z"/>, layers:<path d="m12 3 9 5-9 5-9-5 9-5Zm-7 9 7 4 7-4M5 16l7 4 7-4"/>, movie:<path d="M4 5h16v14H4zM8 5l2 4M14 5l2 4M4 9h16"/>, post:<path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h5"/>, search:<><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5"/></>, settings:<><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-5l-.3 3.1a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 3.1h5l.3-3.1a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1Z"/></>, spark:<path d="m12 2 1.7 6.3L20 10l-6.3 1.7L12 18l-1.7-6.3L4 10l6.3-1.7L12 2Z"/> }; return <svg aria-hidden="true" className={className} fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" viewBox="0 0 24 24">{paths[name]}</svg> }

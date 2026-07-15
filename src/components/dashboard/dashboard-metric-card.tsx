@@ -14,7 +14,7 @@ export function DashboardMetricCard({ metric, creditUsage }: Props) {
 
 function MetricContent({ metric, creditUsage }: Props) {
   const toneClass = { blue: "bg-[#e5eeff] text-[#0058bc]", indigo: "bg-[#e1e0ff] text-[#4648d4]", red: "bg-red-50 text-red-700" }[metric.tone];
-  return <><div className="flex items-start justify-between gap-4"><p className="text-sm font-bold text-[#717786]">{metric.label}</p><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${toneClass}`}><DashboardIcon name={metric.icon} className="h-5 w-5" /></span></div><div className="mt-5 min-w-0"><p className="break-words text-4xl font-extrabold leading-none text-[#0b1c30]">{formatMetricValue(metric.value)}</p><p className="mt-2 text-xs font-semibold text-[#717786]">{metric.supportingText}</p>{creditUsage ? <CreditDetails creditUsage={creditUsage} /> : <Comparison metric={metric} />}</div></>;
+  return <><div className="flex items-start justify-between gap-4"><p className="text-sm font-bold text-[#717786]">{metric.label}</p><span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${toneClass}`}><DashboardIcon name={metric.icon} className="h-5 w-5" /></span></div><div className="mt-5 min-w-0"><p className="break-words text-4xl font-extrabold leading-none text-[#0b1c30]">{creditUsage?.unlimited ? "Unlimited" : formatMetricValue(metric.value)}</p><p className="mt-2 text-xs font-semibold text-[#717786]">{metric.supportingText}</p>{creditUsage ? <CreditDetails creditUsage={creditUsage} /> : <Comparison metric={metric} />}</div></>;
 }
 
 function Comparison({ metric }: { metric: DashboardMetric }) {
@@ -22,8 +22,6 @@ function Comparison({ metric }: { metric: DashboardMetric }) {
   return <p className="mt-2 inline-flex items-start gap-1 text-xs font-bold text-[#414755]">{comparison.state !== "no-baseline" && comparison.state !== "unchanged" ? <DashboardIcon name="trend" className={`mt-0.5 h-4 w-4 shrink-0 text-[#0058bc] ${comparison.state === "decrease" ? "rotate-90" : ""}`} /> : null}<span>{comparison.label}</span></p>;
 }
 
-function CreditDetails({ creditUsage }: { creditUsage: DashboardCalculatedCreditUsage }) {
-  return <div className="mt-3"><DashboardProgress value={creditUsage.usedPercentage} label="Workspace credits used" valueText={`${creditUsage.used} of ${creditUsage.total} credits used`} /><p className="mt-2 text-xs font-semibold text-[#414755]">{formatMetricValue(creditUsage.remaining)} of {formatMetricValue(creditUsage.total)} credits remaining</p><p className="mt-1 text-xs font-bold text-[#717786]">{creditUsage.usedPercentage}% used</p></div>;
-}
+function CreditDetails({ creditUsage }: { creditUsage: DashboardCalculatedCreditUsage }) { if (creditUsage.unlimited) return <p className="mt-3 text-xs font-bold text-emerald-700">Unlimited rendering on {creditUsage.planName}</p>; return <div className="mt-3"><DashboardProgress value={creditUsage.usedPercentage} label="Workspace render credits used" valueText={`${creditUsage.used} of ${creditUsage.total} render credits used`} /><p className="mt-2 text-xs font-semibold text-[#414755]">{formatMetricValue(creditUsage.remaining)} of {formatMetricValue(creditUsage.total)} render credits remaining</p><p className="mt-1 text-xs font-bold text-[#717786]">{creditUsage.usedPercentage}% used · {creditUsage.planName}</p></div>; }
 
 function formatMetricValue(value: number): string { return new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value); }

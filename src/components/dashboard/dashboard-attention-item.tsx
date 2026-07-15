@@ -8,7 +8,7 @@ const presentation: Record<AttentionItem["type"], { icon: DashboardIconName; lab
   overdue: { icon: "clock", label: "Overdue", iconClass: "bg-orange-50 text-orange-700", borderClass: "border-orange-200" },
   approval: { icon: "check", label: "Approval", iconClass: "bg-[#e1e0ff] text-[#4648d4]", borderClass: "border-[#c9c8fa]" },
   missing_asset: { icon: "assets", label: "Missing asset", iconClass: "bg-amber-50 text-amber-700", borderClass: "border-amber-200" },
-  low_credit: { icon: "bolt", label: "Low credit", iconClass: "bg-amber-50 text-amber-700", borderClass: "border-amber-200" },
+  low_credit: { icon: "bolt", label: "Low render credit", iconClass: "bg-amber-50 text-amber-700", borderClass: "border-amber-200" },
 };
 
 export function DashboardAttentionItem({ item }: { item: AttentionItem }) {
@@ -19,6 +19,6 @@ export function DashboardAttentionItem({ item }: { item: AttentionItem }) {
 }
 
 function formatAttentionCount(item: AttentionItem): string {
-  if (item.type === "low_credit") return `${item.count.toLocaleString("en-US")} ${item.count === 1 ? "credit" : "credits"} remaining`;
+  if (item.type === "low_credit") return `${item.count.toLocaleString("en-US")} render ${item.count === 1 ? "credit" : "credits"} remaining`;
   return `${item.count.toLocaleString("en-US")} ${item.countLabel}${item.count === 1 ? "" : "s"}`;
 }

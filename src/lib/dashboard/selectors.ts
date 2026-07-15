@@ -1,6 +1,7 @@
-import type { DashboardActivity, DashboardAttentionItem, DashboardAttentionType, DashboardCampaignSummary, DashboardDataSource, DashboardDateRange, DashboardMetricComparison, DashboardPercentageChange, DashboardViewModel } from "@/lib/dashboard/types";
+import type { DashboardActivity, DashboardAttentionItem, DashboardAttentionType, DashboardCalculatedCreditUsage, DashboardCampaignSummary, DashboardDataSource, DashboardDateRange, DashboardMetricComparison, DashboardPercentageChange, DashboardViewModel } from "@/lib/dashboard/types";
 import { canAccessDashboardDestination, canNavigateDashboardAttention, filterDashboardAttentionByPermissions, filterDashboardMetricsByPermissions, getDashboardPermissions } from "@/lib/dashboard/permissions";
 import type { DashboardPermissions } from "@/lib/dashboard/types";
+import { getCurrentPlan, getRenderCreditsRemaining } from "@/lib/billing/selectors";
 
 const attentionPriority: Record<DashboardAttentionType, number> = { failed_publish: 0, overdue: 1, approval: 2, missing_asset: 3, low_credit: 4 };
 const campaignStatusPriority: Record<DashboardCampaignSummary["status"], number> = { published: 0, ready: 1, blueprint: 2 };
@@ -107,12 +108,13 @@ function buildFilteredMetrics(data: DashboardDataSource, campaigns: DashboardCam
   const current = aggregateCampaignMetrics(campaigns);
   const previous = aggregateCampaignMetrics(previousCampaigns);
   const hasPreviousData = previousCampaigns.length > 0;
-  const credit = calculateCreditUsage(data.creditUsage.remainingCredits, data.creditUsage.totalCredits);
+  const renderCredits = getRenderCreditsRemaining(data.renderCreditUsages, data.workspaceSubscription);
+  const planName = getCurrentPlan(data.workspaceSubscription)?.name ?? "Unknown plan";
   return data.metrics.map((metric) => {
     if (metric.id === "metric-total-campaigns") return { ...metric, value: current.activeCampaigns, comparison: buildMetricComparison(current.activeCampaigns, previous.activeCampaigns, hasPreviousData) };
     if (metric.id === "metric-total-posts") return { ...metric, value: current.totalPosts, comparison: buildMetricComparison(current.totalPosts, previous.totalPosts, hasPreviousData) };
     if (metric.id === "metric-ready-publish") return { ...metric, value: current.readyPosts, comparison: buildMetricComparison(current.readyPosts, previous.readyPosts, hasPreviousData) };
-    if (metric.id === "metric-credits-left") return { ...metric, value: credit.remaining };
+    if (metric.id === "metric-credits-left") return { ...metric, value: renderCredits.unlimited ? 0 : renderCredits.remaining, supportingText: renderCredits.unlimited ? `${planName} · Unlimited render credits` : `Shared ${planName} workspace quota` };
     return metric;
   });
 }
@@ -125,10 +127,14 @@ export function buildDashboardViewModel(data: DashboardDataSource, options: { se
   const campaigns = getCampaignsForDashboard(data.campaigns, selectedBrandId, selectedDateRange);
   const previousCampaigns = getCampaignsForDashboard(data.campaigns, selectedBrandId, getPreviousPeriodDateRange(selectedDateRange));
   const matchesBrand = (brandId: string) => selectedBrandId === "all" || brandId === selectedBrandId;
-  const creditUsage = calculateCreditUsage(data.creditUsage.remainingCredits, data.creditUsage.totalCredits);
-  const remainingPercentage = creditUsage.total > 0 ? creditUsage.remaining / creditUsage.total * 100 : 100;
+  const rawCredits = getRenderCreditsRemaining(data.renderCreditUsages, data.workspaceSubscription);
+  const planName = getCurrentPlan(data.workspaceSubscription)?.name ?? "Unknown plan";
+  const creditUsage: DashboardCalculatedCreditUsage = rawCredits.unlimited
+    ? { unlimited: true, remaining: null, used: rawCredits.used, usedPercentage: null, total: null, planName }
+    : { unlimited: false, remaining: rawCredits.remaining, used: rawCredits.used, usedPercentage: rawCredits.limit > 0 ? Math.round(rawCredits.used / rawCredits.limit * 100) : 0, total: rawCredits.limit, planName };
+  const remainingPercentage = creditUsage.unlimited || creditUsage.total === 0 ? 100 : creditUsage.remaining / creditUsage.total * 100;
   const attentionItems = data.attentionItems.flatMap((item) => {
-    if (item.type === "low_credit") return remainingPercentage <= LOW_CREDIT_THRESHOLD_PERCENTAGE ? [{ ...item, count: creditUsage.remaining }] : [];
+    if (item.type === "low_credit") return !creditUsage.unlimited && remainingPercentage <= LOW_CREDIT_THRESHOLD_PERCENTAGE ? [{ ...item, count: creditUsage.remaining }] : [];
     return item.brandId && matchesBrand(item.brandId) && isDateInRange(item.occurredAt, selectedDateRange) ? [item] : [];
   });
   const visibleAttentionItems = filterDashboardAttentionByPermissions(attentionItems, permissions).map((item) => item.href && !canNavigateDashboardAttention(item, permissions) ? { ...item, href: undefined } : item);
