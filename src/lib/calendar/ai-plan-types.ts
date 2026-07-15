@@ -1,6 +1,6 @@
 import type { ContentObjective, SocialPlatform } from "@/lib/calendar/types";
 
-export type AiPlanningPeriod = "one-week" | "two-weeks" | "one-month" | "custom";
+export type AiPlanningPeriod = "thirty-days" | "sixty-days" | "one-year";
 export type CalendarWeekday = "sunday" | "monday" | "tuesday" | "wednesday" | "thursday" | "friday" | "saturday";
 export type AiPlanImportantDate = { id: string; date: string; label: string };
 export type AiPlanRequest = {

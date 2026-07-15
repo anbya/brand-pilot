@@ -4,10 +4,10 @@ import type { AiPlanningPeriod, AiPlanRequest, CalendarWeekday } from "@/lib/cal
 export type AiPlanValidationErrors = Partial<Record<keyof AiPlanRequest, string>>;
 const weekdays: CalendarWeekday[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday"];
 
-export function getPlanningPeriodEndDate(startDate: string, period: Exclude<AiPlanningPeriod, "custom">): string {
-  if (period === "one-week") return addDays(startDate, 6);
-  if (period === "two-weeks") return addDays(startDate, 13);
-  return addDays(addMonths(startDate, 1), -1);
+export function getPlanningPeriodEndDate(startDate: string, period: AiPlanningPeriod): string {
+  if (period === "thirty-days") return addDays(startDate, 29);
+  if (period === "sixty-days") return addDays(startDate, 59);
+  return addDays(addMonths(startDate, 12), -1);
 }
 
 export function getDatesInRange(startDate: string, endDate: string): string[] {
