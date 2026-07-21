@@ -29,7 +29,27 @@ export function AssetLibraryClient() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [toast, setToast] = useState("");
 
-  useEffect(() => { const unsubscribe = subscribeToAssetLibrary(setAssets); const timer = window.setTimeout(() => { setAssets(readAssetLibrary(window.localStorage)); setHydrated(true); }, 0); return () => { window.clearTimeout(timer); unsubscribe(); }; }, []);
+  useEffect(() => {
+    let canceled = false;
+    const unsubscribe = subscribeToAssetLibrary(setAssets);
+    async function loadAssets() {
+      try {
+        const response = await fetch("/api/assets", { cache: "no-store" });
+        if (!response.ok) throw new Error("Unable to load assets.");
+        const payload = await response.json() as { data?: WorkspaceAsset[] };
+        if (!canceled && Array.isArray(payload.data)) {
+          setAssets(payload.data);
+          writeAssetLibrary(window.localStorage, payload.data);
+        }
+      } catch {
+        if (!canceled) setAssets(readAssetLibrary(window.localStorage));
+      } finally {
+        if (!canceled) setHydrated(true);
+      }
+    }
+    loadAssets();
+    return () => { canceled = true; unsubscribe(); };
+  }, []);
   useEffect(() => { if (!toast) return; const timer = window.setTimeout(() => setToast(""), 3000); return () => window.clearTimeout(timer); }, [toast]);
 
   const visible = useMemo(() => {
@@ -40,9 +60,19 @@ export function AssetLibraryClient() {
   const pendingDelete = assets.find((asset) => asset.id === deleteId);
 
   function persist(next: WorkspaceAsset[], message: string) { setAssets(next); writeAssetLibrary(window.localStorage, next); setToast(message); }
-  function saveNew(asset: WorkspaceAsset) { persist([asset, ...assets], "Asset added to the workspace library."); setUploadOpen(false); }
-  function saveAsset(asset: WorkspaceAsset) { persist(assets.map((item) => item.id === asset.id ? asset : item), "Asset metadata updated."); setSelectedId(null); }
-  function deleteAsset() { if (!pendingDelete) return; persist(assets.filter((asset) => asset.id !== pendingDelete.id), "Asset removed from the library."); setDeleteId(null); setSelectedId(null); }
+  function persistAsset(asset: WorkspaceAsset) {
+    fetch("/api/assets", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(asset) })
+      .catch(() => setToast("Asset saved locally, but database sync failed."));
+  }
+  function saveNew(asset: WorkspaceAsset) { persist([asset, ...assets], "Asset added to the workspace library."); persistAsset(asset); setUploadOpen(false); }
+  function saveAsset(asset: WorkspaceAsset) { persist(assets.map((item) => item.id === asset.id ? asset : item), "Asset metadata updated."); persistAsset(asset); setSelectedId(null); }
+  function deleteAsset() {
+    if (!pendingDelete) return;
+    persist(assets.filter((asset) => asset.id !== pendingDelete.id), "Asset removed from the library.");
+    fetch(`/api/assets/${encodeURIComponent(pendingDelete.id)}`, { method: "DELETE" }).catch(() => setToast("Asset removed locally, but database sync failed."));
+    setDeleteId(null);
+    setSelectedId(null);
+  }
 
   const stats = [
     ["Total Assets", assets.length], ["Linked to Brands", assets.filter((asset) => asset.brandIds.length).length],
@@ -62,7 +92,7 @@ export function AssetLibraryClient() {
 
     {uploadOpen ? <UploadAssetDialog onClose={() => setUploadOpen(false)} onSave={saveNew} /> : null}
     {selected ? <AssetDetailsDialog asset={selected} onClose={() => setSelectedId(null)} onDelete={permissions.canDelete ? () => setDeleteId(selected.id) : undefined} onSave={permissions.canEdit ? saveAsset : undefined} /> : null}
-    {pendingDelete ? <ResponsiveOverlayShell role="alertdialog" title="Delete asset?" description={`${pendingDelete.name} will be removed from this mock workspace library.`} footer={<><button type="button" onClick={() => setDeleteId(null)} className={secondaryButton}>Cancel</button><button type="button" onClick={deleteAsset} className={dangerButton}>Delete Asset</button></>} maxWidth="max-w-md" onClose={() => setDeleteId(null)}><p className="rounded-lg bg-amber-50 p-4 text-sm leading-6 text-amber-900">This asset has {pendingDelete.usage.length} recorded usage reference{pendingDelete.usage.length === 1 ? "" : "s"}. Existing prototype references may become unavailable.</p></ResponsiveOverlayShell> : null}
+    {pendingDelete ? <ResponsiveOverlayShell role="alertdialog" title="Delete asset?" description={`${pendingDelete.name} will be removed from this workspace library.`} footer={<><button type="button" onClick={() => setDeleteId(null)} className={secondaryButton}>Cancel</button><button type="button" onClick={deleteAsset} className={dangerButton}>Delete Asset</button></>} maxWidth="max-w-md" onClose={() => setDeleteId(null)}><p className="rounded-lg bg-amber-50 p-4 text-sm leading-6 text-amber-900">This asset has {pendingDelete.usage.length} recorded usage reference{pendingDelete.usage.length === 1 ? "" : "s"}. Existing prototype references may become unavailable.</p></ResponsiveOverlayShell> : null}
     {toast ? <div role="status" className="fixed bottom-4 right-4 z-[120] max-w-sm rounded-lg border border-emerald-200 bg-white px-4 py-3 text-sm font-bold text-emerald-800 shadow-lg">{toast}</div> : null}
   </main>;
 }
@@ -76,7 +106,7 @@ function UploadAssetDialog({ onClose, onSave }: { onClose: () => void; onSave: (
   function chooseFile(event: ChangeEvent<HTMLInputElement>) { const next = event.target.files?.[0]; if (!next) return; if (next.size > maximumSize) { setError("Files must be 10 MB or smaller."); event.target.value = ""; return; } setFile(next); setName(displayName(next.name)); setKind(kindFromMime(next.type)); setError(""); }
   function submit(event: FormEvent) { event.preventDefault(); if (!file || !name.trim()) return setError("Choose a file and enter its asset name."); const now = new Date().toISOString(); const previewUrl = mockPreviewDataUrl(name.trim(), kind); onSave({ id: `asset-${Date.now()}`, name: name.trim(), fileName: file.name, mimeType: file.type || "application/octet-stream", kind, source: "upload", previewUrl, description: description.trim(), tags: tags.split(",").map((tag) => tag.trim()).filter(Boolean).slice(0, 10), sizeBytes: file.size, createdAt: now, updatedAt: now, brandIds, campaignIds, usage: [...brandIds.map((id) => ({ type: "brand" as const, entityId: id, label: dashboardMockData.brands.find((brand) => brand.id === id)?.name ?? id })), ...campaignIds.map((id) => ({ type: "campaign" as const, entityId: id, label: dashboardMockData.campaigns.find((campaign) => campaign.id === id)?.name ?? id }))] }); }
   const footer = <><button type="button" onClick={onClose} className={secondaryButton}>Cancel</button><button form="upload-asset-form" type="submit" className={primaryButton}>Add to Asset Library</button></>;
-  return <ResponsiveOverlayShell title="Upload Asset" description="Files are stored as centralized mock records. No cloud upload occurs." footer={footer} maxWidth="max-w-[760px]" onClose={onClose}><form id="upload-asset-form" onSubmit={submit} className="grid gap-5"><label className={labelClass}>File<input type="file" accept={acceptedTypes} onChange={chooseFile} className="block w-full rounded-lg border border-[#c5d2e5] bg-white text-sm font-medium normal-case tracking-normal file:mr-3 file:border-0 file:border-r file:border-[#c5d2e5] file:bg-[#eff4ff] file:px-4 file:py-3 file:font-bold file:text-[#0058bc]" /><span className="normal-case tracking-normal text-[#717786]">PNG, JPG, WebP, SVG, MP4, WebM, or PDF. Maximum 10 MB.</span></label><div className="grid gap-4 sm:grid-cols-2"><Field label="Asset Name"><input value={name} onChange={(event) => setName(event.target.value)} className={fieldClass} /></Field><Field label="File Type"><select value={kind} onChange={(event) => setKind(event.target.value as AssetKind)} className={fieldClass}>{kinds.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div><Field label="Description"><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} className={textareaClass} /></Field><Field label="Tags"><input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="comma, separated, tags" className={fieldClass} /></Field><RelationPicker title="Link to brands" options={dashboardMockData.brands} selected={brandIds} onChange={setBrandIds} /><RelationPicker title="Link to campaigns" options={dashboardMockData.campaigns} selected={campaignIds} onChange={setCampaignIds} />{error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p> : null}</form></ResponsiveOverlayShell>;
+  return <ResponsiveOverlayShell title="Upload Asset" description="Asset metadata is stored in the workspace database. File storage is still represented by a preview URL in this prototype." footer={footer} maxWidth="max-w-[760px]" onClose={onClose}><form id="upload-asset-form" onSubmit={submit} className="grid gap-5"><label className={labelClass}>File<input type="file" accept={acceptedTypes} onChange={chooseFile} className="block w-full rounded-lg border border-[#c5d2e5] bg-white text-sm font-medium normal-case tracking-normal file:mr-3 file:border-0 file:border-r file:border-[#c5d2e5] file:bg-[#eff4ff] file:px-4 file:py-3 file:font-bold file:text-[#0058bc]" /><span className="normal-case tracking-normal text-[#717786]">PNG, JPG, WebP, SVG, MP4, WebM, or PDF. Maximum 10 MB.</span></label><div className="grid gap-4 sm:grid-cols-2"><Field label="Asset Name"><input value={name} onChange={(event) => setName(event.target.value)} className={fieldClass} /></Field><Field label="File Type"><select value={kind} onChange={(event) => setKind(event.target.value as AssetKind)} className={fieldClass}>{kinds.filter((item) => item.value !== "all").map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select></Field></div><Field label="Description"><textarea rows={3} value={description} onChange={(event) => setDescription(event.target.value)} className={textareaClass} /></Field><Field label="Tags"><input value={tags} onChange={(event) => setTags(event.target.value)} placeholder="comma, separated, tags" className={fieldClass} /></Field><RelationPicker title="Link to brands" options={dashboardMockData.brands} selected={brandIds} onChange={setBrandIds} /><RelationPicker title="Link to campaigns" options={dashboardMockData.campaigns} selected={campaignIds} onChange={setCampaignIds} />{error ? <p role="alert" className="rounded-lg bg-rose-50 p-3 text-sm font-bold text-rose-700">{error}</p> : null}</form></ResponsiveOverlayShell>;
 }
 
 function AssetDetailsDialog({ asset, onClose, onDelete, onSave }: { asset: WorkspaceAsset; onClose: () => void; onDelete?: () => void; onSave?: (asset: WorkspaceAsset) => void }) {

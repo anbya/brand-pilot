@@ -16,40 +16,33 @@ type CampaignForm = { primaryObjective: string; targetPlatforms: SocialPlatform[
 
 const platforms = socialPlatforms.map((value) => ({ value, label: socialPlatformLabels[value], icon: value === "instagram" ? "post" : value === "facebook" ? "campaign" : "movie" })) satisfies Array<{ value: SocialPlatform; label: string; icon: IconName }>;
 const tones = ["Visionary", "Reliable", "Professional", "Friendly", "Bold", "Educational"];
-const campaignStorageKey = "brand-pilot-campaigns";
 const initialForm: CampaignForm = { primaryObjective: "", targetPlatforms: [], toneOfVoice: [], startDate: "2026-07-01", endDate: "2026-07-30" };
 export default function CampaignsPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(initialForm);
   const [error, setError] = useState("");
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState<"all" | CampaignStatus>("all");
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => seedCampaigns.map((campaign) => ({ ...campaign })));
-  const [storageReady, setStorageReady] = useState(false);
 
   useEffect(() => {
-    const restoreCampaigns = window.setTimeout(() => {
+    let canceled = false;
+    async function loadCampaigns() {
       try {
-        const storedCampaigns = window.localStorage.getItem(campaignStorageKey);
-        if (storedCampaigns) {
-          const parsedCampaigns = JSON.parse(storedCampaigns) as unknown;
-          if (Array.isArray(parsedCampaigns)) setCampaigns((parsedCampaigns as Partial<Campaign>[]).map(normalizeStoredCampaign));
-        }
+        const response = await fetch("/api/campaigns", { cache: "no-store" });
+        if (!response.ok) throw new Error("Unable to load campaigns.");
+        const payload = await response.json() as { data?: Partial<Campaign>[] };
+        if (!canceled && Array.isArray(payload.data)) setCampaigns(payload.data.map(normalizeStoredCampaign));
       } catch {
-        window.localStorage.removeItem(campaignStorageKey);
-      } finally {
-        setStorageReady(true);
+        if (!canceled) setCampaigns(seedCampaigns.map((campaign) => ({ ...campaign })));
       }
-    }, 0);
+    }
 
-    return () => window.clearTimeout(restoreCampaigns);
+    loadCampaigns();
+    return () => { canceled = true; };
   }, []);
-
-  useEffect(() => {
-    if (!storageReady) return;
-    window.localStorage.setItem(campaignStorageKey, JSON.stringify(campaigns));
-  }, [campaigns, storageReady]);
 
   const campaignRows = campaigns.filter((campaign) => {
     const matchesQuery = campaign.name.toLowerCase().includes(query.toLowerCase());
@@ -76,13 +69,12 @@ export default function CampaignsPage() {
     if (message) return setError(message);
     saveCampaign();
   }
-  function saveCampaign() {
+  async function saveCampaign() {
     const message = validate();
     if (message) return setError(message);
 
     const objective = form.primaryObjective.trim();
-    const newCampaign: Campaign = {
-      id: `cmp-${Date.now()}`,
+    const payload: Partial<Campaign> = {
       workspaceId: activeWorkspace.id,
       brandId: "brand-coffee-xyz",
       name: objective,
@@ -99,10 +91,25 @@ export default function CampaignsPage() {
       ctaRecommendation: "Not configured",
     };
 
-    setCampaigns((current) => [newCampaign, ...current]);
-    setSaved(true);
-    setModalOpen(false);
-    setForm(initialForm);
+    setSaving(true);
+    try {
+      const response = await fetch("/api/campaigns", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await response.json() as { data?: Campaign; message?: string };
+      if (!response.ok || !result.data) throw new Error(result.message || "Campaign could not be created.");
+      const createdCampaign = result.data;
+      setCampaigns((current) => [normalizeStoredCampaign(createdCampaign), ...current]);
+      setSaved(true);
+      setModalOpen(false);
+      setForm(initialForm);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Campaign could not be created.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   return (
@@ -121,7 +128,7 @@ export default function CampaignsPage() {
         </section>
       </section>
 
-      {modalOpen && <ResponsiveOverlayShell title="Create Campaign Data" eyebrow="New Campaign" headerAside={<span className={`hidden rounded-full px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.18em] min-[420px]:inline-flex ${saved ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-[#0869e8]"}`}>{saved ? "Saved" : "Ready"}</span>} maxWidth="max-w-[980px]" footer={<button form="create-campaign-form" type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#0869e8] px-6 text-sm font-bold text-white hover:bg-[#0058bc]"><Icon name="check" />Create Campaign</button>} closeLabel="Close campaign modal" onClose={() => setModalOpen(false)}>
+      {modalOpen && <ResponsiveOverlayShell title="Create Campaign Data" eyebrow="New Campaign" headerAside={<span className={`hidden rounded-full px-3 py-2 text-[10px] font-extrabold uppercase tracking-[.18em] min-[420px]:inline-flex ${saved ? "bg-emerald-50 text-emerald-700" : "bg-blue-50 text-[#0869e8]"}`}>{saved ? "Saved" : saving ? "Saving" : "Ready"}</span>} maxWidth="max-w-[980px]" footer={<button form="create-campaign-form" type="submit" disabled={saving} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-lg bg-[#0869e8] px-6 text-sm font-bold text-white hover:bg-[#0058bc] disabled:cursor-not-allowed disabled:opacity-60"><Icon name="check" />{saving ? "Creating..." : "Create Campaign"}</button>} closeLabel="Close campaign modal" onClose={() => setModalOpen(false)}>
         <form id="create-campaign-form" onSubmit={submit}>
           <div className="grid gap-6">
             <FieldLabel label="Primary Objective"><input autoFocus value={form.primaryObjective} onChange={(e) => update("primaryObjective", e.target.value)} className="h-14 rounded-lg border border-[#bdd7ff] px-5 outline-none focus:border-[#0869e8] focus:ring-4 focus:ring-blue-50" /></FieldLabel>

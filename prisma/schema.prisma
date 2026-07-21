@@ -1,0 +1,265 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id          String                @id
+  name        String
+  initials    String
+  role        String
+  memberships WorkspaceMembership[]
+  createdAt   DateTime              @default(now())
+  updatedAt   DateTime              @updatedAt
+
+  @@map("users")
+}
+
+model Workspace {
+  id                 String                  @id
+  name               String
+  memberships        WorkspaceMembership[]
+  subscriptions      WorkspaceSubscription[]
+  brands             BrandProfile[]
+  campaigns          Campaign[]
+  calendarItems      CalendarItem[]
+  assets             WorkspaceAsset[]
+  campaignPackUsages CampaignPackUsage[]
+  renderCreditUsages RenderCreditUsage[]
+  operationJobs      OperationJob[]
+  contentWorkflows   ContentWorkflow[]
+  createdAt          DateTime                @default(now())
+  updatedAt          DateTime                @updatedAt
+
+  @@map("workspaces")
+}
+
+model WorkspaceMembership {
+  id          String    @id
+  workspaceId String
+  userId      String
+  role        String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@unique([workspaceId, userId])
+  @@map("workspace_memberships")
+}
+
+model WorkspaceSubscription {
+  id                        String              @id
+  workspaceId               String
+  planId                    String
+  status                    String
+  billingInterval           String
+  currentPeriodStart        String
+  currentPeriodEnd          String
+  assignedCampaignPackLimit Int?
+  renderCreditLimit         Int?
+  startedAt                 String
+  canceledAt                String?
+  workspace                 Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaignPackUsages        CampaignPackUsage[]
+  renderCreditUsages        RenderCreditUsage[]
+  createdAt                 DateTime            @default(now())
+  updatedAt                 DateTime            @updatedAt
+
+  @@index([workspaceId, status])
+  @@map("workspace_subscriptions")
+}
+
+model BrandProfile {
+  id                  String           @id
+  workspaceId         String
+  companyName         String
+  slug                String
+  industry            String
+  targetAudience      String
+  businessDescription String
+  usp                 String
+  brandVoice          String
+  language            String
+  location            String
+  website             String?
+  instagram           String?
+  facebook            String?
+  tiktok              String?
+  youtube             String?
+  primaryColor        String
+  secondaryColor      String
+  aiSummary           String
+  aiPersonality       String
+  aiTone              String
+  aiKeywords          String[]
+  aiNegativePrompt    String
+  brain               Json?
+  workspace           Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  campaigns           Campaign[]
+  calendarItems       CalendarItem[]
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+
+  @@unique([workspaceId, slug])
+  @@index([workspaceId])
+  @@map("brand_profiles")
+}
+
+model Campaign {
+  id                   String              @id
+  workspaceId          String
+  brandId              String
+  name                 String
+  goal                 String
+  platforms            String[]
+  durationDays         Int
+  startDate            String
+  endDate              String
+  status               String
+  campaignPackConsumed Boolean             @default(false)
+  campaignPackUsageId  String?
+  publishedAt          String?
+  publishedBy          String?
+  strategy             String
+  contentPillars       String[]
+  postingFrequency     String
+  ctaRecommendation    String
+  workspace            Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  brand                BrandProfile        @relation(fields: [brandId], references: [id], onDelete: Restrict)
+  calendarItems        CalendarItem[]
+  campaignPackUsages   CampaignPackUsage[]
+  createdAt            DateTime            @default(now())
+  updatedAt            DateTime            @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([brandId])
+  @@map("campaigns")
+}
+
+model CalendarItem {
+  id             String        @id
+  workspaceId    String
+  brandId        String?
+  campaignId     String?
+  dayNumber      Int
+  topic          String
+  hook           String
+  objective      String
+  cta            String
+  assetNeeded    String
+  captionPreview String
+  platform       String
+  status         String
+  scheduledDate  String?
+  metadata       Json?
+  workspace      Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  brand          BrandProfile? @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  campaign       Campaign?     @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([campaignId])
+  @@map("calendar_items")
+}
+
+model WorkspaceAsset {
+  id          String    @id
+  workspaceId String
+  name        String
+  fileName    String
+  mimeType    String
+  kind        String
+  source      String
+  previewUrl  String
+  description String
+  tags        String[]
+  sizeBytes   Int
+  brandIds    String[]
+  campaignIds String[]
+  usage       Json
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, kind])
+  @@map("workspace_assets")
+}
+
+model CampaignPackUsage {
+  id                 String                @id
+  workspaceId        String
+  subscriptionId     String
+  campaignId         String
+  billingPeriodStart String
+  billingPeriodEnd   String
+  consumedAt         String
+  consumedBy         String
+  workspace          Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscription       WorkspaceSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  campaign           Campaign              @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+
+  @@unique([subscriptionId, campaignId])
+  @@index([workspaceId])
+  @@map("campaign_pack_usages")
+}
+
+model RenderCreditUsage {
+  id             String                @id
+  workspaceId    String
+  subscriptionId String
+  contentId      String
+  renderJobId    String
+  credits        Int
+  status         String
+  workspace      Workspace             @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  subscription   WorkspaceSubscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  createdAt      String
+  updatedAt      String
+
+  @@unique([renderJobId])
+  @@index([workspaceId, status])
+  @@map("render_credit_usages")
+}
+
+model OperationJob {
+  id          String    @id @default(cuid())
+  workspaceId String
+  type        String
+  entityId    String
+  status      String
+  message     String
+  metadata    Json?
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, type, entityId])
+  @@map("operation_jobs")
+}
+
+model ContentWorkflow {
+  id          String    @id
+  workspaceId String
+  title       String
+  source      String
+  stage       String
+  brandId     String?
+  campaignId  String?
+  payload     Json
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId, source, stage])
+  @@index([brandId])
+  @@index([campaignId])
+  @@map("content_workflows")
+}
