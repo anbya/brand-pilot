@@ -1,11 +1,16 @@
+import { requireAuth } from "@/lib/auth/guard";
 import { createCampaign, getCampaigns } from "@/lib/db/platform-data";
 
 export async function GET() {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.response;
   const campaigns = await getCampaigns();
   return Response.json({ data: campaigns });
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.response;
   const body = await readBody(request);
   const campaign = await createCampaign(body);
   return Response.json(

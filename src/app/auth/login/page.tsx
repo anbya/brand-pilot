@@ -2,7 +2,8 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useState, type FormEvent } from "react";
 
 const teamAvatars = [
   "https://lh3.googleusercontent.com/aida-public/AB6AXuCQHC-W5LQ9NJ4-nE9V_zRa5CWEw90iF0tIz_8c3Yd-AZRso8MZfovzo5XvG6aY83_sQtfDhdWKS_w2ynUUMBVtyCrfj4Cc5LxTftpuHrRvPXi0vFiqgl__q01wvbHU_wHO0poIG-EL8xEh3hvX4DW7ex6XXDNdleO6ug3p-1yiPOjtIEl9eJO9Gn3Psv9ICRP1PDSBeCmzlfF3sbRjcE4sH9HB9kst4mWbvQpIupsrrrjedpp5T5cQ",
@@ -11,7 +12,37 @@ const teamAvatars = [
 ] as const;
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState(false);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError("");
+    setPending(true);
+    const formData = new FormData(event.currentTarget);
+    try {
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          email: formData.get("email"),
+          password: formData.get("password"),
+          remember: formData.get("remember") === "on",
+        }),
+      });
+      const result = await response.json() as { message?: string };
+      if (!response.ok) throw new Error(result.message || "Unable to log in.");
+      const next = new URLSearchParams(window.location.search).get("next") || "/dashboard";
+      router.replace(next);
+      router.refresh();
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Unable to log in.");
+    } finally {
+      setPending(false);
+    }
+  }
 
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-50 px-4 py-24 text-slate-950 sm:px-6 lg:px-10">
@@ -61,7 +92,7 @@ export default function LoginPage() {
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
-          <form className="grid gap-4">
+          <form className="grid gap-4" onSubmit={submit}>
             <div>
               <label className="mb-2 block text-sm font-semibold text-slate-700" htmlFor="email">
                 Email address
@@ -69,7 +100,9 @@ export default function LoginPage() {
               <input
                 className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm text-slate-950 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                 id="email"
+                name="email"
                 placeholder="name@company.com"
+                required
                 type="email"
               />
             </div>
@@ -90,7 +123,9 @@ export default function LoginPage() {
                 <input
                   className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 pr-16 text-sm text-slate-950 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-100"
                   id="password"
+                  name="password"
                   placeholder="Password"
+                  required
                   type={showPassword ? "text" : "password"}
                 />
                 <button
@@ -106,17 +141,21 @@ export default function LoginPage() {
             <label className="flex items-center gap-2 pt-1 text-sm text-slate-600">
               <input
                 className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-100"
+                name="remember"
                 type="checkbox"
               />
               Keep me logged in
             </label>
 
-            <Link
-              className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700"
-              href="/onboarding/workspace"
+            {error ? <p role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{error}</p> : null}
+
+            <button
+              className="mt-2 inline-flex w-full items-center justify-center rounded-lg bg-blue-600 px-4 py-3 text-sm font-bold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
+              disabled={pending}
+              type="submit"
             >
-              Log in
-            </Link>
+              {pending ? "Logging in..." : "Log in"}
+            </button>
           </form>
 
           <p className="mt-8 text-center text-sm text-slate-600">

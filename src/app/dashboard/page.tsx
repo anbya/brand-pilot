@@ -1,12 +1,16 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { DashboardClient } from "@/components/dashboard/dashboard-client";
 import { DashboardIcon } from "@/components/dashboard/dashboard-icon";
 import { getDashboardDataSource } from "@/lib/db/dashboard-data";
 import { getDashboardPermissions } from "@/lib/dashboard/permissions";
 import { dashboardStateScenarios } from "@/lib/dashboard/state-scenarios";
+import { getCurrentSession } from "@/lib/auth/session";
 
 export default async function DashboardPage() {
-  const dataSource = await getDashboardDataSource();
+  const session = await getCurrentSession();
+  if (!session) redirect("/auth/login?next=/dashboard");
+  const dataSource = await getDashboardDataSource(session.user);
   const permissions = getDashboardPermissions(dataSource.user.role);
   return <div className="min-h-screen min-w-0 bg-[#f8f9ff] text-[#0b1c30]">
     <main id="dashboard-content" className="bp-page"><DashboardClient dataSource={dataSource} permissions={permissions} initialDateRangeId="range-july" initialScenario={dashboardStateScenarios.ready} /></main>

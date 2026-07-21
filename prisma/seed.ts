@@ -1,6 +1,7 @@
 import "dotenv/config";
 import { Prisma, PrismaClient } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { hashPassword } from "../src/lib/auth/password";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -8,10 +9,10 @@ const prisma = new PrismaClient({ adapter });
 const workspace = { id: "workspace-brand-pilot", name: "Brand Pilot Workspace" };
 
 const users = [
-  { id: "user-sarah-jenkins", name: "Sarah Jenkins", initials: "SJ", role: "admin" },
-  { id: "user-mika-putri", name: "Mika Putri", initials: "MP", role: "manager" },
-  { id: "user-ari-pratama", name: "Ari Pratama", initials: "AP", role: "editor" },
-  { id: "user-nina-wijaya", name: "Nina Wijaya", initials: "NW", role: "viewer" },
+  { id: "user-sarah-jenkins", email: "sarah@brandpilot.test", name: "Sarah Jenkins", initials: "SJ", role: "admin" },
+  { id: "user-mika-putri", email: "mika@brandpilot.test", name: "Mika Putri", initials: "MP", role: "manager" },
+  { id: "user-ari-pratama", email: "ari@brandpilot.test", name: "Ari Pratama", initials: "AP", role: "editor" },
+  { id: "user-nina-wijaya", email: "nina@brandpilot.test", name: "Nina Wijaya", initials: "NW", role: "viewer" },
 ];
 
 const memberships = [
@@ -342,9 +343,18 @@ const assets = [
 ];
 
 async function main() {
+  const seededPasswordHash = await hashPassword("Password123!");
+  const passwordUpdatedAt = new Date();
+
   await prisma.workspace.upsert({ where: { id: workspace.id }, create: workspace, update: workspace });
 
-  for (const user of users) await prisma.user.upsert({ where: { id: user.id }, create: user, update: user });
+  for (const user of users) {
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: { ...user, passwordHash: seededPasswordHash, passwordUpdatedAt, emailVerifiedAt: passwordUpdatedAt },
+      update: { ...user, passwordHash: seededPasswordHash, passwordUpdatedAt },
+    });
+  }
   for (const membership of memberships) await prisma.workspaceMembership.upsert({ where: { id: membership.id }, create: membership, update: membership });
 
   await prisma.workspaceSubscription.upsert({

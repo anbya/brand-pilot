@@ -8,15 +8,36 @@ datasource db {
 }
 
 model User {
-  id          String                @id
-  name        String
-  initials    String
-  role        String
-  memberships WorkspaceMembership[]
-  createdAt   DateTime              @default(now())
-  updatedAt   DateTime              @updatedAt
+  id                String                @id
+  email             String?               @unique
+  passwordHash      String?
+  passwordUpdatedAt DateTime?
+  emailVerifiedAt   DateTime?
+  name              String
+  initials          String
+  role              String
+  memberships       WorkspaceMembership[]
+  sessions          AuthSession[]
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   @@map("users")
+}
+
+model AuthSession {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  revokedAt DateTime?
+  userAgent String?
+  ipAddress String?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId, expiresAt])
+  @@map("auth_sessions")
 }
 
 model Workspace {
@@ -75,7 +96,7 @@ model WorkspaceSubscription {
 }
 
 model BrandProfile {
-  id                  String           @id
+  id                  String         @id
   workspaceId         String
   companyName         String
   slug                String
@@ -99,11 +120,11 @@ model BrandProfile {
   aiKeywords          String[]
   aiNegativePrompt    String
   brain               Json?
-  workspace           Workspace        @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  workspace           Workspace      @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   campaigns           Campaign[]
   calendarItems       CalendarItem[]
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
 
   @@unique([workspaceId, slug])
   @@index([workspaceId])

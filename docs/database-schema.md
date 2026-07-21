@@ -1,7 +1,7 @@
 # Database Schema
 
 Last updated: 2026-07-21
-Prisma migration: `20260720234011_init`
+Prisma migrations: `20260720234011_init`, `20260721003000_add_auth`
 Database: PostgreSQL on Neon
 
 This document is the required companion to `prisma/schema.prisma`. Any change to `prisma/schema.prisma` must update this file in the same change.
@@ -31,15 +31,48 @@ Relations: owns memberships, subscriptions, brands, campaigns, calendar items, a
 
 ### `users`
 
-Prototype user records for role and membership checks.
+User records for authentication, identity, role, and membership checks.
 
 | Column | Type | Notes |
 | --- | --- | --- |
 | `id` | `text` | Primary key. |
+| `email` | `text?` | Unique login email. Nullable to keep old/prototype users migratable. |
+| `passwordHash` | `text?` | Versioned `scrypt` password hash. Passwords are never stored in plaintext. |
+| `passwordUpdatedAt` | `timestamp?` | Last password hash update time. |
+| `emailVerifiedAt` | `timestamp?` | Email verification timestamp. Seeded prototype users are treated as verified. |
 | `name` | `text` | Display name. |
 | `initials` | `text` | UI avatar initials. |
 | `role` | `text` | Workspace role mirror for seeded dashboard users. |
 | `createdAt`, `updatedAt` | `timestamp` | Prisma-managed timestamps. |
+
+Constraint: unique `email`.
+
+Seeded demo users:
+
+| Email | Role | Demo password |
+| --- | --- | --- |
+| `sarah@brandpilot.test` | `admin` | `Password123!` |
+| `mika@brandpilot.test` | `manager` | `Password123!` |
+| `ari@brandpilot.test` | `editor` | `Password123!` |
+| `nina@brandpilot.test` | `viewer` | `Password123!` |
+
+### `auth_sessions`
+
+Database-backed session records for logged-in users. The browser stores only the raw random session token in an `HttpOnly` cookie; the database stores `sha256` token hashes.
+
+| Column | Type | Notes |
+| --- | --- | --- |
+| `id` | `text` | Primary key, generated with `cuid()`. |
+| `userId` | `text` | FK to `users.id`, cascade delete. |
+| `tokenHash` | `text` | Unique `sha256` hash of the raw session token. |
+| `expiresAt` | `timestamp` | Session expiry. Default app logic uses 1 day, or 30 days when "remember me" is checked. |
+| `revokedAt` | `timestamp?` | Set on logout or explicit revocation. |
+| `userAgent` | `text?` | Optional request user-agent audit metadata. |
+| `ipAddress` | `text?` | Optional forwarded/client IP audit metadata. |
+| `createdAt`, `updatedAt` | `timestamp` | Prisma-managed timestamps. |
+
+Constraints: unique `tokenHash`.
+Index: `(userId, expiresAt)`.
 
 ### `workspace_memberships`
 
@@ -238,6 +271,10 @@ Indexes: `(workspaceId, source, stage)`, `brandId`, `campaignId`.
 
 Current database-backed endpoints:
 
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `POST /api/auth/logout`
+- `GET /api/auth/me`
 - `GET /api/brands`
 - `POST /api/brands`
 - `GET /api/campaigns`

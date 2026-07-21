@@ -1,8 +1,9 @@
 import { dashboardMockData } from "@/lib/dashboard/mock-data";
-import type { DashboardCampaignSummary, DashboardDataSource } from "@/lib/dashboard/types";
+import type { DashboardCampaignSummary, DashboardDataSource, DashboardUser } from "@/lib/dashboard/types";
 import { getActiveSubscription, getBrands, getCampaigns, getRenderCreditUsages } from "@/lib/db/platform-data";
+import type { AuthUser } from "@/lib/auth/session";
 
-export async function getDashboardDataSource(): Promise<DashboardDataSource> {
+export async function getDashboardDataSource(authUser?: AuthUser): Promise<DashboardDataSource> {
   const [brands, campaigns, subscription] = await Promise.all([
     getBrands(),
     getCampaigns(),
@@ -14,6 +15,7 @@ export async function getDashboardDataSource(): Promise<DashboardDataSource> {
 
   return {
     ...dashboardMockData,
+    user: toDashboardUser(authUser) ?? dashboardMockData.user,
     brands: brands.map((brand) => ({ id: brand.id, name: brand.companyName, slug: brand.companyName.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") })),
     workspaceSubscription: subscription ?? dashboardMockData.workspaceSubscription,
     renderCreditUsages,
@@ -36,5 +38,15 @@ export async function getDashboardDataSource(): Promise<DashboardDataSource> {
         textColor: mock?.textColor ?? "text-blue-700",
       };
     }),
+  };
+}
+
+function toDashboardUser(user: AuthUser | undefined): DashboardUser | undefined {
+  if (!user) return undefined;
+  return {
+    id: user.id,
+    name: user.name,
+    role: user.role as DashboardUser["role"],
+    initials: user.initials,
   };
 }

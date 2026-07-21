@@ -1,12 +1,17 @@
 import { canCreateBrand, getBrandUsage } from "@/lib/billing/selectors";
+import { requireAuth } from "@/lib/auth/guard";
 import { createBrand, getActiveSubscription, getActiveWorkspace, getBrands } from "@/lib/db/platform-data";
 
 export async function GET() {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.response;
   const brands = await getBrands();
   return Response.json({ data: brands });
 }
 
 export async function POST(request: Request) {
+  const auth = await requireAuth();
+  if (!auth.ok) return auth.response;
   const [activeWorkspace, subscription, brands] = await Promise.all([
     getActiveWorkspace(),
     getActiveSubscription(),
